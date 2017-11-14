@@ -129,3 +129,4 @@ Shoutouts to the homies:
  * carnal0wnage
  * indi303
  * emperorcow
+ * rossja
