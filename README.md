@@ -14,7 +14,7 @@ GScript uses a JS V8 Virtual Machine to interpret your genesis script and allow 
 
 ## What is GENESIS btw?
 
-GENESIS was created by @vyrus, @gen0cide, and @ahhh.db for dynamically bundling multiple payloads into one dropper for faster deployment of implants for the CCDC Red Team.
+GENESIS was created by @vyrus, @gen0cide, @emperorcow, and @ahhh for dynamically bundling multiple payloads into one dropper for faster deployment of implants for the CCDC Red Team.
 
 GENESIS Script is a virtual machine to allow intelligent deployment of those payloads.
 
@@ -124,7 +124,9 @@ function ServeFileOverHTTP(file, port)  { return true;   };
 Shoutouts to the homies:
 
  * vyrus
- * ahhh.db
+ * ahhh
  * cmccsec
  * carnal0wnage
  * indi303
+ * emperorcow
+ * rossja
