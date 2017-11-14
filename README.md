@@ -105,7 +105,7 @@ function GetEnv(varname)                { return value;  };
 function FileCreateTime(path)           { return epoch;  };
 function FileModifyTime(path)           { return epoch;  };
 function LoggedInUsers()                { return users;  };
-function UsersRunningProcs()       { return users;  };
+function UsersRunningProcs()            { return users;  };
 function ServeFileOverHTTP(file, port)  { return true;   };
 
 ```
