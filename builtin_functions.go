@@ -66,9 +66,34 @@ func (e *Engine) VMHTTPRequest(call otto.FunctionCall) otto.Value {
 	return otto.FalseValue()
 }
 
-func (e *Engine) VMCmd(call otto.FunctionCall) otto.Value {
-	e.LogCritf("Function Not Implemented: %s", CalledBy())
-	return otto.FalseValue()
+func (e *Engine) VMExec(call otto.FunctionCall) otto.Value {
+	baseCmd := call.Argument(0)
+	if !baseCmd.IsString() {
+		e.Logger.Errorf("Function Error: function=%s error=CMD_CALL_NOT_OF_TYPE_STRING arg=%s", CalledBy(), spew.Sdump(baseCmd))
+		return otto.FalseValue()
+	}
+	cmdArgs := call.Argument(1)
+	argList := []string{}
+	if !cmdArgs.IsNull() {
+		argArray, err := cmdArgs.Export()
+		if err != nil {
+			e.Logger.Errorf("Function Error: function=%s error=CMD_ARGS_NOT_PARSABLE arg=%s", CalledBy(), spew.Sdump(cmdArgs))
+			return otto.FalseValue()
+		}
+		argList = argArray.([]string)
+	}
+	baseCmdAsString, err := baseCmd.ToString()
+	if err != nil {
+		e.Logger.Errorf("Function Error: function=%s error=CMD_BASE_NOT_PARSABLE arg=%s", CalledBy(), spew.Sdump(baseCmd))
+		return otto.FalseValue()
+	}
+	cmdOutput := ExecuteCommand(baseCmdAsString, argList...)
+	vmResponse, err := e.VM.ToValue(cmdOutput)
+	if err != nil {
+		e.Logger.Errorf("Function Error: function=%s error=CMD_OUTPUT_OBJECT_CAST_FAILED arg=%s", CalledBy(), spew.Sdump(baseCmd))
+		return otto.FalseValue()
+	}
+	return vmResponse
 }
 
 func (e *Engine) VMMD5(call otto.FunctionCall) otto.Value {
