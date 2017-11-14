@@ -11,67 +11,67 @@ import (
 	"github.com/robertkrimen/otto"
 )
 
-func (e *Engine) Halt(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMHalt(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) DeleteFile(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMDeleteFile(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) WriteFile(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMWriteFile(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) ExecuteFile(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMExecuteFile(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) AppendFile(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMAppendFile(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) ReplaceInFile(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMReplaceInFile(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) Signal(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMSignal(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) Implode(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMImplode(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) RetrieveFileFromURL(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMRetrieveFileFromURL(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) DNSQuery(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMDNSQuery(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) HTTPRequest(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMHTTPRequest(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) Cmd(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMCmd(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) MD5(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMMD5(call otto.FunctionCall) otto.Value {
 	var HashVal string
 	if len(call.ArgumentList) > 0 {
 		arg := call.ArgumentList[0]
@@ -113,7 +113,7 @@ func (e *Engine) MD5(call otto.FunctionCall) otto.Value {
 	return ret
 }
 
-func (e *Engine) SHA1(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMSHA1(call otto.FunctionCall) otto.Value {
 	var HashVal string
 	if len(call.ArgumentList) > 0 {
 		arg := call.ArgumentList[0]
@@ -155,7 +155,7 @@ func (e *Engine) SHA1(call otto.FunctionCall) otto.Value {
 	return ret
 }
 
-func (e *Engine) B64Decode(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMB64Decode(call otto.FunctionCall) otto.Value {
 	var NewVal string
 	if len(call.ArgumentList) > 0 {
 		arg := call.ArgumentList[0]
@@ -184,7 +184,7 @@ func (e *Engine) B64Decode(call otto.FunctionCall) otto.Value {
 	return ret
 }
 
-func (e *Engine) B64Encode(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMB64Encode(call otto.FunctionCall) otto.Value {
 	var EncVal string
 	if len(call.ArgumentList) > 0 {
 		arg := call.ArgumentList[0]
@@ -222,7 +222,7 @@ func (e *Engine) B64Encode(call otto.FunctionCall) otto.Value {
 	return ret
 }
 
-func (e *Engine) Timestamp(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMTimestamp(call otto.FunctionCall) otto.Value {
 	ts := time.Now().Unix()
 	ret, err := otto.ToValue(ts)
 	if err != nil {
@@ -231,22 +231,22 @@ func (e *Engine) Timestamp(call otto.FunctionCall) otto.Value {
 	return ret
 }
 
-func (e *Engine) CPUStats(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMCPUStats(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) MemStats(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMMemStats(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) SSHCmd(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMSSHCmd(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) Sleep(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMSleep(call otto.FunctionCall) otto.Value {
 	if len(call.ArgumentList) > 0 {
 		arg := call.ArgumentList[0]
 		if arg.IsNumber() {
@@ -261,47 +261,47 @@ func (e *Engine) Sleep(call otto.FunctionCall) otto.Value {
 	return otto.Value{}
 }
 
-func (e *Engine) GetTweet(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMGetTweet(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) GetDirsInPath(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMGetDirsInPath(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) EnvVars(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMEnvVars(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) GetEnv(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMGetEnv(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) FileCreateTime(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMFileCreateTime(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) FileModifyTime(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMFileModifyTime(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) LoggedInUsers(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMLoggedInUsers(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) UsersRunningProcs(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMUsersRunningProcs(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) ServeFileOverHTTP(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMServeFileOverHTTP(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }

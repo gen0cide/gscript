@@ -21,22 +21,22 @@ Halt();
 `
 )
 
-func (e *Engine) BeforeDeploy(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMBeforeDeploy(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) Deploy(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMDeploy(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) AfterDeploy(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMAfterDeploy(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) OnError(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMOnError(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }

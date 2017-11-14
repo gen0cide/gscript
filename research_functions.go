@@ -2,117 +2,117 @@ package gscript
 
 import "github.com/robertkrimen/otto"
 
-func (e *Engine) LocalUserExists(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMLocalUserExists(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) ProcExistsWithName(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMProcExistsWithName(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) CanReadFile(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMCanReadFile(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) CanWriteFile(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMCanWriteFile(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) CanExecFile(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMCanExecFile(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) FileExists(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMFileExists(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) DirExists(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMDirExists(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) FileContains(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMFileContains(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) IsVM(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMIsVM(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) IsAWS(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMIsAWS(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) HasPublicIP(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMHasPublicIP(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) CanMakeTCPConn(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMCanMakeTCPConn(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) ExpectedDNS(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMExpectedDNS(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) CanMakeHTTPConn(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMCanMakeHTTPConn(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) DetectSSLMITM(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMDetectSSLMITM(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) CmdSuccessful(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMCmdSuccessful(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) CanPing(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMCanPing(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) TCPPortInUse(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMTCPPortInUse(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) UDPPortInUse(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMUDPPortInUse(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) ExistsInPath(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMExistsInPath(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) CanSudo(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMCanSudo(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) Matches(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMMatches(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
-func (e *Engine) CanSSHLogin(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMCanSSHLogin(call otto.FunctionCall) otto.Value {
 	e.LogCritf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
