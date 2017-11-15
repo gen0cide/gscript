@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"time"
-
 	"github.com/davecgh/go-spew/spew"
 	"github.com/robertkrimen/otto"
 )
