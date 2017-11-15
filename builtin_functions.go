@@ -38,7 +38,7 @@ func (e *Engine) VMWriteFile(call otto.FunctionCall) otto.Value {
 		e.Logger.Errorf("Function Error: function=VMWriteFile() error=ARG_NOT_STRINGABLE arg=%s", spew.Sdump(call.ArgumentList[1]))
 		return otto.FalseValue()
 	}
-	err = LocalCreateFile(rawBytes, path)
+	err = LocalCreateFile(path, rawBytes)
 	if err != nil {
 		e.Logger.Errorf("There was an error writing the file to that path")
 		return otto.FalseValue()
@@ -73,7 +73,7 @@ func (e *Engine) VMCopyFile(call otto.FunctionCall) otto.Value {
 		return otto.FalseValue()
 	}
 	//e.Logger.Errorf("Function Error: function=VMCopyFile() error=Debug; read local file at: %s", spew.Sdump(readPath))
-	err = LocalCreateFile(bytes, writePath)
+	err = LocalCreateFile(writePath, bytes)
 	if err != nil {
 		e.Logger.Errorf("Function Error: function=VMCopyFile() error='There was an error writing the file to that path'")
 		return otto.FalseValue()
