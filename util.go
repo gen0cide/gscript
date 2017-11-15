@@ -34,33 +34,32 @@ func LocalFileExists(path string) bool {
 	return false
 }
 
-func LocalCreateFile(path string, bytes []byte) bool {
+func LocalCreateFile(path string, bytes []byte) error {
 	if LocalFileExists(path) {
-		return false
-		//errors.New("The file to create already exists so we won't overwite it")
+		return errors.New("The file to create already exists so we won't overwite it")
 	}
 	err := ioutil.WriteFile(path, bytes, 0700)
 	if err != nil {
-		return false
+		return err
 	}
-	return true
+	return nil
 }
 
 // Append adds input to the end of filename.
-func LocalAppendFile(filename string, bytes []byte) bool {
+func LocalAppendFile(filename string, bytes []byte) error {
 	fileInfo, err := os.Stat(filename)
 	if err != nil {
-		return false
+		return err
 	}
 	file, err := os.OpenFile(filename, os.O_APPEND, fileInfo.Mode())
 	if err != nil {
-		return false
+		return err
 	}
 	if _, err = file.Write(bytes); err != nil {
-		return false
+		return err
 	}
 	file.Close()
-	return true
+	return nil
 }
 
 
