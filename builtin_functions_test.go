@@ -67,6 +67,8 @@ func TestVMAppendFile(t *testing.T) {
 	e.CreateVM()
 
 	e.VM.Run(testScript)
+	e.LogInfof("Function: function=%s msg='Appended local file at: %s'", CalledBy(), spew.Sdump(g_file_1))
+	e.LogInfof("Function: function=%s msg='Appended local file at: %s'", CalledBy(), spew.Sdump(g_file_2))
 	retVal, err := e.VM.Get("return_value1")
 	assert.Nil(t, err)
 	retValAsString, err := retVal.ToString()
@@ -77,6 +79,28 @@ func TestVMAppendFile(t *testing.T) {
 	retValAsString2, err := retVal2.ToString()
 	assert.Nil(t, err)
 	assert.Equal(t, "true", retValAsString2)
+}
+
+func TestVMReplaceInFile(t *testing.T) {
+	string01 := "root"
+	string02 := "lol"
+	testScript := fmt.Sprintf(`
+    var file_1 = "%s";
+    var string01 = "%s";
+		var string02 = "%s";
+    var return_value1 = ReplaceInFile(file_1, string01, string02);
+  `, g_file_1, string01, string02)
+
+	e := New()
+	e.EnableLogging()
+	e.CreateVM()
+
+	e.VM.Run(testScript)
+	retVal, err := e.VM.Get("return_value1")
+	assert.Nil(t, err)
+	retValAsString, err := retVal.ToString()
+	assert.Nil(t, err)
+	assert.Equal(t, "true", retValAsString)
 }
 
 func TestVMRetrieveFileFromURL(t *testing.T) {

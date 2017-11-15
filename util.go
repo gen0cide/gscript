@@ -91,44 +91,54 @@ func LocalFileAppendString(input, filename string) error {
 
 // Replace will replace all instances of match with replace in file.
 func LocalFileReplace(file, match, replacement string) error {
-	fileInfo, err := os.Stat(file)
-	if err != nil {
-		return err
+	if LocalFileExists(file) {
+	  fileInfo, err := os.Stat(file)
+	  if err != nil {
+	  	return err
+	  }
+	  contents, err := ioutil.ReadFile(file)
+	  if err != nil {
+	  	return err
+	  }
+	  lines := strings.Split(string(contents), "\n")
+	  for index, line := range lines {
+	  	if strings.Contains(line, match) {
+	  		lines[index] = strings.Replace(line, match, replacement, 10)
+	  	}
+	  }
+
+
+	  ioutil.WriteFile(file, []byte(strings.Join(lines, "\n")), fileInfo.Mode())
+	  return nil
+  } else {
+		return errors.New("The file to read does not exist")
 	}
-	contents, err := ioutil.ReadFile(file)
-	if err != nil {
-		return err
-	}
-	lines := strings.Split(string(contents), "\n")
-	for index, line := range lines {
-		if strings.Contains(line, match) {
-			lines[index] = replacement
-		}
-	}
-	ioutil.WriteFile(file, []byte(strings.Join(lines, "\n")), fileInfo.Mode())
-	return nil
 }
 
 // ReplaceMulti will replace all instances of possible matches with replacement in file.
 func LocalFileReplaceMulti(file string, matches []string, replacement string) error {
-	fileInfo, err := os.Stat(file)
-	if err != nil {
-		return err
+	if LocalFileExists(file) {
+	  fileInfo, err := os.Stat(file)
+	  if err != nil {
+	  	return err
+	  }
+	  contents, err := ioutil.ReadFile(file)
+	  if err != nil {
+	  	return err
+	  }
+	  lines := strings.Split(string(contents), "\n")
+	  for index, line := range lines {
+	  	for _, match := range matches {
+	  		if strings.Contains(line, match) {
+	  			lines[index] = replacement
+	  		}
+	  	}
+	  }
+	  ioutil.WriteFile(file, []byte(strings.Join(lines, "\n")), fileInfo.Mode())
+	  return nil
+  } else {
+    return errors.New("The file to read does not exist")
 	}
-	contents, err := ioutil.ReadFile(file)
-	if err != nil {
-		return err
-	}
-	lines := strings.Split(string(contents), "\n")
-	for index, line := range lines {
-		for _, match := range matches {
-			if strings.Contains(line, match) {
-				lines[index] = replacement
-			}
-		}
-	}
-	ioutil.WriteFile(file, []byte(strings.Join(lines, "\n")), fileInfo.Mode())
-	return nil
 }
 
 // LocalReadFile takes a file path and returns the byte array of the file there
