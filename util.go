@@ -14,6 +14,7 @@ import (
 	"time"
 	"path/filepath"
 	"github.com/matishsiao/goInfo"
+	"unicode"
 )
 
 func CalledBy() string {
@@ -197,6 +198,35 @@ func LocalFileRead(path string) ([]byte, error) {
 	return nil, errors.New("The file to read does not exist")
 }
 
+func XorFiles(file1 string, file2 string, outPut string) error {
+  dat1, err := ioutil.ReadFile(file1)
+  if err != nil{
+    return err
+  }
+  dat2, err := ioutil.ReadFile(file2)
+  if err != nil{
+    return err
+  }
+  dat3 := XorBytes(dat1[:], dat2[:])
+  err = LocalFileCreate(outPut, dat3[:])
+  if err != nil{
+    return err
+  }
+  return nil
+}
+
+func XorBytes(a []byte, b []byte) []byte {
+  n := len(a)
+	if len(b) < n {
+		n = len(b)
+	}
+  var byte_dst [20]byte
+	for i := 0; i < n; i++ {
+		byte_dst[i] = a[i] ^ b[i]
+	}
+	return byte_dst[:]
+}
+
 func LocalSystemInfo() ([]string, error) {
   var InfoDump []string
 	gi := goInfo.GetInfo()
@@ -247,6 +277,34 @@ func HTTPGetFile(url string) ([]byte, error) {
 	pageData, err := ioutil.ReadAll(resp.Body)
 	resp.Body.Close()
 	return pageData, nil
+}
+
+// StripSpaces will remove the spaces from a single string and return the new string
+func StripSpaces(str string) string {
+	return strings.Map(func(r rune) rune {
+		if unicode.IsSpace(r) {
+			return -1
+		}
+		return r
+	}, str)
+}
+
+// DeobfuscateString from https://github.com/SaturnsVoid/GoBot2/blob/7d6609cd49f006f5aee76a4ffd97eb25d12a1a9b/components/Cryptography.go#L44
+func DeobfuscateString(Data string) string {
+	var ClearText string
+	for i := 0; i < len(Data); i++ {
+		ClearText += string(int(Data[i]) - 1)
+	}
+	return ClearText
+}
+
+// ObfuscateString from https://github.com/SaturnsVoid/GoBot2/blob/7d6609cd49f006f5aee76a4ffd97eb25d12a1a9b/components/Cryptography.go#L52
+func ObfuscateString(Data string) string {
+	var ObfuscateText string
+	for i := 0; i < len(Data); i++ {
+		ObfuscateText += string(int(Data[i]) + 1)
+	}
+	return ObfuscateText
 }
 
 // RandString returns a string the length of strlen
