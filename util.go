@@ -34,7 +34,7 @@ func LocalFileExists(path string) bool {
 	return false
 }
 
-func LocalCreateFile(path string, bytes []byte) error {
+func LocalFileCreate(path string, bytes []byte) error {
 	if LocalFileExists(path) {
 		return errors.New("The file to create already exists so we won't overwite it")
 	}
@@ -45,7 +45,104 @@ func LocalCreateFile(path string, bytes []byte) error {
 	return nil
 }
 
-func LocalReadFile(path string) ([]byte, error) {
+// LocalFileAppendBytes adds bytes to the end of filename's path.
+func LocalFileAppendBytes(filename string, bytes []byte) error {
+	if LocalFileExists(filename) {
+  	fileInfo, err := os.Stat(filename)
+	  if err != nil {
+		  return err
+	  }
+	  file, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY, fileInfo.Mode())
+	  if err != nil {
+		  return err
+	  }
+	  if _, err = file.Write(bytes); err != nil {
+		  return err
+	  }
+	  file.Close()
+		// Appened the bytes w/o error
+	  return nil
+	} else {
+		err := LocalFileCreate(filename, bytes)
+		if err != nil {
+			return err
+		}
+		// Created a new file w/o error
+		return nil
+	}
+}
+
+// LocalFileAppendString adds input as strings to the end of filename's path.
+func LocalFileAppendString(input, filename string) error {
+	fileInfo, err := os.Stat(filename)
+	if err != nil {
+		return err
+	}
+	file, err := os.OpenFile(filename, os.O_APPEND, fileInfo.Mode())
+	if err != nil {
+		return err
+	}
+	if _, err = file.WriteString(input); err != nil {
+		return err
+	}
+	file.Close()
+	return nil
+}
+
+// Replace will replace all instances of match with replace in file.
+func LocalFileReplace(file, match, replacement string) error {
+	if LocalFileExists(file) {
+	  fileInfo, err := os.Stat(file)
+	  if err != nil {
+	  	return err
+	  }
+	  contents, err := ioutil.ReadFile(file)
+	  if err != nil {
+	  	return err
+	  }
+	  lines := strings.Split(string(contents), "\n")
+	  for index, line := range lines {
+	  	if strings.Contains(line, match) {
+	  		lines[index] = strings.Replace(line, match, replacement, 10)
+	  	}
+	  }
+
+
+	  ioutil.WriteFile(file, []byte(strings.Join(lines, "\n")), fileInfo.Mode())
+	  return nil
+  } else {
+		return errors.New("The file to read does not exist")
+	}
+}
+
+// ReplaceMulti will replace all instances of possible matches with replacement in file.
+func LocalFileReplaceMulti(file string, matches []string, replacement string) error {
+	if LocalFileExists(file) {
+	  fileInfo, err := os.Stat(file)
+	  if err != nil {
+	  	return err
+	  }
+	  contents, err := ioutil.ReadFile(file)
+	  if err != nil {
+	  	return err
+	  }
+	  lines := strings.Split(string(contents), "\n")
+	  for index, line := range lines {
+	  	for _, match := range matches {
+	  		if strings.Contains(line, match) {
+	  			lines[index] = replacement
+	  		}
+	  	}
+	  }
+	  ioutil.WriteFile(file, []byte(strings.Join(lines, "\n")), fileInfo.Mode())
+	  return nil
+  } else {
+    return errors.New("The file to read does not exist")
+	}
+}
+
+// LocalReadFile takes a file path and returns the byte array of the file there
+func LocalFileRead(path string) ([]byte, error) {
 	if LocalFileExists(path) {
 		dat, err := ioutil.ReadFile(path)
 		if err != nil {
@@ -56,6 +153,7 @@ func LocalReadFile(path string) ([]byte, error) {
 	return nil, errors.New("The file to read does not exist")
 }
 
+// ExecuteCommand function
 func ExecuteCommand(c string, args ...string) VMExecResponse {
 	cmd := exec.Command(c, args...)
 	var stdout bytes.Buffer
@@ -77,6 +175,7 @@ func ExecuteCommand(c string, args ...string) VMExecResponse {
 	return respObj
 }
 
+// HTTPGetFile takes a url and returns a byte slice of the file there
 func HTTPGetFile(url string) ([]byte, error) {
 	resp, err := http.Get(url)
 	if err != nil {
@@ -87,6 +186,7 @@ func HTTPGetFile(url string) ([]byte, error) {
 	return pageData, nil
 }
 
+// RandString returns a string the length of strlen
 func RandString(strlen int) string {
 	var r = rand.New(rand.NewSource(time.Now().UnixNano()))
 	const chars = "abcdefghijklmnopqrstuvwxyz0123456789"
@@ -95,4 +195,9 @@ func RandString(strlen int) string {
 		result[i] = chars[r.Intn(len(chars))]
 	}
 	return string(result)
+}
+
+// RandomInt returns an int inbetween min and max.
+func RandomInt(min, max int) int {
+	return rand.Intn(max-min) + min
 }

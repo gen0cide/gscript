@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"time"
-
 	"github.com/davecgh/go-spew/spew"
 	"github.com/robertkrimen/otto"
 )
@@ -22,8 +21,8 @@ func (e *Engine) VMDeleteFile(call otto.FunctionCall) otto.Value {
 }
 
 func (e *Engine) VMWriteFile(call otto.FunctionCall) otto.Value {
+	// Arg0 is the string path of the new file to write
 	// Arg1 is a byte array of bytes of the file
-	// Arg2 is the string path of the new file to write
 	filePath := call.Argument(0)
 	fileData := call.Argument(1)
 	fileBytes := e.ValueToByteSlice(fileData)
@@ -32,7 +31,7 @@ func (e *Engine) VMWriteFile(call otto.FunctionCall) otto.Value {
 		e.LogErrorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(filePath))
 		return otto.FalseValue()
 	}
-	err = LocalCreateFile(filePathAsString.(string), fileBytes)
+	err = LocalFileCreate(filePathAsString.(string), fileBytes)
 	if err != nil {
 		e.LogErrorf("Error writing the file: function=%s path=%s error=%s", CalledBy(), filePathAsString.(string), err.Error())
 		return otto.FalseValue()
@@ -41,8 +40,8 @@ func (e *Engine) VMWriteFile(call otto.FunctionCall) otto.Value {
 }
 
 func (e *Engine) VMCopyFile(call otto.FunctionCall) otto.Value {
-	// Arg1 is the string path of the first file we read
-	// Arg2 is the string path of the new file to write
+	// Arg0 is the string path of the first file we read
+	// Arg1 is the string path of the new file to write
 	readPath, err := call.ArgumentList[0].ToString()
 	if err != nil {
 		e.LogErrorf("Function Error: function=VMCopyFile() error=ARG_NOT_STRINGABLE arg=%s", spew.Sdump(call.ArgumentList[0]))
@@ -53,19 +52,19 @@ func (e *Engine) VMCopyFile(call otto.FunctionCall) otto.Value {
 		e.LogErrorf("Function Error: function=VMCopyFile() error=ARG_NOT_STRINGABLE arg=%s", spew.Sdump(call.ArgumentList[1]))
 		return otto.FalseValue()
 	}
-	bytes, err := LocalReadFile(readPath)
+	bytes, err := LocalFileRead(readPath)
 	if err != nil {
 		e.LogErrorf("Function Error: function=VMCopyFile() error='There was an error reading the file to copy'")
 		return otto.FalseValue()
 	}
 	//e.Logger.Errorf("Function Error: function=VMCopyFile() error=Debug; read local file at: %s", spew.Sdump(readPath))
-	err = LocalCreateFile(writePath, bytes)
+	err = LocalFileCreate(writePath, bytes)
 	if err != nil {
 		e.LogErrorf("Function Error: function=VMCopyFile() error='There was an error writing the file to that path'")
 		return otto.FalseValue()
 	}
 	// Testing Debug call function //
-	e.LogErrorf("Function Error: function=%s error=Debug; wrote local file at: %s", CalledBy(), spew.Sdump(writePath))
+	e.LogInfof("Function: function=%s msg='wrote local file at: %s'", CalledBy(), spew.Sdump(writePath))
 	//returnString := fmt.Sprintf("File created at: %s", string(writePath))
 	//var ret = otto.Value{}
 	//var er error
@@ -83,13 +82,52 @@ func (e *Engine) VMExecuteFile(call otto.FunctionCall) otto.Value {
 }
 
 func (e *Engine) VMAppendFile(call otto.FunctionCall) otto.Value {
-	e.LogCritf("Function Not Implemented: %s", CalledBy())
-	return otto.FalseValue()
+	// Arg0 is the string path of the new file to write
+	// Arg1 is a byte array of bytes of the file
+	filePath := call.Argument(0)
+	fileData := call.Argument(1)
+	fileBytes := e.ValueToByteSlice(fileData)
+	filePathAsString, err := filePath.Export()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(filePath))
+		return otto.FalseValue()
+	}
+	err = LocalFileAppendBytes(filePathAsString.(string), fileBytes)
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=LocalFileAppendBytesFailed details=%s", CalledBy(), spew.Sdump(err))
+		return otto.FalseValue()
+	}
+	return otto.TrueValue()
 }
 
 func (e *Engine) VMReplaceInFile(call otto.FunctionCall) otto.Value {
-	e.LogCritf("Function Not Implemented: %s", CalledBy())
-	return otto.FalseValue()
+	// Arg0 is the string path of the file to search / replace
+	// Arg1 is a string to find / match w/
+	// Arg2 is a to string to replace w/
+	filePath := call.Argument(0)
+	filePathAsString, err := filePath.Export()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(filePath))
+		return otto.FalseValue()
+	}
+	sFind := call.Argument(1)
+	sFindAsString, err := sFind.Export()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(sFind))
+		return otto.FalseValue()
+	}
+	sReplace := call.Argument(2)
+	sReplaceAsString, err := sReplace.Export()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(sReplace))
+		return otto.FalseValue()
+	}
+  err = LocalFileReplace(filePathAsString.(string), sFindAsString.(string), sReplaceAsString.(string))
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=Failed to run LocalFileReplace info=%s", CalledBy(), spew.Sdump(err))
+		return otto.FalseValue()
+	}
+	return otto.TrueValue()
 }
 
 func (e *Engine) VMSignal(call otto.FunctionCall) otto.Value {

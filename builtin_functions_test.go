@@ -5,7 +5,11 @@ import (
 	"time"
   "fmt"
 	"github.com/stretchr/testify/assert"
+	"github.com/davecgh/go-spew/spew"
 )
+
+var g_file_1 = fmt.Sprintf("/tmp/%s", RandString(6))
+var g_file_2 = fmt.Sprintf("/tmp/%s", RandString(6))
 
 func TestVMMD5(t *testing.T) {
 	testScript := `
@@ -29,7 +33,7 @@ func TestVMMD5(t *testing.T) {
 }
 
 func TestVMCopyFile(t *testing.T) {
-	file_2 := fmt.Sprintf("/tmp/%s", RandString(6))
+	file_2 := g_file_1
 	testScript := fmt.Sprintf(`
     var file_1 = "/etc/passwd";
     var file_2 = "%s";
@@ -48,8 +52,59 @@ func TestVMCopyFile(t *testing.T) {
 	assert.Equal(t, "true", retValAsString)
 }
 
+func TestVMAppendFile(t *testing.T) {
+	bytes := "60,104,116,109,108,62,10,32,32,60,98,111,100,121,62,10,32,32,32,32"
+	testScript := fmt.Sprintf(`
+    var file_1 = "%s";
+		var file_2 = "%s";
+    var bytes = [%s];
+    var return_value1 = AppendFile(file_1, bytes);
+		var return_value2 = AppendFile(file_2, bytes);
+  `, g_file_1, g_file_2, bytes)
+
+	e := New()
+	e.EnableLogging()
+	e.CreateVM()
+
+	e.VM.Run(testScript)
+	e.LogInfof("Function: function=%s msg='Appended local file at: %s'", CalledBy(), spew.Sdump(g_file_1))
+	e.LogInfof("Function: function=%s msg='Appended local file at: %s'", CalledBy(), spew.Sdump(g_file_2))
+	retVal, err := e.VM.Get("return_value1")
+	assert.Nil(t, err)
+	retValAsString, err := retVal.ToString()
+	assert.Nil(t, err)
+	assert.Equal(t, "true", retValAsString)
+	retVal2, err := e.VM.Get("return_value2")
+	assert.Nil(t, err)
+	retValAsString2, err := retVal2.ToString()
+	assert.Nil(t, err)
+	assert.Equal(t, "true", retValAsString2)
+}
+
+func TestVMReplaceInFile(t *testing.T) {
+	string01 := "root"
+	string02 := "lol"
+	testScript := fmt.Sprintf(`
+    var file_1 = "%s";
+    var string01 = "%s";
+		var string02 = "%s";
+    var return_value1 = ReplaceInFile(file_1, string01, string02);
+  `, g_file_1, string01, string02)
+
+	e := New()
+	e.EnableLogging()
+	e.CreateVM()
+
+	e.VM.Run(testScript)
+	retVal, err := e.VM.Get("return_value1")
+	assert.Nil(t, err)
+	retValAsString, err := retVal.ToString()
+	assert.Nil(t, err)
+	assert.Equal(t, "true", retValAsString)
+}
+
 func TestVMRetrieveFileFromURL(t *testing.T) {
-  url := "http://icanhazip.com"
+  url := "https://alexlevinson.com/"
 	file_3 := fmt.Sprintf("/tmp/%s", RandString(6))
   testScript2 := fmt.Sprintf(`
 	  var url = "%s";
@@ -63,11 +118,12 @@ func TestVMRetrieveFileFromURL(t *testing.T) {
   e.CreateVM()
 
   e.VM.Run(testScript2)
+	e.LogInfof("Function: function=%s msg='wrote local file at: %s'", CalledBy(), spew.Sdump(file_3))
   retVal, err := e.VM.Get("return_value2")
   assert.Nil(t, err)
   retValAsString, err := retVal.ToString()
   assert.Nil(t, err)
-  assert.Equal(t, "true", retValAsString)
+  assert.Equal(t, "60,104,116,109,108,62,10,32,32,60,98,111,100,121,62,10,32,32,32,32,60,99,101,110,116,101,114,62,10,32,32,32,32,32,32,60,105,109,103,32,115,114,99,61,34,114,111,111,116,46,106,112,103,34,32,47,62,10,32,32,32,32,60,47,99,101,110,116,101,114,62,10,32,32,60,47,98,111,100,121,62,10,60,47,104,116,109,108,62,10", retValAsString)
 }
 
 func TestVMTimestamp(t *testing.T) {
