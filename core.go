@@ -14,9 +14,9 @@ var (
 var helloWorld = "helloworld";
 var foo = MD5(helloWorld);
 VMLogInfo(foo);
-Sleep(1);
-VMLogInfo("Finished Sleeping");
-Halt();
+console.log("haha");
+var output = Exec("ls", [ "-a" ]);
+VMLogInfo(JSON.stringify(output));
 
 `
 )

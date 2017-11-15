@@ -68,3 +68,24 @@ func TestVMTimestamp(t *testing.T) {
 	assert.Nil(t, err)
 	assert.True(t, (retValAsNumber >= currTime))
 }
+
+func TestExec(t *testing.T) {
+	testCmd := ExecuteCommand("ls", "-lah")
+
+	testScript := `
+      var test_exec = Exec("ls", ["-lah"]);
+    `
+	e := New()
+	e.EnableLogging()
+	e.CreateVM()
+
+	e.VM.Run(testScript)
+	retVal, err := e.VM.Get("test_exec")
+	assert.Nil(t, err)
+	assert.True(t, retVal.IsObject())
+	retValAsInterface, err := retVal.Export()
+	assert.Nil(t, err)
+	realRetVal := retValAsInterface.(VMExecResponse)
+
+	assert.Equal(t, testCmd.Stdout, realRetVal.Stdout)
+}

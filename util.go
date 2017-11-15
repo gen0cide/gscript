@@ -1,10 +1,13 @@
 package gscript
 
 import (
-	"runtime"
 	"io/ioutil"
 	"os"
 	"errors"
+	"bytes"
+	"os/exec"
+	"runtime"
+	"strings"
 )
 
 func CalledBy() string {
@@ -48,4 +51,24 @@ func LocalReadFile(path string) ([]byte, error) {
   return dat, nil
  }
  return nil, errors.New("The file to read does not exist")
+  
+func ExecuteCommand(c string, args ...string) VMExecResponse {
+	cmd := exec.Command(c, args...)
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	err := cmd.Run()
+	respObj := VMExecResponse{
+		Stdout: strings.Split(stdout.String(), "\n"),
+		Stderr: strings.Split(stderr.String(), "\n"),
+		PID:    cmd.Process.Pid,
+	}
+	if err != nil {
+		respObj.ErrorMsg = err.Error()
+		respObj.Success = false
+	} else {
+		respObj.Success = true
+	}
+	return respObj
 }
