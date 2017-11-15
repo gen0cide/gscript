@@ -34,4 +34,20 @@ function DumpObjectIndented(obj, indent) {
   }
   return result.replace(/,\n$/, "");
 }
+
+function BeforeDeploy() {
+  return false;
+}
+
+function Deploy() {
+  return false;
+}
+
+function AfterDeploy() {
+  return true;
+}
+
+function OnError() {
+  return false;
+}
 `

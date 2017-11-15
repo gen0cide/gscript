@@ -40,7 +40,7 @@ func main() {
 			Aliases: []string{"t"},
 			Usage:   "Check a GSE script for syntax errors.",
 			Action: func(c *cli.Context) error {
-				gse := gscript.New()
+				gse := gscript.New("main")
 				gse.EnableLogging()
 				filename := c.Args().Get(0)
 				if len(filename) == 0 {
@@ -60,6 +60,7 @@ func main() {
 					gse.LogCritf("File Not Valid Javascript!\n -- JSHint Output:\n%s", jshOutput)
 				}
 				data, err := ioutil.ReadFile(filename)
+				gse.SetName(filename)
 				gse.CreateVM()
 				err = gse.ValidateAST(data)
 				if err != nil {
@@ -75,7 +76,7 @@ func main() {
 			Aliases: []string{"s"},
 			Usage:   "Run an interactive GSE console session.",
 			Action: func(c *cli.Context) error {
-				gse := gscript.New()
+				gse := gscript.New("shell")
 				gse.EnableLogging()
 				gse.CreateVM()
 				gse.InteractiveSession()
@@ -85,8 +86,10 @@ func main() {
 		{
 			Name:    "compile",
 			Aliases: []string{"c"},
-			Usage:   "Compile a Genesis script into a stand alone binary.",
+			Usage:   "Compile a Genesis script into a stand alone Golang package.",
 			Action: func(c *cli.Context) error {
+				compiler := gscript.NewCompiler("cmd/gscript/real.gs", "hades", "", []string{"/Users/flint/Downloads/tater.jpg"})
+				compiler.Do()
 				return nil
 			},
 		},
@@ -103,7 +106,7 @@ func main() {
 			Aliases: []string{"r"},
 			Usage:   "Run a Genesis script (Careful, don't infect yourself!).",
 			Action: func(c *cli.Context) error {
-				gse := gscript.New()
+				gse := gscript.New("main")
 				gse.EnableLogging()
 				filename := c.Args().Get(0)
 				if len(filename) == 0 {
@@ -113,13 +116,19 @@ func main() {
 					gse.LogCritf("File does not exist: %s", filename)
 				}
 				data, err := ioutil.ReadFile(filename)
+				gse.SetName(filename)
 				gse.CreateVM()
-				err = gse.RunScript(data)
+				err = gse.LoadScript(data)
 				if err != nil {
 					gse.LogErrorf("Script Error: %s", err.Error())
 				} else {
-					gse.LogInfof("Script Finished Successfully")
+					gse.LogInfof("Script loaded successfully")
 				}
+				err = gse.ExecutePlan()
+				if err != nil {
+					gse.LogCritf("Hooks Failure: %s", err.Error())
+				}
+				gse.LogInfof("Hooks executed successfully")
 				return nil
 			},
 		},

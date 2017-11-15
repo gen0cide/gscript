@@ -3,13 +3,14 @@ package gscript
 import (
 	"bytes"
 	"errors"
+	"io"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"os"
 	"os/exec"
 	"runtime"
 	"strings"
-	"math/rand"
 	"time"
 )
 
@@ -48,20 +49,20 @@ func LocalFileCreate(path string, bytes []byte) error {
 // LocalFileAppendBytes adds bytes to the end of filename's path.
 func LocalFileAppendBytes(filename string, bytes []byte) error {
 	if LocalFileExists(filename) {
-  	fileInfo, err := os.Stat(filename)
-	  if err != nil {
-		  return err
-	  }
-	  file, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY, fileInfo.Mode())
-	  if err != nil {
-		  return err
-	  }
-	  if _, err = file.Write(bytes); err != nil {
-		  return err
-	  }
-	  file.Close()
+		fileInfo, err := os.Stat(filename)
+		if err != nil {
+			return err
+		}
+		file, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY, fileInfo.Mode())
+		if err != nil {
+			return err
+		}
+		if _, err = file.Write(bytes); err != nil {
+			return err
+		}
+		file.Close()
 		// Appened the bytes w/o error
-	  return nil
+		return nil
 	} else {
 		err := LocalFileCreate(filename, bytes)
 		if err != nil {
@@ -92,25 +93,24 @@ func LocalFileAppendString(input, filename string) error {
 // Replace will replace all instances of match with replace in file.
 func LocalFileReplace(file, match, replacement string) error {
 	if LocalFileExists(file) {
-	  fileInfo, err := os.Stat(file)
-	  if err != nil {
-	  	return err
-	  }
-	  contents, err := ioutil.ReadFile(file)
-	  if err != nil {
-	  	return err
-	  }
-	  lines := strings.Split(string(contents), "\n")
-	  for index, line := range lines {
-	  	if strings.Contains(line, match) {
-	  		lines[index] = strings.Replace(line, match, replacement, 10)
-	  	}
-	  }
+		fileInfo, err := os.Stat(file)
+		if err != nil {
+			return err
+		}
+		contents, err := ioutil.ReadFile(file)
+		if err != nil {
+			return err
+		}
+		lines := strings.Split(string(contents), "\n")
+		for index, line := range lines {
+			if strings.Contains(line, match) {
+				lines[index] = strings.Replace(line, match, replacement, 10)
+			}
+		}
 
-
-	  ioutil.WriteFile(file, []byte(strings.Join(lines, "\n")), fileInfo.Mode())
-	  return nil
-  } else {
+		ioutil.WriteFile(file, []byte(strings.Join(lines, "\n")), fileInfo.Mode())
+		return nil
+	} else {
 		return errors.New("The file to read does not exist")
 	}
 }
@@ -118,26 +118,26 @@ func LocalFileReplace(file, match, replacement string) error {
 // ReplaceMulti will replace all instances of possible matches with replacement in file.
 func LocalFileReplaceMulti(file string, matches []string, replacement string) error {
 	if LocalFileExists(file) {
-	  fileInfo, err := os.Stat(file)
-	  if err != nil {
-	  	return err
-	  }
-	  contents, err := ioutil.ReadFile(file)
-	  if err != nil {
-	  	return err
-	  }
-	  lines := strings.Split(string(contents), "\n")
-	  for index, line := range lines {
-	  	for _, match := range matches {
-	  		if strings.Contains(line, match) {
-	  			lines[index] = replacement
-	  		}
-	  	}
-	  }
-	  ioutil.WriteFile(file, []byte(strings.Join(lines, "\n")), fileInfo.Mode())
-	  return nil
-  } else {
-    return errors.New("The file to read does not exist")
+		fileInfo, err := os.Stat(file)
+		if err != nil {
+			return err
+		}
+		contents, err := ioutil.ReadFile(file)
+		if err != nil {
+			return err
+		}
+		lines := strings.Split(string(contents), "\n")
+		for index, line := range lines {
+			for _, match := range matches {
+				if strings.Contains(line, match) {
+					lines[index] = replacement
+				}
+			}
+		}
+		ioutil.WriteFile(file, []byte(strings.Join(lines, "\n")), fileInfo.Mode())
+		return nil
+	} else {
+		return errors.New("The file to read does not exist")
 	}
 }
 
@@ -200,4 +200,38 @@ func RandString(strlen int) string {
 // RandomInt returns an int inbetween min and max.
 func RandomInt(min, max int) int {
 	return rand.Intn(max-min) + min
+}
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
+
+var letterRunes = []rune("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+func RandStringRunes(n int) string {
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letterRunes[rand.Intn(len(letterRunes))]
+	}
+	return string(b)
+}
+
+func LocalCopyFile(src, dst string) error {
+	from, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer from.Close()
+
+	to, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE, 0666)
+	if err != nil {
+		return err
+	}
+	defer to.Close()
+
+	_, err = io.Copy(to, from)
+	if err != nil {
+		return err
+	}
+	return nil
 }
