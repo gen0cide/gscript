@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"os/exec"
 	"runtime"
@@ -31,7 +32,7 @@ func LocalFileExists(path string) bool {
 	return false
 }
 
-func LocalCreateFile(bytes []byte, path string) error {
+func LocalCreateFile(path string, bytes []byte) error {
 	if LocalFileExists(path) {
 		return errors.New("The file to create already exists so we won't overwite it")
 	}
@@ -72,4 +73,14 @@ func ExecuteCommand(c string, args ...string) VMExecResponse {
 		respObj.Success = true
 	}
 	return respObj
+}
+
+func HTTPGetFile(url string) ([]byte, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	pageData, err := ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
+	return pageData, nil
 }

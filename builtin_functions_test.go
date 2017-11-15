@@ -35,6 +35,7 @@ func TestVMCopyFile(t *testing.T) {
     var file_2 = "%s";
     var return_value = CopyFile(file_1, file_2);
   `, file_2)
+
 	e := New()
 	e.EnableLogging()
 	e.CreateVM()
@@ -42,12 +43,28 @@ func TestVMCopyFile(t *testing.T) {
 	e.VM.Run(testScript)
 	retVal, err := e.VM.Get("return_value")
 	assert.Nil(t, err)
-
 	retValAsString, err := retVal.ToString()
 	assert.Nil(t, err)
+	assert.Equal(t, "true", retValAsString)
+}
 
-  finalDestination := fmt.Sprintf("File created at: %s", file_2)
-	assert.Equal(t, finalDestination, retValAsString)
+func TestVMRetrieveFileFromURL(t *testing.T) {
+  url := "http://icanhazip.com"
+  testScript2 := fmt.Sprintf(`
+	  var url = "%s";
+	  var response2 = RetrieveFileFromURL(url);
+	  var return_value2 = response2;
+  `, url)
+  e := New()
+  e.EnableLogging()
+  e.CreateVM()
+
+  e.VM.Run(testScript2)
+  retVal, err := e.VM.Get("return_value2")
+  assert.Nil(t, err)
+  retValAsString, err := retVal.ToString()
+  assert.Nil(t, err)
+  assert.Equal(t, "true", retValAsString)
 }
 
 func TestVMTimestamp(t *testing.T) {
