@@ -127,11 +127,47 @@ func (e *Engine) ValueToByteSlice(v otto.Value) []byte {
 			return valueBytes
 		}
 		switch t := arr.(type) {
-		case []uint16:
+		case []uint:
 			for _, i := range t {
 				valueBytes = append(valueBytes, byte(i))
 			}
 		case []uint8:
+			for _, i := range t {
+				valueBytes = append(valueBytes, byte(i))
+			}
+		case []uint16:
+			for _, i := range t {
+				valueBytes = append(valueBytes, byte(i))
+			}
+		case []uint32:
+			for _, i := range t {
+				valueBytes = append(valueBytes, byte(i))
+			}
+		case []uint64:
+			for _, i := range t {
+				valueBytes = append(valueBytes, byte(i))
+			}
+		case []int:
+			for _, i := range t {
+				valueBytes = append(valueBytes, byte(i))
+			}
+		case []int16:
+			for _, i := range t {
+				valueBytes = append(valueBytes, byte(i))
+			}
+		case []int32:
+			for _, i := range t {
+				valueBytes = append(valueBytes, byte(i))
+			}
+		case []int64:
+			for _, i := range t {
+				valueBytes = append(valueBytes, byte(i))
+			}
+		case []float32:
+			for _, i := range t {
+				valueBytes = append(valueBytes, byte(i))
+			}
+		case []float64:
 			for _, i := range t {
 				valueBytes = append(valueBytes, byte(i))
 			}
@@ -143,7 +179,7 @@ func (e *Engine) ValueToByteSlice(v otto.Value) []byte {
 			}
 		default:
 			_ = t
-			e.Logger.Errorf("Failed to cast array to byte slice: function=%s array=%x", CalledBy(), arr)
+			e.Logger.Errorf("Failed to cast array to byte slice: function=%s array=%v", CalledBy(), arr)
 		}
 	} else {
 		spew.Dump(v)
@@ -153,39 +189,3 @@ func (e *Engine) ValueToByteSlice(v otto.Value) []byte {
 
 	return valueBytes
 }
-
-var VMPreload = `
-function StringToByteArray(s) {
-  var data = [];
-  for (var i = 0; i < s.length; i++ ) {
-    data.push(s.charCodeAt(i));
-  }
-  return data;
-}
-
-function ByteArrayToString(a) {
-  return String.fromCharCode.apply(String, a);
-}
-
-function DumpObjectIndented(obj, indent) {
-  var result = "";
-  if (indent == null) indent = "";
-
-  for (var property in obj) {
-    var value = obj[property];
-    if (typeof value == 'string') {
-      value = "'" + value + "'";
-    }
-    else if (typeof value == 'object') {
-      if (value instanceof Array) {
-        value = "[ " + value + " ]";
-      } else {
-        var od = DumpObjectIndented(value, indent + "  ");        
-        value = "\n" + indent + "{\n" + od + "\n" + indent + "}";
-      }
-    }
-    result += indent + "'" + property + "' : " + value + ",\n";
-  }
-  return result.replace(/,\n$/, "");
-}
-`
