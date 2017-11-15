@@ -92,7 +92,7 @@ func (e *Engine) CreateVM() {
 	e.VM.Set("VMLogCrit", e.VMLogCrit)
 	_, err := e.VM.Run(VMPreload)
 	if err != nil {
-		panic(err)
+		e.LogCritf("Syntax error in preload:\n%s", err.Error())
 	}
 }
 
@@ -179,12 +179,12 @@ func (e *Engine) ValueToByteSlice(v otto.Value) []byte {
 			}
 		default:
 			_ = t
-			e.Logger.Errorf("Failed to cast array to byte slice: function=%s array=%v", CalledBy(), arr)
+			e.LogErrorf("Failed to cast array to byte slice: function=%s array=%v", CalledBy(), arr)
 		}
 	} else {
 		spew.Dump(v)
 		spew.Dump(v.Class())
-		e.Logger.Errorf("Unknown class to cast to byte slice: function=%s value=%s class=%s", CalledBy(), spew.Sdump(v), spew.Sdump(v.Class()))
+		e.LogErrorf("Unknown class to cast to byte slice: function=%s value=%s class=%s", CalledBy(), spew.Sdump(v), spew.Sdump(v.Class()))
 	}
 
 	return valueBytes

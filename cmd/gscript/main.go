@@ -56,6 +56,7 @@ func main() {
 			Usage:   "Run an interactive GSE console session.",
 			Action: func(c *cli.Context) error {
 				a := gscript.New()
+				a.EnableLogging()
 				a.CreateVM()
 				a.InteractiveSession()
 				return nil
