@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"time"
-	"fmt"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/robertkrimen/otto"
 )
@@ -73,23 +72,22 @@ func (e *Engine) VMCopyFile(call otto.FunctionCall) otto.Value {
 		e.Logger.Errorf("Function Error: function=VMCopyFile() error='There was an error reading the file to copy'")
 		return otto.FalseValue()
 	}
-	e.Logger.Errorf("Function Error: function=VMCopyFile() error=Debug, read local file at: %s", spew.Sdump(readPath))
+	//e.Logger.Errorf("Function Error: function=VMCopyFile() error=Debug; read local file at: %s", spew.Sdump(readPath))
 	err = LocalCreateFile(bytes, writePath)
 	if err != nil {
 		e.Logger.Errorf("Function Error: function=VMCopyFile() error='There was an error writing the file to that path'")
 		return otto.FalseValue()
 	}
-	e.Logger.Errorf("Function Error: function=VMCopyFile() error=Debug, wrote local file at: %s", spew.Sdump(writePath))
-
-	returnString := fmt.Sprintf("File created at: %s", string(writePath))
-	var ret = otto.Value{}
-	var er error
-	ret, er = otto.ToValue(returnString)
-	if er != nil {
-		e.Logger.Errorf("Function Error: function=VMCopyFile() error='Error returning value to VM'")
-		return otto.FalseValue()
-	}
-	return ret
+	//e.Logger.Errorf("Function Error: function=VMCopyFile() error=Debug; wrote local file at: %s", spew.Sdump(writePath))
+	//returnString := fmt.Sprintf("File created at: %s", string(writePath))
+	//var ret = otto.Value{}
+	//var er error
+	//ret, er = otto.ToValue(returnString)
+	//if er != nil {
+	//	e.Logger.Errorf("Function Error: function=VMCopyFile() error='Error returning value to VM'")
+	//	return otto.FalseValue()
+	//}
+	return otto.TrueValue()
 }
 
 func (e *Engine) VMExecuteFile(call otto.FunctionCall) otto.Value {
@@ -118,8 +116,22 @@ func (e *Engine) VMImplode(call otto.FunctionCall) otto.Value {
 }
 
 func (e *Engine) VMRetrieveFileFromURL(call otto.FunctionCall) otto.Value {
-	e.LogCritf("Function Not Implemented: %s", CalledBy())
-	return otto.FalseValue()
+	readURL, err := call.ArgumentList[0].ToString()
+	if err != nil {
+		e.Logger.Errorf("Function Error: function=VMRetrieveFileFromURL() error=ARG_NOT_STRINGABLE arg=%s", spew.Sdump(call.ArgumentList[0]))
+		return otto.FalseValue()
+	}
+	bytes, err := HTTPGetFile(readURL)
+	if err != nil {
+		e.Logger.Errorf("Function Error: function=VMRetrieveFileFromURL() error='There was an error fetching the file: %v'", spew.Sdump(err))
+		return otto.FalseValue()
+	}
+	vmResponse, err := e.VM.ToValue(bytes)
+	if err != nil {
+		e.Logger.Errorf("Function Error: function=%s error=URL_DOWNLOAD_OBJECT_CAST_FAILED arg=%s", CalledBy(), spew.Sdump(err))
+		return otto.FalseValue()
+	}
+	return vmResponse
 }
 
 func (e *Engine) VMDNSQuery(call otto.FunctionCall) otto.Value {
