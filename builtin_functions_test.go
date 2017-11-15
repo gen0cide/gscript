@@ -19,7 +19,7 @@ func TestVMMD5(t *testing.T) {
   `
 	// "helloworld" = fc5e038d38a57032085441e7fe7010b0
 
-	e := New()
+	e := New("MD5")
 	e.EnableLogging()
 	e.CreateVM()
 
@@ -41,7 +41,7 @@ func TestVMCopyFile(t *testing.T) {
     var return_value = CopyFile(file_1, file_2);
   `, file_2)
 
-	e := New()
+	e := New("CopyFile")
 	e.EnableLogging()
 	e.CreateVM()
 
@@ -63,7 +63,7 @@ func TestVMAppendFile(t *testing.T) {
 		var return_value2 = AppendFile(file_2, bytes);
   `, g_file_1, g_file_2, bytes)
 
-	e := New()
+	e := New("AppendFile")
 	e.EnableLogging()
 	e.CreateVM()
 
@@ -92,7 +92,7 @@ func TestVMReplaceInFile(t *testing.T) {
     var return_value1 = ReplaceInFile(file_1, string01, string02);
   `, g_file_1, string01, string02)
 
-	e := New()
+	e := New("ReplaceInFile")
 	e.EnableLogging()
 	e.CreateVM()
 
@@ -114,7 +114,7 @@ func TestVMRetrieveFileFromURL(t *testing.T) {
 	  var return_value2 = response2;
 		var response3 = WriteFile(file_3, response2);
   `, url, file_3)
-  e := New()
+  e := New("RetrieveFileFromURL")
   e.EnableLogging()
   e.CreateVM()
 
@@ -137,7 +137,7 @@ func TestVMDeleteFile(t *testing.T) {
     var return_value3 = DeleteFile(file_3);
   `, g_file_1, g_file_2, g_file_3)
 
-	e := New()
+	e := New("DeleteFile")
 	e.EnableLogging()
 	e.CreateVM()
 
@@ -177,7 +177,7 @@ func TestVMDNSQuery(t *testing.T) {
     var return_value6 = DNSQuery(ip, type6);
   `)
 
-	e := New()
+	e := New("DNSQuery")
 	e.EnableLogging()
 	e.CreateVM()
 
@@ -220,7 +220,7 @@ func TestVMTimestamp(t *testing.T) {
 	testScript := `
     var test_time = Timestamp();
   `
-	e := New()
+	e := New("Timestamp")
 	e.EnableLogging()
 	e.CreateVM()
 
@@ -239,7 +239,7 @@ func TestExec(t *testing.T) {
 	testScript := `
       var test_exec = Exec("ls", ["-lah"]);
     `
-	e := New()
+	e := New("Exec")
 	e.EnableLogging()
 	e.CreateVM()
 
@@ -259,7 +259,7 @@ func TestCPUStats(t *testing.T) {
 	testScript := `
       var results = CPUStats();
     `
-	e := New()
+	e := New("CPUStats")
 	e.EnableLogging()
 	e.CreateVM()
 
