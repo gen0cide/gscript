@@ -5,18 +5,23 @@ import (
 	"encoding/binary"
 	"fmt"
 
+	"github.com/robertkrimen/otto/parser"
+
 	"github.com/davecgh/go-spew/spew"
 	"github.com/happierall/l"
 	"github.com/robertkrimen/otto"
 )
 
 type Engine struct {
-	VM     *otto.Otto
-	Logger *l.Logger
+	VM            *otto.Otto
+	Logger        *l.Logger
+	RunningScript bool
 }
 
 func New() *Engine {
-	return &Engine{}
+	return &Engine{
+		RunningScript: false,
+	}
 }
 
 func (e *Engine) EnableLogging() {
@@ -32,6 +37,7 @@ func (e *Engine) CreateVM() {
 	e.VM.Set("AfterDeploy", e.VMAfterDeploy)
 	e.VM.Set("OnError", e.VMOnError)
 	e.VM.Set("Halt", e.VMHalt)
+	e.VM.Set("DebugConsole", e.DebugConsole)
 	e.VM.Set("DeleteFile", e.VMDeleteFile)
 	e.VM.Set("CopyFile", e.VMCopyFile)
 	e.VM.Set("WriteFile", e.VMWriteFile)
@@ -188,4 +194,16 @@ func (e *Engine) ValueToByteSlice(v otto.Value) []byte {
 	}
 
 	return valueBytes
+}
+
+func (e *Engine) RunScript(source []byte) error {
+	e.RunningScript = true
+	_, err := e.VM.Run(string(source))
+	e.RunningScript = false
+	return err
+}
+
+func (e *Engine) ValidateAST(source []byte) error {
+	_, err := parser.ParseFile(nil, "", source, 0)
+	return err
 }

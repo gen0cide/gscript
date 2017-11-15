@@ -5,10 +5,16 @@ import (
 	"strings"
 
 	prompt "github.com/c-bata/go-prompt"
+	"github.com/robertkrimen/otto"
 )
 
 func (e *Engine) SessionCompleter(d prompt.Document) []prompt.Suggest {
 	return []prompt.Suggest{}
+}
+
+func (e *Engine) DebugConsole(call otto.FunctionCall) otto.Value {
+	e.InteractiveSession()
+	return otto.TrueValue()
 }
 
 func (e *Engine) SessionExecutor(in string) {

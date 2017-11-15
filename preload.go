@@ -1,6 +1,6 @@
 package gscript
 
-var VMPreload = `
+const VMPreload = `
 function StringToByteArray(s) {
   var data = [];
   for (var i = 0; i < s.length; i++ ) {
