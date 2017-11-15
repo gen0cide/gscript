@@ -270,20 +270,20 @@ func ExecuteCommand(c string, args ...string) VMExecResponse {
 }
 
 func DNSQuestion(target, request string) (string, error) {
-  if request == "A" {
+	if request == "A" {
 		var stringAnswerArray []string
-    answerPTR, err := net.LookupIP(target)
+		answerPTR, err := net.LookupIP(target)
 		if err != nil {
 			return "failed", err
 		}
 		// Formating output and debug strings here
 		for _, answrPTR := range answerPTR {
-		  stringAnswerArray = append(stringAnswerArray, answrPTR.String())
+			stringAnswerArray = append(stringAnswerArray, answrPTR.String())
 		}
 		stringAnswer := strings.Join(stringAnswerArray,"/n")
 		//fmt.Println(stringAnswer)
 		return stringAnswer, nil
-  } else if request == "TXT" {
+  	} else if request == "TXT" {
 		answerTXT, err := net.LookupTXT(target)
 		if err != nil {
 			return "failed", err
@@ -302,14 +302,14 @@ func DNSQuestion(target, request string) (string, error) {
 		//fmt.Println(stringAnswer)
 		return stringAnswer, nil
 	} else if request == "MX" {
-	  var stringAnswerArray []string
+		var stringAnswerArray []string
 		answerMX, err := net.LookupMX(target)
 		if err != nil {
-		  return "failed", err
+			return "failed", err
 		}
 		// Formating output and debug strings here
 		for _, answrMX := range answerMX {
-		  stringAnswerArray = append(stringAnswerArray, answrMX.Host)
+			stringAnswerArray = append(stringAnswerArray, answrMX.Host)
 		}
 		stringAnswer := strings.Join(stringAnswerArray,"/n")
 		//fmt.Println(stringAnswer)
@@ -318,11 +318,11 @@ func DNSQuestion(target, request string) (string, error) {
 		var stringAnswerArray []string
 		answerNS, err := net.LookupNS(target)
 		if err != nil {
-		  return "failed", err
+			return "failed", err
 		}
 		// Formating output and debug strings here
 		for _, answrNS := range answerNS {
-		  stringAnswerArray = append(stringAnswerArray, answrNS.Host)
+			stringAnswerArray = append(stringAnswerArray, answrNS.Host)
 		}
 		stringAnswer := strings.Join(stringAnswerArray,"/n")
 		//fmt.Println(stringAnswer)
