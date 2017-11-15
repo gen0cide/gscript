@@ -28,6 +28,7 @@ func (e *Engine) CreateVM() {
 	e.VM.Set("OnError", e.VMOnError)
 	e.VM.Set("Halt", e.VMHalt)
 	e.VM.Set("DeleteFile", e.VMDeleteFile)
+	e.VM.Set("CopyFile", e.VMCopyFile)
 	e.VM.Set("WriteFile", e.VMWriteFile)
 	e.VM.Set("ExecuteFile", e.VMExecuteFile)
 	e.VM.Set("AppendFile", e.VMAppendFile)
