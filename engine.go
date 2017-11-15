@@ -5,37 +5,36 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"github.com/robertkrimen/otto/parser"
-
 	"github.com/davecgh/go-spew/spew"
 	"github.com/happierall/l"
 	"github.com/robertkrimen/otto"
 )
 
 type Engine struct {
-	VM            *otto.Otto
-	Logger        *l.Logger
-	RunningScript bool
+	VM     *otto.Otto
+	Logger *l.Logger
+	Name   string
 }
 
-func New() *Engine {
+func New(name string) *Engine {
 	return &Engine{
-		RunningScript: false,
+		Name: name,
 	}
+}
+
+func (e *Engine) SetName(name string) {
+	e.Name = name
+	e.Logger.Prefix = fmt.Sprintf("%s%s%s%s%s%s ", l.Colorize("[", l.Bold+l.White), l.Colorize("GENESIS", l.Bold+l.LightRed), l.Colorize(":", "\033[0m"+l.White), l.Colorize(e.Name, l.LightYellow), l.Colorize("]", l.Bold+l.White), "\033[0m")
 }
 
 func (e *Engine) EnableLogging() {
 	e.Logger = l.New()
-	e.Logger.Prefix = "[GENESIS] "
+	e.Logger.Prefix = fmt.Sprintf("%s%s%s%s%s%s ", l.Colorize("[", l.Bold+l.White), l.Colorize("GENESIS", l.Bold+l.LightRed), l.Colorize(":", "\033[0m"+l.White), l.Colorize(e.Name, l.LightYellow), l.Colorize("]", l.Bold+l.White), "\033[0m")
 	e.Logger.DisabledInfo = false
 }
 
 func (e *Engine) CreateVM() {
 	e.VM = otto.New()
-	e.VM.Set("BeforeDeploy", e.VMBeforeDeploy)
-	e.VM.Set("Deploy", e.VMDeploy)
-	e.VM.Set("AfterDeploy", e.VMAfterDeploy)
-	e.VM.Set("OnError", e.VMOnError)
 	e.VM.Set("Halt", e.VMHalt)
 	e.VM.Set("DebugConsole", e.DebugConsole)
 	e.VM.Set("DeleteFile", e.VMDeleteFile)
@@ -194,16 +193,4 @@ func (e *Engine) ValueToByteSlice(v otto.Value) []byte {
 	}
 
 	return valueBytes
-}
-
-func (e *Engine) RunScript(source []byte) error {
-	e.RunningScript = true
-	_, err := e.VM.Run(string(source))
-	e.RunningScript = false
-	return err
-}
-
-func (e *Engine) ValidateAST(source []byte) error {
-	_, err := parser.ParseFile(nil, "", source, 0)
-	return err
 }
