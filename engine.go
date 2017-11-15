@@ -120,7 +120,7 @@ func (e *Engine) ValueToByteSlice(v otto.Value) []byte {
 			fmt.Println("binary.Write failed:", err)
 		}
 		valueBytes = buf.Bytes()
-	} else if v.Class() == "Array" {
+	} else if v.Class() == "Array" || v.Class() == "GoArray" {
 		arr, err := v.Export()
 		if err != nil {
 			e.LogErrorf("Cannot convert array to byte slice: %s", spew.Sdump(v))
