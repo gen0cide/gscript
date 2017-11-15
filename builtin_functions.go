@@ -134,7 +134,7 @@ func (e *Engine) VMReplaceInFile(call otto.FunctionCall) otto.Value {
 		e.LogErrorf("Function Error: function=%s error=ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(sReplace))
 		return otto.FalseValue()
 	}
-  err = LocalFileReplace(filePathAsString.(string), sFindAsString.(string), sReplaceAsString.(string))
+  	err = LocalFileReplace(filePathAsString.(string), sFindAsString.(string), sReplaceAsString.(string))
 	if err != nil {
 		e.LogErrorf("Function Error: function=%s error=Failed to run LocalFileReplace info=%s", CalledBy(), spew.Sdump(err))
 		return otto.FalseValue()
