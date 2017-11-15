@@ -1,21 +1,14 @@
 package main
 
 import (
+	"io/ioutil"
 	"os"
+	"os/exec"
 	"sort"
 
 	"github.com/gen0cide/gscript"
 	"github.com/urfave/cli"
 )
-
-// func main() {
-
-// 	a := gscript.New()
-// 	a.EnableLogging()
-// 	a.CreateVM()
-// 	a.VM.Run(gscript.DefaultScript)
-
-// }
 
 func main() {
 	app := cli.NewApp()
@@ -47,6 +40,33 @@ func main() {
 			Aliases: []string{"t"},
 			Usage:   "Check a GSE script for syntax errors.",
 			Action: func(c *cli.Context) error {
+				gse := gscript.New()
+				gse.EnableLogging()
+				filename := c.Args().Get(0)
+				if len(filename) == 0 {
+					gse.LogCritf("You did not supply a filename!")
+				}
+				if _, err := os.Stat(filename); os.IsNotExist(err) {
+					gse.LogCritf("File does not exist: %s", filename)
+				}
+				_, err := exec.LookPath("jshint")
+				if err != nil {
+					gse.LogCritf("You do not have jshint in your path. Run: npm install -g jshint")
+				}
+
+				jshCmd := exec.Command("jshint", filename)
+				jshOutput, err := jshCmd.CombinedOutput()
+				if err != nil {
+					gse.LogCritf("File Not Valid Javascript!\n -- JSHint Output:\n%s", jshOutput)
+				}
+				data, err := ioutil.ReadFile(filename)
+				gse.CreateVM()
+				err = gse.ValidateAST(data)
+				if err != nil {
+					gse.LogErrorf("Invalid Script Error: %s", err.Error())
+				} else {
+					gse.LogInfof("Script Valid: %s", filename)
+				}
 				return nil
 			},
 		},
@@ -55,10 +75,10 @@ func main() {
 			Aliases: []string{"s"},
 			Usage:   "Run an interactive GSE console session.",
 			Action: func(c *cli.Context) error {
-				a := gscript.New()
-				a.EnableLogging()
-				a.CreateVM()
-				a.InteractiveSession()
+				gse := gscript.New()
+				gse.EnableLogging()
+				gse.CreateVM()
+				gse.InteractiveSession()
 				return nil
 			},
 		},
@@ -83,6 +103,23 @@ func main() {
 			Aliases: []string{"r"},
 			Usage:   "Run a Genesis script (Careful, don't infect yourself!).",
 			Action: func(c *cli.Context) error {
+				gse := gscript.New()
+				gse.EnableLogging()
+				filename := c.Args().Get(0)
+				if len(filename) == 0 {
+					gse.LogCritf("You did not supply a filename!")
+				}
+				if _, err := os.Stat(filename); os.IsNotExist(err) {
+					gse.LogCritf("File does not exist: %s", filename)
+				}
+				data, err := ioutil.ReadFile(filename)
+				gse.CreateVM()
+				err = gse.RunScript(data)
+				if err != nil {
+					gse.LogErrorf("Script Error: %s", err.Error())
+				} else {
+					gse.LogInfof("Script Finished Successfully")
+				}
 				return nil
 			},
 		},
