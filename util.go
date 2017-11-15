@@ -6,12 +6,14 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"fmt"
 	"os/exec"
 	"runtime"
 	"strings"
 	"math/rand"
 	"time"
 	"path/filepath"
+	"github.com/matishsiao/goInfo"
 )
 
 func CalledBy() string {
@@ -193,6 +195,25 @@ func LocalFileRead(path string) ([]byte, error) {
 		return dat, nil
 	}
 	return nil, errors.New("The file to read does not exist")
+}
+
+func LocalSystemInfo() ([]string, error) {
+  var InfoDump []string
+	gi := goInfo.GetInfo()
+	// later when we define these objects we can just set the values to the object vs the string slice
+  InfoDump = append(InfoDump, fmt.Sprintf("GoOS: %s",gi.GoOS))
+	InfoDump = append(InfoDump, fmt.Sprintf("Kernel: %s",gi.Kernel))
+	InfoDump = append(InfoDump, fmt.Sprintf("Core: %s",gi.Core))
+	InfoDump = append(InfoDump, fmt.Sprintf("Platform: %s",gi.Platform))
+	InfoDump = append(InfoDump, fmt.Sprintf("OS: %s",gi.OS))
+	InfoDump = append(InfoDump, fmt.Sprintf("Hostname: %s",gi.Hostname))
+	InfoDump = append(InfoDump, fmt.Sprintf("CPUs: %v",gi.CPUs))
+	//gi.VarDump()
+	if InfoDump != nil {
+		return InfoDump, nil
+	} else {
+		return nil, errors.New("Failed to retrieve local system information")
+	}
 }
 
 // ExecuteCommand function

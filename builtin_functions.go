@@ -371,8 +371,13 @@ func (e *Engine) VMTimestamp(call otto.FunctionCall) otto.Value {
 }
 
 func (e *Engine) VMCPUStats(call otto.FunctionCall) otto.Value {
-	e.LogCritf("Function Not Implemented: %s", CalledBy())
-	return otto.FalseValue()
+	CPUInfo, err := LocalSystemInfo()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=%s", CalledBy(), err.Error())
+	} else {
+		e.LogInfof("Function: function=%s msg='CPU Stats: %s'", CalledBy(), spew.Sdump(CPUInfo))
+	}
+	return otto.TrueValue()
 }
 
 func (e *Engine) VMMemStats(call otto.FunctionCall) otto.Value {

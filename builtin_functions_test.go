@@ -198,3 +198,20 @@ func TestExec(t *testing.T) {
 
 	assert.Equal(t, testCmd.Stdout, realRetVal.Stdout)
 }
+
+func TestCPUStats(t *testing.T) {
+	//resultz := CPUStats()
+	testScript := `
+      var results = CPUStats();
+    `
+	e := New()
+	e.EnableLogging()
+	e.CreateVM()
+
+	e.VM.Run(testScript)
+	retVal, err := e.VM.Get("results")
+	assert.Nil(t, err)
+	retValAsString, err := retVal.ToString()
+	assert.Nil(t, err)
+	assert.Equal(t, "true", retValAsString)
+}
