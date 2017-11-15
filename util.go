@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"runtime"
 	"strings"
+  "net/http"
 )
 
 func CalledBy() string {
@@ -51,7 +52,8 @@ func LocalReadFile(path string) ([]byte, error) {
   return dat, nil
  }
  return nil, errors.New("The file to read does not exist")
-  
+}
+
 func ExecuteCommand(c string, args ...string) VMExecResponse {
 	cmd := exec.Command(c, args...)
 	var stdout bytes.Buffer
@@ -71,4 +73,14 @@ func ExecuteCommand(c string, args ...string) VMExecResponse {
 		respObj.Success = true
 	}
 	return respObj
+}
+
+func HTTPGetFile(url string) ([]byte, error) {
+  resp, err := http.Get(url)
+  if err != nil {
+	  return nil, err
+  }
+  pageData, err := ioutil.ReadAll(resp.Body)
+  resp.Body.Close()
+	return pageData, nil
 }
