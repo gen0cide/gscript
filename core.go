@@ -21,7 +21,7 @@ console.log(dem_bytes);
 var newString = ByteArrayToString(dem_bytes);
 console.log(newString);
 
-var fileTest = WriteFile("/tmp/foobar1234", StringToByteArray(helloWorld));
+var fileTest = WriteFile("/tmp/foobar1234", -38882.5488202);
 console.log(fileTest);
 
 `
