@@ -66,7 +66,7 @@ None
 
 `boolean` (true = success, false = error)
 
---
+---
 
 #### DeleteFile(path)
 
@@ -80,7 +80,7 @@ Delete the file located at `path`.
 
 `boolean` (true = success, false = error)
 
---
+---
 
 #### CopyFile(srcPath, dstPath)
 
@@ -95,7 +95,7 @@ Copy file from `srcPath` to `dstPath`.
 
 `boolean` (true = success, false = error)
 
---
+---
 
 #### WriteFile(path, bytes, perms)
 
@@ -111,7 +111,7 @@ Write `bytes` to `path` and set perms to `perms`.
 
 `boolean` (true = success, false = error)
 
---
+---
 
 #### ExecuteFile(path, args)
 
@@ -126,7 +126,7 @@ Execute a file located at `path` with `args` as arguments.
 
 `boolean` (true = success, false = error)
 
---
+---
 
 #### AppendFile(path, bytes)
 
@@ -141,7 +141,7 @@ Append `bytes` to the file located at `path`.
 
 `boolean` (true = success, false = error)
 
---
+---
 
 #### ReplaceInFile(path, target, replace)
 
@@ -157,7 +157,7 @@ Replace any instances of `target` with `replace` in the file located at `path`.
 
 `boolean` (true = success, false = error)
 
---
+---
 
 #### Signal(pid, signal)
 
@@ -172,7 +172,7 @@ Send a signal to another process.
 
 `boolean` (true = success, false = error)
 
---
+---
 
 #### RetrieveFileFromURL(url)
 
@@ -186,7 +186,7 @@ Retrieve a file via `GET` for a given `url`.
 
 `[]bytes` - Byte array of body response.
 
---
+---
 
 #### DNSQuery(question, type)
 
@@ -201,7 +201,7 @@ Perform a DNS lookup.
 
 `Object` - Reference `VMDNSQueryResponse` in `response_objects.go` for object details.
 
---
+---
 
 #### HTTPRequest(method, url, body, headers)
 
@@ -218,7 +218,7 @@ Perform an HTTP/S request.
 
 `Object` - Reference `VMHTTPRequestResponse` in `response_objects.go` for object details.
 
---
+---
 
 #### Exec(cmd, args)
 
@@ -233,7 +233,7 @@ Execute the given command and arguments.
 
 `Object` - Reference `VMExecResponse` in `response_objects.go` for object details.
 
---
+---
 
 #### MD5(bytes)
 
@@ -247,7 +247,7 @@ Create a MD5 hash of the given bytes.
 
 `string` - Hex encoded MD5 hash.
 
---
+---
 
 #### SHA1(bytes)
 
@@ -261,7 +261,7 @@ Create a SHA1 hash of the given bytes.
 
 `string` - Hex encoded SHA1 hash.
 
---
+---
 
 #### B64Encode(bytes)
 
@@ -275,7 +275,7 @@ Perform a Base64 encode on `bytes`.
 
 `string` - Base64 encoded string representation.
 
---
+---
 
 #### B64Decode(string)
 
@@ -289,7 +289,7 @@ Perform a Base64 decode on `string`.
 
 `[]bytes` - Byte array of the deserialized b64 string.
 
---
+---
 
 #### Timestamp()
 
@@ -303,7 +303,7 @@ None
 
 `integer` - Current time in Epoch.
 
---
+---
 
 #### CPUStats()
 
@@ -317,7 +317,7 @@ None
 
 `Object` - Reference `VMCPUStatsResponse` in `response_objects.go` for object details.
 
---
+---
 
 #### MemStats()
 
@@ -331,7 +331,7 @@ None
 
 `Object` - Reference `VMMemStatsResponse` in `response_objects.go` for object details.
 
---
+---
 
 #### SSHExec(host, port, creds, cmds)
 
@@ -348,7 +348,7 @@ Executes SSH commands on the given host.
 
 `Object` - Reference `VMSSHExecResponse` in `response_objects.go` for object details.
 
---
+---
 
 #### Sleep(seconds)
 
@@ -362,7 +362,7 @@ Sleep for `seconds` number of seconds.
 
 `boolean` (true = success, false = error)
 
---
+---
 
 #### GetDirsInPath()
 
@@ -376,7 +376,7 @@ None
 
 `[]string` - Array of directories in the current PATH as strings.
 
---
+---
 
 #### EnvVars()
 
@@ -390,7 +390,7 @@ None
 
 `Object` - Reference `VMEnvVarsResponse` in `response_objects.go` for object details.
 
---
+---
 
 #### GetEnv(varname)
 
@@ -404,7 +404,7 @@ Retrieve the value for Environment Variable `varname`.
 
 `string` - Value, empty if undefined.
 
---
+---
 
 #### FileCreateTime(path)
 
@@ -418,7 +418,7 @@ Lookup the creation time for file located at `path`.
 
 `int` - Last modified time in Epoch format.
 
---
+---
 
 #### FileModifyTime(path)
 
@@ -432,7 +432,7 @@ Lookup the last modified time for file located at `path`.
 
 `int` - Last modified time in Epoch format.
 
---
+---
 
 #### LoggedInUsers()
 
@@ -446,7 +446,7 @@ None
 
 `[]string` - Array of usernames as strings.
 
---
+---
 
 #### UsersRunningProcs()
 
@@ -460,7 +460,7 @@ None
 
 `[]string` - Array of usernames as strings.
 
---
+---
 
 #### ServeDataOverHTTP(data, port, timeout)
 
@@ -476,7 +476,7 @@ Starts an HTTPServer that will respond to `GET /` with the `data` provided on po
 
 `boolean` (true = success, false = error)
 
---
+---
 
 ## Notes
 
