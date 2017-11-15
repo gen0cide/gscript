@@ -88,7 +88,7 @@ func TestVMRetrieveFileFromURL(t *testing.T) {
   e.CreateVM()
 
   e.VM.Run(testScript2)
-	e.Logger.Errorf("Function Error: function=%s error=Debug; wrote local file at: %s", CalledBy(), spew.Sdump(file_3))
+	e.LogInfof("Function: function=%s msg='wrote local file at: %s'", CalledBy(), spew.Sdump(file_3))
   retVal, err := e.VM.Get("return_value2")
   assert.Nil(t, err)
   retValAsString, err := retVal.ToString()

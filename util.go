@@ -52,7 +52,7 @@ func LocalFileAppendBytes(filename string, bytes []byte) error {
 	  if err != nil {
 		  return err
 	  }
-	  file, err := os.OpenFile(filename, os.O_APPEND, fileInfo.Mode())
+	  file, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY, fileInfo.Mode())
 	  if err != nil {
 		  return err
 	  }

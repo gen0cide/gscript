@@ -64,7 +64,7 @@ func (e *Engine) VMCopyFile(call otto.FunctionCall) otto.Value {
 		return otto.FalseValue()
 	}
 	// Testing Debug call function //
-	e.LogErrorf("Function Error: function=%s error=Debug; wrote local file at: %s", CalledBy(), spew.Sdump(writePath))
+	e.LogInfof("Function: function=%s msg='wrote local file at: %s'", CalledBy(), spew.Sdump(writePath))
 	//returnString := fmt.Sprintf("File created at: %s", string(writePath))
 	//var ret = otto.Value{}
 	//var er error
@@ -89,12 +89,12 @@ func (e *Engine) VMAppendFile(call otto.FunctionCall) otto.Value {
 	fileBytes := e.ValueToByteSlice(fileData)
 	filePathAsString, err := filePath.Export()
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(filePath))
+		e.LogErrorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(filePath))
 		return otto.FalseValue()
 	}
 	err = LocalFileAppendBytes(filePathAsString.(string), fileBytes)
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=%s error=LocalFileAppendBytesFailed details=%s", CalledBy(), spew.Sdump(err))
+		e.LogErrorf("Function Error: function=%s error=LocalFileAppendBytesFailed details=%s", CalledBy(), spew.Sdump(err))
 		return otto.FalseValue()
 	}
 	return otto.TrueValue()
