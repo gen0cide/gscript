@@ -11,6 +11,7 @@ import (
 	"strings"
 	"math/rand"
 	"time"
+	"path/filepath"
 )
 
 func CalledBy() string {
@@ -32,6 +33,49 @@ func LocalFileExists(path string) bool {
 		return true
 	}
 	return false
+}
+
+func LocalDirCreate(path string) error {
+	err := os.MkdirAll(path, 0700)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func LocalDirRemoveAll(dir string) error {
+	d, err := os.Open(dir)
+	if err != nil {
+		return err
+	}
+	defer d.Close()
+	names, err := d.Readdirnames(-1)
+	if err != nil {
+		return err
+	}
+	for _, name := range names {
+		err = os.RemoveAll(filepath.Join(dir, name))
+		if err != nil {
+			return err
+		}
+	}
+	err = os.RemoveAll(dir)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func LocalFileDelete(path string) error {
+	if LocalFileExists(path) {
+	  err := os.Remove(path)
+	  if err != nil {
+	  	return err
+	  }
+	  return nil
+  } else {
+		return errors.New("The file dosn't exist to delete")
+	}
 }
 
 func LocalFileCreate(path string, bytes []byte) error {
@@ -106,8 +150,6 @@ func LocalFileReplace(file, match, replacement string) error {
 	  		lines[index] = strings.Replace(line, match, replacement, 10)
 	  	}
 	  }
-
-
 	  ioutil.WriteFile(file, []byte(strings.Join(lines, "\n")), fileInfo.Mode())
 	  return nil
   } else {

@@ -16,8 +16,19 @@ func (e *Engine) VMHalt(call otto.FunctionCall) otto.Value {
 }
 
 func (e *Engine) VMDeleteFile(call otto.FunctionCall) otto.Value {
-	e.LogCritf("Function Not Implemented: %s", CalledBy())
-	return otto.FalseValue()
+	// Arg0 is the string path of the file to delete
+	filePath := call.Argument(0)
+	filePathAsString, err := filePath.Export()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(filePath))
+		return otto.FalseValue()
+	}
+	err = LocalFileDelete(filePathAsString.(string))
+	if err != nil {
+		e.LogErrorf("Error deleting the file: function=%s path=%s error=%s", CalledBy(), filePathAsString.(string), err.Error())
+		return otto.FalseValue()
+	}
+	return otto.TrueValue()
 }
 
 func (e *Engine) VMWriteFile(call otto.FunctionCall) otto.Value {
