@@ -15,8 +15,14 @@ var helloWorld = "helloworld";
 var foo = MD5(helloWorld);
 VMLogInfo(foo);
 console.log("haha");
-var output = Exec("ls", [ "-a" ]);
-VMLogInfo(JSON.stringify(output));
+console.log("wat");
+var dem_bytes = StringToByteArray(helloWorld);
+console.log(dem_bytes);
+var newString = ByteArrayToString(dem_bytes);
+console.log(newString);
+
+var fileTest = WriteFile("/tmp/foobar1234", StringToByteArray(helloWorld));
+console.log(fileTest);
 
 `
 )

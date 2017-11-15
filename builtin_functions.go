@@ -5,8 +5,9 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 	"encoding/hex"
-	"time"
 	"fmt"
+	"time"
+
 	"github.com/davecgh/go-spew/spew"
 	"github.com/robertkrimen/otto"
 )
@@ -24,35 +25,29 @@ func (e *Engine) VMDeleteFile(call otto.FunctionCall) otto.Value {
 func (e *Engine) VMWriteFile(call otto.FunctionCall) otto.Value {
 	// Arg1 is a byte array of bytes of the file
 	// Arg2 is the string path of the new file to write
-  arg := call.ArgumentList[0]
+
+	filePath := call.Argument(0)
+	fileBytes := call.Argument(1)
 	rawBytes := []byte{}
-	expVal, err := arg.Export()
+	expVal, err := fileBytes.Export()
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=VMWriteFile() error=ARY_ARG_NOT_BYTESLICE arg=%s", spew.Sdump(arg))
+		e.Logger.Errorf("Function Error: function=%s error=ARY_ARG_NOT_BYTESLICE arg=%s", CalledBy(), spew.Sdump(fileBytes))
 		return otto.FalseValue()
 	}
-	for _, i := range expVal.([]interface{}) {
-		rawBytes = append(rawBytes, i.(byte))
+	for _, i := range expVal.([]uint16) {
+		rawBytes = append(rawBytes, byte(i))
 	}
-	path, err := call.ArgumentList[1].ToString()
+	filePathAsString, err := filePath.Export()
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=VMWriteFile() error=ARG_NOT_STRINGABLE arg=%s", spew.Sdump(call.ArgumentList[1]))
+		e.Logger.Errorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(filePath))
 		return otto.FalseValue()
 	}
-	err = LocalCreateFile(rawBytes, path)
+	err = LocalCreateFile(rawBytes, filePathAsString.(string))
 	if err != nil {
-		e.Logger.Errorf("There was an error writing the file to that path")
+		e.Logger.Errorf("Error writing the file: function=%s path=%s error=%s", CalledBy(), filePathAsString.(string), err.Error())
 		return otto.FalseValue()
 	}
-	returnString := "File created at path"
-	var ret = otto.Value{}
-	var er error
-	ret, er = otto.ToValue(returnString)
-	if er != nil {
-		e.Logger.Errorf("Function Error: function=VMCopyFile() error='Error returning value to VM'")
-		return otto.FalseValue()
-	}
-	return ret
+	return otto.TrueValue()
 }
 
 func (e *Engine) VMCopyFile(call otto.FunctionCall) otto.Value {
@@ -68,8 +63,8 @@ func (e *Engine) VMCopyFile(call otto.FunctionCall) otto.Value {
 		e.Logger.Errorf("Function Error: function=VMCopyFile() error=ARG_NOT_STRINGABLE arg=%s", spew.Sdump(call.ArgumentList[1]))
 		return otto.FalseValue()
 	}
-  bytes, err := LocalReadFile(readPath)
-  if err != nil {
+	bytes, err := LocalReadFile(readPath)
+	if err != nil {
 		e.Logger.Errorf("Function Error: function=VMCopyFile() error='There was an error reading the file to copy'")
 		return otto.FalseValue()
 	}

@@ -1,6 +1,7 @@
 package gscript
 
 import (
+	"github.com/davecgh/go-spew/spew"
 	"github.com/happierall/l"
 	"github.com/robertkrimen/otto"
 )
@@ -85,10 +86,42 @@ func (e *Engine) CreateVM() {
 	e.VM.Set("VMLogWarn", e.VMLogWarn)
 	e.VM.Set("VMLogError", e.VMLogError)
 	e.VM.Set("VMLogCrit", e.VMLogCrit)
-	e.VM.Run(VMPreload)
+	_, err := e.VM.Run(VMPreload)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (e *Engine) ArrayValueToByteSlice(v otto.Value) []byte {
+	bytes := []byte{}
+	if v.IsNull() || v.IsUndefined() {
+		return bytes
+	}
+	ints, err := v.Export()
+	if err != nil {
+		e.LogErrorf("Cannot convert array to byte slice: %s", spew.Sdump(v))
+		return bytes
+	}
+	newInts := ints.([]interface{})
+	for _, i := range newInts {
+		bytes = append(bytes, i.(byte))
+	}
+	return bytes
 }
 
 var VMPreload = `
+function StringToByteArray(s) {
+  var data = [];
+  for (var i = 0; i < s.length; i++){  
+    data.push(s.charCodeAt(i));
+  }
+  return data;
+}
+
+function ByteArrayToString(a) {
+  return String.fromCharCode.apply(String, a);
+}
+
 function DumpObjectIndented(obj, indent) {
   var result = "";
   if (indent == null) indent = "";
