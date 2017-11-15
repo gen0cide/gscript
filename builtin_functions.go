@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"time"
+	"fmt"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/robertkrimen/otto"
 )
@@ -133,7 +134,7 @@ func (e *Engine) VMReplaceInFile(call otto.FunctionCall) otto.Value {
 		e.LogErrorf("Function Error: function=%s error=ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(sReplace))
 		return otto.FalseValue()
 	}
-  err = LocalFileReplace(filePathAsString.(string), sFindAsString.(string), sReplaceAsString.(string))
+  	err = LocalFileReplace(filePathAsString.(string), sFindAsString.(string), sReplaceAsString.(string))
 	if err != nil {
 		e.LogErrorf("Function Error: function=%s error=Failed to run LocalFileReplace info=%s", CalledBy(), spew.Sdump(err))
 		return otto.FalseValue()
@@ -170,9 +171,29 @@ func (e *Engine) VMRetrieveFileFromURL(call otto.FunctionCall) otto.Value {
 	return vmResponse
 }
 
+// Uses the native DNS client (including things like host files and resolution)
 func (e *Engine) VMDNSQuery(call otto.FunctionCall) otto.Value {
-	e.LogCritf("Function Not Implemented: %s", CalledBy())
-	return otto.FalseValue()
+	// Arg0 is the target string domain to do a DNS lookup
+	// Arg1 is string of the TYPE of DNS query
+	targetDomain := call.Argument(0)
+	queryType := call.Argument(1)
+	targetDomainAsString, err := targetDomain.Export()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(targetDomain))
+		return otto.FalseValue()
+	}
+	queryTypeAsString, err := queryType.Export()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(queryType))
+		return otto.FalseValue()
+	}
+	result, err := DNSQuestion(targetDomainAsString.(string), queryTypeAsString.(string))
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=DNSLookupFailed details=%s args=%s %s", CalledBy(), spew.Sdump(err), spew.Sdump(targetDomainAsString.(string)), queryTypeAsString.(string))
+		return otto.FalseValue()
+	}
+	fmt.Println(string(result))
+	return otto.TrueValue()
 }
 
 func (e *Engine) VMHTTPRequest(call otto.FunctionCall) otto.Value {
