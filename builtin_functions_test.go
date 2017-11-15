@@ -49,7 +49,7 @@ func TestVMCopyFile(t *testing.T) {
 }
 
 func TestVMRetrieveFileFromURL(t *testing.T) {
-  url := "http://icanhazip.com"
+  url := "https://alexlevinson.com/"
 	file_3 := fmt.Sprintf("/tmp/%s", RandString(6))
   testScript2 := fmt.Sprintf(`
 	  var url = "%s";
@@ -67,7 +67,7 @@ func TestVMRetrieveFileFromURL(t *testing.T) {
   assert.Nil(t, err)
   retValAsString, err := retVal.ToString()
   assert.Nil(t, err)
-  assert.Equal(t, "true", retValAsString)
+  assert.Equal(t, "60,104,116,109,108,62,10,32,32,60,98,111,100,121,62,10,32,32,32,32,60,99,101,110,116,101,114,62,10,32,32,32,32,32,32,60,105,109,103,32,115,114,99,61,34,114,111,111,116,46,106,112,103,34,32,47,62,10,32,32,32,32,60,47,99,101,110,116,101,114,62,10,32,32,60,47,98,111,100,121,62,10,60,47,104,116,109,108,62,10", retValAsString)
 }
 
 func TestVMTimestamp(t *testing.T) {
