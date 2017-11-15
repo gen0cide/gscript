@@ -43,9 +43,10 @@ GENESIS Script is a virtual machine to allow intelligent deployment of those pay
 | `os`          | `string` | `linux`                                                 | The operating system (basically `runtime.GOOS`)                                                              |
 | `arch`        | `string` | `amd64`                                                 | Theoperating system (basically `runtime.GOARCH`)                                                             |
 
-## Functions
+## Builtin Functions
+These functions are available to you automatically within the GSE scripting context.
 
-### Builtin
+
 
 #### Halt()
 
@@ -59,6 +60,8 @@ None
 
 `boolean` (true = success, false = error)
 
+--
+
 #### DeleteFile(path)
 
 Delete the file located at `path`.
@@ -70,6 +73,8 @@ Delete the file located at `path`.
 ##### Return Type
 
 `boolean` (true = success, false = error)
+
+--
 
 #### CopyFile(srcPath, dstPath)
 
@@ -83,6 +88,8 @@ Copy file from `srcPath` to `dstPath`.
 ##### Return Type
 
 `boolean` (true = success, false = error)
+
+--
 
 #### WriteFile(path, bytes, perms)
 
@@ -98,6 +105,8 @@ Write `bytes` to `path` and set perms to `perms`.
 
 `boolean` (true = success, false = error)
 
+--
+
 #### ExecuteFile(path, args)
 
 Execute a file located at `path` with `args` as arguments.
@@ -111,6 +120,8 @@ Execute a file located at `path` with `args` as arguments.
 
 `boolean` (true = success, false = error)
 
+--
+
 #### AppendFile(path, bytes)
 
 Append `bytes` to the file located at `path`.
@@ -123,6 +134,8 @@ Append `bytes` to the file located at `path`.
 ##### Return Type
 
 `boolean` (true = success, false = error)
+
+--
 
 #### ReplaceInFile(path, target, replace)
 
@@ -138,6 +151,8 @@ Replace any instances of `target` with `replace` in the file located at `path`.
 
 `boolean` (true = success, false = error)
 
+--
+
 #### Signal(pid, signal)
 
 Send a signal to another process.
@@ -151,6 +166,8 @@ Send a signal to another process.
 
 `boolean` (true = success, false = error)
 
+--
+
 #### RetrieveFileFromURL(url)
 
 Retrieve a file via `GET` for a given `url`.
@@ -162,6 +179,8 @@ Retrieve a file via `GET` for a given `url`.
 ##### Return Type
 
 `[]bytes` - Byte array of body response.
+
+--
 
 #### DNSQuery(question, type)
 
@@ -175,6 +194,8 @@ Perform a DNS lookup.
 ##### Return Type
 
 `Object` - Reference `VMDNSQueryResponse` in `response_objects.go` for object details.
+
+--
 
 #### HTTPRequest(method, url, body, headers)
 
@@ -191,6 +212,8 @@ Perform an HTTP/S request.
 
 `Object` - Reference `VMHTTPRequestResponse` in `response_objects.go` for object details.
 
+--
+
 #### Exec(cmd, args)
 
 Execute the given command and arguments.
@@ -204,6 +227,8 @@ Execute the given command and arguments.
 
 `Object` - Reference `VMExecResponse` in `response_objects.go` for object details.
 
+--
+
 #### MD5(bytes)
 
 Create a MD5 hash of the given bytes.
@@ -215,6 +240,8 @@ Create a MD5 hash of the given bytes.
 ##### Return Type
 
 `string` - Hex encoded MD5 hash.
+
+--
 
 #### SHA1(bytes)
 
@@ -228,6 +255,8 @@ Create a SHA1 hash of the given bytes.
 
 `string` - Hex encoded SHA1 hash.
 
+--
+
 #### B64Encode(bytes)
 
 Perform a Base64 encode on `bytes`.
@@ -239,6 +268,8 @@ Perform a Base64 encode on `bytes`.
 ##### Return Type
 
 `string` - Base64 encoded string representation.
+
+--
 
 #### B64Decode(string)
 
@@ -252,6 +283,8 @@ Perform a Base64 decode on `string`.
 
 `[]bytes` - Byte array of the deserialized b64 string.
 
+--
+
 #### Timestamp()
 
 Get current time in Epoch.
@@ -263,6 +296,8 @@ None
 ##### Return Type
 
 `integer` - Current time in Epoch.
+
+--
 
 #### CPUStats()
 
@@ -276,6 +311,8 @@ None
 
 `Object` - Reference `VMCPUStatsResponse` in `response_objects.go` for object details.
 
+--
+
 #### MemStats()
 
 Retreive specs about the machine's memory.
@@ -287,6 +324,8 @@ None
 ##### Return Type
 
 `Object` - Reference `VMMemStatsResponse` in `response_objects.go` for object details.
+
+--
 
 #### SSHExec(host, port, creds, cmds)
 
@@ -303,6 +342,8 @@ Executes SSH commands on the given host.
 
 `Object` - Reference `VMSSHExecResponse` in `response_objects.go` for object details.
 
+--
+
 #### Sleep(seconds)
 
 Sleep for `seconds` number of seconds.
@@ -314,6 +355,8 @@ Sleep for `seconds` number of seconds.
 ##### Return Type
 
 `boolean` (true = success, false = error)
+
+--
 
 #### GetDirsInPath()
 
@@ -327,6 +370,8 @@ None
 
 `[]string` - Array of directories in the current PATH as strings.
 
+--
+
 #### EnvVars()
 
 Retrieve an array of all environment variables in the current execution.
@@ -338,6 +383,8 @@ None
 ##### Return Type
 
 `Object` - Reference `VMEnvVarsResponse` in `response_objects.go` for object details.
+
+--
 
 #### GetEnv(varname)
 
@@ -351,6 +398,8 @@ Retrieve the value for Environment Variable `varname`.
 
 `string` - Value, empty if undefined.
 
+--
+
 #### FileCreateTime(path)
 
 Lookup the creation time for file located at `path`.
@@ -362,6 +411,8 @@ Lookup the creation time for file located at `path`.
 ##### Return Type
 
 `int` - Last modified time in Epoch format.
+
+--
 
 #### FileModifyTime(path)
 
@@ -375,6 +426,8 @@ Lookup the last modified time for file located at `path`.
 
 `int` - Last modified time in Epoch format.
 
+--
+
 #### LoggedInUsers()
 
 Gets an array of unique users currently logged in.
@@ -387,6 +440,7 @@ None
 
 `[]string` - Array of usernames as strings.
 
+--
 
 #### UsersRunningProcs()
 
@@ -399,6 +453,8 @@ None
 ##### Return Type
 
 `[]string` - Array of usernames as strings.
+
+--
 
 #### ServeDataOverHTTP(data, port, timeout)
 
@@ -413,6 +469,8 @@ Starts an HTTPServer that will respond to `GET /` with the `data` provided on po
 ##### Return Type
 
 `boolean` (true = success, false = error)
+
+--
 
 ## Notes
 
