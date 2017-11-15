@@ -5,7 +5,11 @@ import (
 	"time"
   "fmt"
 	"github.com/stretchr/testify/assert"
+	"github.com/davecgh/go-spew/spew"
 )
+
+var g_file_1 = fmt.Sprintf("/tmp/%s", RandString(6))
+var g_file_2 = fmt.Sprintf("/tmp/%s", RandString(6))
 
 func TestVMMD5(t *testing.T) {
 	testScript := `
@@ -29,12 +33,33 @@ func TestVMMD5(t *testing.T) {
 }
 
 func TestVMCopyFile(t *testing.T) {
-	file_2 := fmt.Sprintf("/tmp/%s", RandString(6))
+	file_2 := g_file_1
 	testScript := fmt.Sprintf(`
     var file_1 = "/etc/passwd";
     var file_2 = "%s";
     var return_value = CopyFile(file_1, file_2);
   `, file_2)
+
+	e := New()
+	e.EnableLogging()
+	e.CreateVM()
+
+	e.VM.Run(testScript)
+	retVal, err := e.VM.Get("return_value")
+	assert.Nil(t, err)
+	retValAsString, err := retVal.ToString()
+	assert.Nil(t, err)
+	assert.Equal(t, "true", retValAsString)
+}
+
+func TestVMAppendFile(t *testing.T) {
+	file_1 := g_file_1
+	bytes := "60,104,116,109,108,62,10,32,32,60,98,111,100,121,62,10,32,32,32,32"
+	testScript := fmt.Sprintf(`
+    var file_1 = "%s";
+    var bytes = [%s];
+    var return_value = AppendFile(file_1, bytes);
+  `, file_1, bytes)
 
 	e := New()
 	e.EnableLogging()
@@ -63,6 +88,7 @@ func TestVMRetrieveFileFromURL(t *testing.T) {
   e.CreateVM()
 
   e.VM.Run(testScript2)
+	e.Logger.Errorf("Function Error: function=%s error=Debug; wrote local file at: %s", CalledBy(), spew.Sdump(file_3))
   retVal, err := e.VM.Get("return_value2")
   assert.Nil(t, err)
   retValAsString, err := retVal.ToString()

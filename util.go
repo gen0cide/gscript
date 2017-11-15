@@ -45,24 +45,28 @@ func LocalFileCreate(path string, bytes []byte) error {
 	return nil
 }
 
-// LocalFileAppendBytes adds input to the end of filename's path.
+// LocalFileAppendBytes adds bytes to the end of filename's path.
 func LocalFileAppendBytes(filename string, bytes []byte) error {
-	fileInfo, err := os.Stat(filename)
-	if err != nil {
-		return err
+	if LocalFileExists(filename) {
+  	fileInfo, err := os.Stat(filename)
+	  if err != nil {
+		  return err
+	  }
+	  file, err := os.OpenFile(filename, os.O_APPEND, fileInfo.Mode())
+	  if err != nil {
+		  return err
+	  }
+	  if _, err = file.Write(bytes); err != nil {
+		  return err
+	  }
+	  file.Close()
+	  return nil
+	} else {
+		return errors.New("The file dosn't exist so we should create it in the future")
 	}
-	file, err := os.OpenFile(filename, os.O_APPEND, fileInfo.Mode())
-	if err != nil {
-		return err
-	}
-	if _, err = file.Write(bytes); err != nil {
-		return err
-	}
-	file.Close()
-	return nil
 }
 
-// LocalFileAppendString adds input to the end of filename.
+// LocalFileAppendString adds input as strings to the end of filename's path.
 func LocalFileAppendString(input, filename string) error {
 	fileInfo, err := os.Stat(filename)
 	if err != nil {

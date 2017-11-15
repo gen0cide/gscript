@@ -21,8 +21,8 @@ func (e *Engine) VMDeleteFile(call otto.FunctionCall) otto.Value {
 }
 
 func (e *Engine) VMWriteFile(call otto.FunctionCall) otto.Value {
+	// Arg0 is the string path of the new file to write
 	// Arg1 is a byte array of bytes of the file
-	// Arg2 is the string path of the new file to write
 	filePath := call.Argument(0)
 	fileData := call.Argument(1)
 	fileBytes := e.ValueToByteSlice(fileData)
@@ -40,8 +40,8 @@ func (e *Engine) VMWriteFile(call otto.FunctionCall) otto.Value {
 }
 
 func (e *Engine) VMCopyFile(call otto.FunctionCall) otto.Value {
-	// Arg1 is the string path of the first file we read
-	// Arg2 is the string path of the new file to write
+	// Arg0 is the string path of the first file we read
+	// Arg1 is the string path of the new file to write
 	readPath, err := call.ArgumentList[0].ToString()
 	if err != nil {
 		e.Logger.Errorf("Function Error: function=VMCopyFile() error=ARG_NOT_STRINGABLE arg=%s", spew.Sdump(call.ArgumentList[0]))
@@ -82,8 +82,22 @@ func (e *Engine) VMExecuteFile(call otto.FunctionCall) otto.Value {
 }
 
 func (e *Engine) VMAppendFile(call otto.FunctionCall) otto.Value {
-	e.LogCritf("Function Not Implemented: %s", CalledBy())
-	return otto.FalseValue()
+	// Arg0 is the string path of the new file to write
+	// Arg1 is a byte array of bytes of the file
+	filePath := call.Argument(0)
+	fileData := call.Argument(1)
+	fileBytes := e.ValueToByteSlice(fileData)
+	filePathAsString, err := filePath.Export()
+	if err != nil {
+		e.Logger.Errorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(filePath))
+		return otto.FalseValue()
+	}
+	err = LocalFileAppendBytes(filePathAsString.(string), fileBytes)
+	if err != nil {
+		e.Logger.Errorf("Function Error: function=%s error=LocalFileAppendBytesFailed details=%s", CalledBy(), spew.Sdump(err))
+		return otto.FalseValue()
+	}
+	return otto.TrueValue()
 }
 
 func (e *Engine) VMReplaceInFile(call otto.FunctionCall) otto.Value {
