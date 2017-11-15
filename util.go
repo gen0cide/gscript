@@ -32,7 +32,7 @@ func LocalFileExists(path string) bool {
   return false
 }
 
-func LocalCreateFile(bytes []byte, path string) error {
+func LocalCreateFile(path string, bytes []byte) error {
 	if LocalFileExists(path) {
     return errors.New("The file to create already exists so we won't overwite it")
   }
