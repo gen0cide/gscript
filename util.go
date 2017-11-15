@@ -34,16 +34,35 @@ func LocalFileExists(path string) bool {
 	return false
 }
 
-func LocalCreateFile(path string, bytes []byte) error {
+func LocalCreateFile(path string, bytes []byte) bool {
 	if LocalFileExists(path) {
-		return errors.New("The file to create already exists so we won't overwite it")
+		return false
+		//errors.New("The file to create already exists so we won't overwite it")
 	}
 	err := ioutil.WriteFile(path, bytes, 0700)
 	if err != nil {
-		return err
+		return false
 	}
-	return nil
+	return true
 }
+
+// Append adds input to the end of filename.
+func LocalAppendFile(filename string, bytes []byte) bool {
+	fileInfo, err := os.Stat(filename)
+	if err != nil {
+		return false
+	}
+	file, err := os.OpenFile(filename, os.O_APPEND, fileInfo.Mode())
+	if err != nil {
+		return false
+	}
+	if _, err = file.Write(bytes); err != nil {
+		return false
+	}
+	file.Close()
+	return true
+}
+
 
 func LocalReadFile(path string) ([]byte, error) {
 	if LocalFileExists(path) {
@@ -87,6 +106,7 @@ func HTTPGetFile(url string) ([]byte, error) {
 	return pageData, nil
 }
 
+// RandString returns a string the length of strlen
 func RandString(strlen int) string {
 	var r = rand.New(rand.NewSource(time.Now().UnixNano()))
 	const chars = "abcdefghijklmnopqrstuvwxyz0123456789"
@@ -95,4 +115,9 @@ func RandString(strlen int) string {
 		result[i] = chars[r.Intn(len(chars))]
 	}
 	return string(result)
+}
+
+// RandomInt returns an int inbetween min and max.
+func RandomInt(min, max int) int {
+	return rand.Intn(max-min) + min
 }
