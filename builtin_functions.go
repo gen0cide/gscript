@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"time"
-	"fmt"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/robertkrimen/otto"
 )
@@ -192,7 +191,7 @@ func (e *Engine) VMDNSQuery(call otto.FunctionCall) otto.Value {
 		e.LogErrorf("Function Error: function=%s error=DNSLookupFailed details=%s args=%s %s", CalledBy(), spew.Sdump(err), spew.Sdump(targetDomainAsString.(string)), queryTypeAsString.(string))
 		return otto.FalseValue()
 	}
-	fmt.Println(string(result))
+	e.LogInfof("Function: function=%s msg='DNS Results: %s'", CalledBy(), spew.Sdump(string(result)))
 	return otto.TrueValue()
 }
 
