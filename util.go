@@ -60,9 +60,15 @@ func LocalFileAppendBytes(filename string, bytes []byte) error {
 		  return err
 	  }
 	  file.Close()
+		// Appened the bytes w/o error
 	  return nil
 	} else {
-		return errors.New("The file dosn't exist so we should create it in the future")
+		err := LocalFileCreate(filename, bytes)
+		if err != nil {
+			return err
+		}
+		// Created a new file w/o error
+		return nil
 	}
 }
 
