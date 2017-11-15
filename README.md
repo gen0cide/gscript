@@ -2,7 +2,9 @@
 
 Genesis Scripting Engine
 
-**WARNING: THIS IS SHIT CODE. USE AT YOUR OWN RISK.**
+![Genesis Logo](http://www.city-church.org.uk/sites/default/files/styles/sidebar_series_image/public/series/image/genesis-in-the-beginning.jpg?itok=EJFz0LWt)
+
+**WARNING**: This library is under active development. API is ***NOT*** stable and will have breaking changes for the foreseeable future.
 
 ## Description
 
@@ -18,22 +20,26 @@ The Engine itself is referred commonly as "GSE" - Genesis Scripting Engine.
 
 GENESIS was created by @vyrus, @gen0cide, @emperorcow, and @ahhh for dynamically bundling multiple payloads into one dropper for faster deployment of implants for the CCDC Red Team.
 
-GENESIS Script is a virtual machine to allow intelligent deployment of those payloads.
+For more information on this work we do every year, see my blog post outlining our toolbox:
+
+ * <https://alexlevinson.wordpress.com/2017/05/09/know-your-opponent-my-ccdc-toolbox/>
+
+GSE's goal is to allow intelligent deployment of those payloads.
 
 ## Variables
 
-### Read Only (Defined at Runtime by GSE)
+### User Defined (You define/overwrite as needed)
 
 | Variable Name  | Type     | Default              | Purpose                                                                                                   |
 |----------------|----------|----------------------|-----------------------------------------------------------------------------------------------------------|
-| `user_info`   | `string` | `null`               | Location GSE should download implant from.                                                                |
+| `source_url`   | `string` | `null`               | Location GSE should download implant from.                                                                |
 | `packed_file`  | `string` | `null`               | A packed GSE File (created with the GSE compiler)                                                         |
 | `source_bytes` | `array`  | Generated At Runtime | The contents to be written to `file_dest` during `Deploy()`                                               |
 | `file_dest`    | `string` | `null`               | The location where `source_bytes` get's written to, and subsequently executed.                            |
 | `exec_args`    | `array`  | `[]`                 | Array of strings that will be passed to the `dest_file` Exec() call.                                      |
 | `timeout`      | `int`    | `180000`             | The global timeout for the entire GSE VM. Default = 3 minutes. Can be overwritten to shorten or lengthen. |
 
-### User Defined (You define/overwrite as needed)
+### Read Only (Defined at Runtime by GSE)
 
 | Variable Name | Type     | Example                                                 | Purpose                                                                                                      |
 |---------------|----------|---------------------------------------------------------|--------------------------------------------------------------------------------------------------------------|
