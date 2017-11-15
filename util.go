@@ -34,7 +34,7 @@ func LocalFileExists(path string) bool {
 	return false
 }
 
-func LocalCreateFile(path string, bytes []byte) error {
+func LocalFileCreate(path string, bytes []byte) error {
 	if LocalFileExists(path) {
 		return errors.New("The file to create already exists so we won't overwite it")
 	}
@@ -46,7 +46,7 @@ func LocalCreateFile(path string, bytes []byte) error {
 }
 
 // Append adds input to the end of filename.
-func LocalAppendFile(filename string, bytes []byte) error {
+func LocalFileAppend(filename string, bytes []byte) error {
 	fileInfo, err := os.Stat(filename)
 	if err != nil {
 		return err
@@ -62,8 +62,50 @@ func LocalAppendFile(filename string, bytes []byte) error {
 	return nil
 }
 
+// Replace will replace all instances of match with replace in file.
+func LocalFileReplace(file, match, replacement string) error {
+	fileInfo, err := os.Stat(file)
+	if err != nil {
+		return err
+	}
+	contents, err := ioutil.ReadFile(file)
+	if err != nil {
+		return err
+	}
+	lines := strings.Split(string(contents), "\n")
+	for index, line := range lines {
+		if strings.Contains(line, match) {
+			lines[index] = replacement
+		}
+	}
+	ioutil.WriteFile(file, []byte(strings.Join(lines, "\n")), fileInfo.Mode())
+	return nil
+}
 
-func LocalReadFile(path string) ([]byte, error) {
+// ReplaceMulti will replace all instances of possible matches with replacement in file.
+func LocalFileReplaceMulti(file string, matches []string, replacement string) error {
+	fileInfo, err := os.Stat(file)
+	if err != nil {
+		return err
+	}
+	contents, err := ioutil.ReadFile(file)
+	if err != nil {
+		return err
+	}
+	lines := strings.Split(string(contents), "\n")
+	for index, line := range lines {
+		for _, match := range matches {
+			if strings.Contains(line, match) {
+				lines[index] = replacement
+			}
+		}
+	}
+	ioutil.WriteFile(file, []byte(strings.Join(lines, "\n")), fileInfo.Mode())
+	return nil
+}
+
+// LocalReadFile takes a file path and returns the byte array of the file there
+func LocalFileRead(path string) ([]byte, error) {
 	if LocalFileExists(path) {
 		dat, err := ioutil.ReadFile(path)
 		if err != nil {
@@ -74,6 +116,7 @@ func LocalReadFile(path string) ([]byte, error) {
 	return nil, errors.New("The file to read does not exist")
 }
 
+// ExecuteCommand function
 func ExecuteCommand(c string, args ...string) VMExecResponse {
 	cmd := exec.Command(c, args...)
 	var stdout bytes.Buffer
@@ -95,6 +138,7 @@ func ExecuteCommand(c string, args ...string) VMExecResponse {
 	return respObj
 }
 
+// HTTPGetFile takes a url and returns a byte slice of the file there
 func HTTPGetFile(url string) ([]byte, error) {
 	resp, err := http.Get(url)
 	if err != nil {
