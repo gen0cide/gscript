@@ -47,7 +47,7 @@ GSE's goal is to allow intelligent deployment of those payloads.
 | `hostname`    | `string` | `example01`                                             | The hostname of the machine.                                                                                 |
 | `ip_addrs`    | `array`  | `["127.0.0.1","192.168.1.5"]`                           | The IP addresses of the machine.                                                                             |
 | `os`          | `string` | `linux`                                                 | The operating system (basically `runtime.GOOS`)                                                              |
-| `arch`        | `string` | `amd64`                                                 | Theoperating system (basically `runtime.GOARCH`)                                                             |
+| `arch`        | `string` | `amd64`                                                 | The CPU architecture (basically `runtime.GOARCH`)                                                             |
 
 ## Builtin Functions
 These functions are available to you automatically within the GSE scripting context.
@@ -479,6 +479,8 @@ Starts an HTTPServer that will respond to `GET /` with the `data` provided on po
 ---
 
 ## Notes
+
+This is just my design chicken scratch. I'll slowly migrate this stuff over to more formal documentation as I implement.
 
 ```
 

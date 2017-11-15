@@ -1,6 +1,10 @@
 package gscript
 
 import (
+	"bytes"
+	"encoding/binary"
+	"fmt"
+
 	"github.com/davecgh/go-spew/spew"
 	"github.com/happierall/l"
 	"github.com/robertkrimen/otto"
@@ -92,27 +96,68 @@ func (e *Engine) CreateVM() {
 	}
 }
 
-func (e *Engine) ArrayValueToByteSlice(v otto.Value) []byte {
-	bytes := []byte{}
+func (e *Engine) ValueToByteSlice(v otto.Value) []byte {
+	valueBytes := []byte{}
 	if v.IsNull() || v.IsUndefined() {
-		return bytes
+		return valueBytes
 	}
-	ints, err := v.Export()
-	if err != nil {
-		e.LogErrorf("Cannot convert array to byte slice: %s", spew.Sdump(v))
-		return bytes
+	if v.IsString() {
+		str, err := v.Export()
+		if err != nil {
+			e.LogErrorf("Cannot convert string to byte slice: %s", spew.Sdump(v))
+			return valueBytes
+		}
+		valueBytes = []byte(str.(string))
+	} else if v.IsNumber() {
+		num, err := v.Export()
+		if err != nil {
+			e.LogErrorf("Cannot convert string to byte slice: %s", spew.Sdump(v))
+			return valueBytes
+		}
+		buf := new(bytes.Buffer)
+		err = binary.Write(buf, binary.LittleEndian, num)
+		if err != nil {
+			fmt.Println("binary.Write failed:", err)
+		}
+		valueBytes = buf.Bytes()
+	} else if v.Class() == "Array" {
+		arr, err := v.Export()
+		if err != nil {
+			e.LogErrorf("Cannot convert array to byte slice: %s", spew.Sdump(v))
+			return valueBytes
+		}
+		switch t := arr.(type) {
+		case []uint16:
+			for _, i := range t {
+				valueBytes = append(valueBytes, byte(i))
+			}
+		case []uint8:
+			for _, i := range t {
+				valueBytes = append(valueBytes, byte(i))
+			}
+		case []string:
+			for _, i := range t {
+				for _, c := range i {
+					valueBytes = append(valueBytes, byte(c))
+				}
+			}
+		default:
+			_ = t
+			e.Logger.Errorf("Failed to cast array to byte slice: function=%s array=%x", CalledBy(), arr)
+		}
+	} else {
+		spew.Dump(v)
+		spew.Dump(v.Class())
+		e.Logger.Errorf("Unknown class to cast to byte slice: function=%s value=%s class=%s", CalledBy(), spew.Sdump(v), spew.Sdump(v.Class()))
 	}
-	newInts := ints.([]interface{})
-	for _, i := range newInts {
-		bytes = append(bytes, i.(byte))
-	}
-	return bytes
+
+	return valueBytes
 }
 
 var VMPreload = `
 function StringToByteArray(s) {
   var data = [];
-  for (var i = 0; i < s.length; i++){  
+  for (var i = 0; i < s.length; i++ ) {
     data.push(s.charCodeAt(i));
   }
   return data;

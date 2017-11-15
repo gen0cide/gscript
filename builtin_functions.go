@@ -26,22 +26,14 @@ func (e *Engine) VMWriteFile(call otto.FunctionCall) otto.Value {
 	// Arg2 is the string path of the new file to write
 
 	filePath := call.Argument(0)
-	fileBytes := call.Argument(1)
-	rawBytes := []byte{}
-	expVal, err := fileBytes.Export()
-	if err != nil {
-		e.Logger.Errorf("Function Error: function=%s error=ARY_ARG_NOT_BYTESLICE arg=%s", CalledBy(), spew.Sdump(fileBytes))
-		return otto.FalseValue()
-	}
-	for _, i := range expVal.([]uint16) {
-		rawBytes = append(rawBytes, byte(i))
-	}
+	fileData := call.Argument(1)
+	fileBytes := e.ValueToByteSlice(fileData)
 	filePathAsString, err := filePath.Export()
 	if err != nil {
 		e.Logger.Errorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(filePath))
 		return otto.FalseValue()
 	}
-	err = LocalCreateFile(filePathAsString.(string), rawBytes)
+	err = LocalCreateFile(filePathAsString.(string), fileBytes)
 	if err != nil {
 		e.Logger.Errorf("Error writing the file: function=%s path=%s error=%s", CalledBy(), filePathAsString.(string), err.Error())
 		return otto.FalseValue()
