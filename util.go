@@ -9,6 +9,8 @@ import (
 	"os/exec"
 	"runtime"
 	"strings"
+	"math/rand"
+	"time"
 )
 
 func CalledBy() string {
@@ -83,4 +85,14 @@ func HTTPGetFile(url string) ([]byte, error) {
 	pageData, err := ioutil.ReadAll(resp.Body)
 	resp.Body.Close()
 	return pageData, nil
+}
+
+func RandString(strlen int) string {
+	var r = rand.New(rand.NewSource(time.Now().UnixNano()))
+	const chars = "abcdefghijklmnopqrstuvwxyz0123456789"
+	result := make([]byte, strlen)
+	for i := range result {
+		result[i] = chars[r.Intn(len(chars))]
+	}
+	return string(result)
 }

@@ -24,16 +24,15 @@ func (e *Engine) VMDeleteFile(call otto.FunctionCall) otto.Value {
 func (e *Engine) VMWriteFile(call otto.FunctionCall) otto.Value {
 	// Arg1 is a byte array of bytes of the file
 	// Arg2 is the string path of the new file to write
-
 	filePath := call.Argument(0)
 	fileBytes := call.Argument(1)
 	rawBytes := []byte{}
 	expVal, err := fileBytes.Export()
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=%s error=ARY_ARG_NOT_BYTESLICE arg=%s", CalledBy(), spew.Sdump(fileBytes))
+		e.Logger.Errorf("Function Error: function=%s error=ARY_ARG_NOT_BYTESLICE arg=%s", CalledBy(), spew.Sdump(err))
 		return otto.FalseValue()
 	}
-	for _, i := range expVal.([]uint16) {
+	for _, i := range expVal.([]uint8) {
 		rawBytes = append(rawBytes, byte(i))
 	}
 	filePathAsString, err := filePath.Export()
@@ -73,7 +72,8 @@ func (e *Engine) VMCopyFile(call otto.FunctionCall) otto.Value {
 		e.Logger.Errorf("Function Error: function=VMCopyFile() error='There was an error writing the file to that path'")
 		return otto.FalseValue()
 	}
-	//e.Logger.Errorf("Function Error: function=VMCopyFile() error=Debug; wrote local file at: %s", spew.Sdump(writePath))
+	// Testing Debug call function //
+	e.Logger.Errorf("Function Error: function=%s error=Debug; wrote local file at: %s", CalledBy(), spew.Sdump(writePath))
 	//returnString := fmt.Sprintf("File created at: %s", string(writePath))
 	//var ret = otto.Value{}
 	//var er error
@@ -113,7 +113,7 @@ func (e *Engine) VMImplode(call otto.FunctionCall) otto.Value {
 func (e *Engine) VMRetrieveFileFromURL(call otto.FunctionCall) otto.Value {
 	readURL, err := call.ArgumentList[0].ToString()
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=VMRetrieveFileFromURL() error=ARG_NOT_STRINGABLE arg=%s", spew.Sdump(call.ArgumentList[0]))
+		e.Logger.Errorf("Function Error: function=%s error=ARG_NOT_STRINGABLE arg=%s", CalledBy(), spew.Sdump(call.ArgumentList[0]))
 		return otto.FalseValue()
 	}
 	bytes, err := HTTPGetFile(readURL)

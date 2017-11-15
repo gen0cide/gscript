@@ -29,7 +29,7 @@ func TestVMMD5(t *testing.T) {
 }
 
 func TestVMCopyFile(t *testing.T) {
-	file_2 := "/tmp/copyFile"
+	file_2 := fmt.Sprintf("/tmp/%s", RandString(6))
 	testScript := fmt.Sprintf(`
     var file_1 = "/etc/passwd";
     var file_2 = "%s";
@@ -50,11 +50,14 @@ func TestVMCopyFile(t *testing.T) {
 
 func TestVMRetrieveFileFromURL(t *testing.T) {
   url := "http://icanhazip.com"
+	file_3 := fmt.Sprintf("/tmp/%s", RandString(6))
   testScript2 := fmt.Sprintf(`
 	  var url = "%s";
+		var file_3 = "%s";
 	  var response2 = RetrieveFileFromURL(url);
 	  var return_value2 = response2;
-  `, url)
+		var response3 = WriteFile(file_3, response2);
+  `, url, file_3)
   e := New()
   e.EnableLogging()
   e.CreateVM()
