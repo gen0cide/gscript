@@ -29,12 +29,12 @@ func (e *Engine) VMWriteFile(call otto.FunctionCall) otto.Value {
 	fileBytes := e.ValueToByteSlice(fileData)
 	filePathAsString, err := filePath.Export()
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(filePath))
+		e.LogErrorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(filePath))
 		return otto.FalseValue()
 	}
 	err = LocalCreateFile(filePathAsString.(string), fileBytes)
 	if err != nil {
-		e.Logger.Errorf("Error writing the file: function=%s path=%s error=%s", CalledBy(), filePathAsString.(string), err.Error())
+		e.LogErrorf("Error writing the file: function=%s path=%s error=%s", CalledBy(), filePathAsString.(string), err.Error())
 		return otto.FalseValue()
 	}
 	return otto.TrueValue()
@@ -45,27 +45,27 @@ func (e *Engine) VMCopyFile(call otto.FunctionCall) otto.Value {
 	// Arg2 is the string path of the new file to write
 	readPath, err := call.ArgumentList[0].ToString()
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=VMCopyFile() error=ARG_NOT_STRINGABLE arg=%s", spew.Sdump(call.ArgumentList[0]))
+		e.LogErrorf("Function Error: function=VMCopyFile() error=ARG_NOT_STRINGABLE arg=%s", spew.Sdump(call.ArgumentList[0]))
 		return otto.FalseValue()
 	}
 	writePath, err := call.ArgumentList[1].ToString()
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=VMCopyFile() error=ARG_NOT_STRINGABLE arg=%s", spew.Sdump(call.ArgumentList[1]))
+		e.LogErrorf("Function Error: function=VMCopyFile() error=ARG_NOT_STRINGABLE arg=%s", spew.Sdump(call.ArgumentList[1]))
 		return otto.FalseValue()
 	}
 	bytes, err := LocalReadFile(readPath)
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=VMCopyFile() error='There was an error reading the file to copy'")
+		e.LogErrorf("Function Error: function=VMCopyFile() error='There was an error reading the file to copy'")
 		return otto.FalseValue()
 	}
 	//e.Logger.Errorf("Function Error: function=VMCopyFile() error=Debug; read local file at: %s", spew.Sdump(readPath))
 	err = LocalCreateFile(writePath, bytes)
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=VMCopyFile() error='There was an error writing the file to that path'")
+		e.LogErrorf("Function Error: function=VMCopyFile() error='There was an error writing the file to that path'")
 		return otto.FalseValue()
 	}
 	// Testing Debug call function //
-	e.Logger.Errorf("Function Error: function=%s error=Debug; wrote local file at: %s", CalledBy(), spew.Sdump(writePath))
+	e.LogErrorf("Function Error: function=%s error=Debug; wrote local file at: %s", CalledBy(), spew.Sdump(writePath))
 	//returnString := fmt.Sprintf("File created at: %s", string(writePath))
 	//var ret = otto.Value{}
 	//var er error
@@ -105,17 +105,17 @@ func (e *Engine) VMImplode(call otto.FunctionCall) otto.Value {
 func (e *Engine) VMRetrieveFileFromURL(call otto.FunctionCall) otto.Value {
 	readURL, err := call.ArgumentList[0].ToString()
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=%s error=ARG_NOT_STRINGABLE arg=%s", CalledBy(), spew.Sdump(call.ArgumentList[0]))
+		e.LogErrorf("Function Error: function=%s error=ARG_NOT_STRINGABLE arg=%s", CalledBy(), spew.Sdump(call.ArgumentList[0]))
 		return otto.FalseValue()
 	}
 	bytes, err := HTTPGetFile(readURL)
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=VMRetrieveFileFromURL() error='There was an error fetching the file: %v'", spew.Sdump(err))
+		e.LogErrorf("Function Error: function=VMRetrieveFileFromURL() error='There was an error fetching the file: %v'", spew.Sdump(err))
 		return otto.FalseValue()
 	}
 	vmResponse, err := e.VM.ToValue(bytes)
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=%s error=URL_DOWNLOAD_OBJECT_CAST_FAILED arg=%s", CalledBy(), spew.Sdump(err))
+		e.LogErrorf("Function Error: function=%s error=URL_DOWNLOAD_OBJECT_CAST_FAILED arg=%s", CalledBy(), spew.Sdump(err))
 		return otto.FalseValue()
 	}
 	return vmResponse
@@ -134,7 +134,7 @@ func (e *Engine) VMHTTPRequest(call otto.FunctionCall) otto.Value {
 func (e *Engine) VMExec(call otto.FunctionCall) otto.Value {
 	baseCmd := call.Argument(0)
 	if !baseCmd.IsString() {
-		e.Logger.Errorf("Function Error: function=%s error=CMD_CALL_NOT_OF_TYPE_STRING arg=%s", CalledBy(), spew.Sdump(baseCmd))
+		e.LogErrorf("Function Error: function=%s error=CMD_CALL_NOT_OF_TYPE_STRING arg=%s", CalledBy(), spew.Sdump(baseCmd))
 		return otto.FalseValue()
 	}
 	cmdArgs := call.Argument(1)
@@ -142,20 +142,20 @@ func (e *Engine) VMExec(call otto.FunctionCall) otto.Value {
 	if !cmdArgs.IsNull() {
 		argArray, err := cmdArgs.Export()
 		if err != nil {
-			e.Logger.Errorf("Function Error: function=%s error=CMD_ARGS_NOT_PARSABLE arg=%s", CalledBy(), spew.Sdump(cmdArgs))
+			e.LogErrorf("Function Error: function=%s error=CMD_ARGS_NOT_PARSABLE arg=%s", CalledBy(), spew.Sdump(cmdArgs))
 			return otto.FalseValue()
 		}
 		argList = argArray.([]string)
 	}
 	baseCmdAsString, err := baseCmd.ToString()
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=%s error=CMD_BASE_NOT_PARSABLE arg=%s", CalledBy(), spew.Sdump(baseCmd))
+		e.LogErrorf("Function Error: function=%s error=CMD_BASE_NOT_PARSABLE arg=%s", CalledBy(), spew.Sdump(baseCmd))
 		return otto.FalseValue()
 	}
 	cmdOutput := ExecuteCommand(baseCmdAsString, argList...)
 	vmResponse, err := e.VM.ToValue(cmdOutput)
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=%s error=CMD_OUTPUT_OBJECT_CAST_FAILED arg=%s", CalledBy(), spew.Sdump(baseCmd))
+		e.LogErrorf("Function Error: function=%s error=CMD_OUTPUT_OBJECT_CAST_FAILED arg=%s", CalledBy(), spew.Sdump(baseCmd))
 		return otto.FalseValue()
 	}
 	return vmResponse
@@ -170,7 +170,7 @@ func (e *Engine) VMMD5(call otto.FunctionCall) otto.Value {
 			rawBytes := []byte{}
 			expVal, err := arg.Export()
 			if err != nil {
-				e.Logger.Errorf("Function Error: function=MD5() error=ARY_ARG_NOT_STRINGABLE arg=%s", spew.Sdump(arg))
+				e.LogErrorf("Function Error: function=MD5() error=ARY_ARG_NOT_STRINGABLE arg=%s", spew.Sdump(arg))
 				return otto.Value{}
 			}
 			for _, i := range expVal.([]interface{}) {
@@ -182,7 +182,7 @@ func (e *Engine) VMMD5(call otto.FunctionCall) otto.Value {
 		default:
 			val, err := call.ArgumentList[0].ToString()
 			if err != nil {
-				e.Logger.Errorf("Function Error: function=MD5() error=ARG_NOT_STRINGABLE arg=%s", spew.Sdump(arg))
+				e.LogErrorf("Function Error: function=MD5() error=ARG_NOT_STRINGABLE arg=%s", spew.Sdump(arg))
 				return otto.Value{}
 			}
 			hasher := md5.New()
@@ -198,7 +198,7 @@ func (e *Engine) VMMD5(call otto.FunctionCall) otto.Value {
 		ret, err = otto.ToValue(nil)
 	}
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=%s error=%s", CalledBy(), err.Error())
+		e.LogErrorf("Function Error: function=%s error=%s", CalledBy(), err.Error())
 	}
 	return ret
 }
@@ -212,7 +212,7 @@ func (e *Engine) VMSHA1(call otto.FunctionCall) otto.Value {
 			rawBytes := []byte{}
 			expVal, err := arg.Export()
 			if err != nil {
-				e.Logger.Errorf("Function Error: function=SHA1() error=ARY_ARG_NOT_STRINGABLE arg=%s", spew.Sdump(arg))
+				e.LogErrorf("Function Error: function=SHA1() error=ARY_ARG_NOT_STRINGABLE arg=%s", spew.Sdump(arg))
 				return otto.Value{}
 			}
 			for _, i := range expVal.([]interface{}) {
@@ -224,7 +224,7 @@ func (e *Engine) VMSHA1(call otto.FunctionCall) otto.Value {
 		default:
 			val, err := call.ArgumentList[0].ToString()
 			if err != nil {
-				e.Logger.Errorf("Function Error: function=SHA1() error=ARG_NOT_STRINGABLE arg=%s", spew.Sdump(arg))
+				e.LogErrorf("Function Error: function=SHA1() error=ARG_NOT_STRINGABLE arg=%s", spew.Sdump(arg))
 				return otto.Value{}
 			}
 			hasher := sha1.New()
@@ -240,7 +240,7 @@ func (e *Engine) VMSHA1(call otto.FunctionCall) otto.Value {
 		ret, err = otto.ToValue(nil)
 	}
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=%s error=%s", CalledBy(), err.Error())
+		e.LogErrorf("Function Error: function=%s error=%s", CalledBy(), err.Error())
 	}
 	return ret
 }
@@ -251,12 +251,12 @@ func (e *Engine) VMB64Decode(call otto.FunctionCall) otto.Value {
 		arg := call.ArgumentList[0]
 		val, err := arg.ToString()
 		if err != nil {
-			e.Logger.Errorf("Function Error: function=B64Decode() error=ARG_NOT_STRINGABLE arg=%s", spew.Sdump(arg))
+			e.LogErrorf("Function Error: function=B64Decode() error=ARG_NOT_STRINGABLE arg=%s", spew.Sdump(arg))
 			return otto.Value{}
 		}
 		valBytes, err := base64.StdEncoding.DecodeString(val)
 		if err != nil {
-			e.Logger.Errorf("Function Error: function=B64Decode() error=BASE64_DECODE_ERROR error=%s", err.Error())
+			e.LogErrorf("Function Error: function=B64Decode() error=BASE64_DECODE_ERROR error=%s", err.Error())
 			return otto.Value{}
 		}
 		NewVal = string(valBytes)
@@ -269,7 +269,7 @@ func (e *Engine) VMB64Decode(call otto.FunctionCall) otto.Value {
 		ret, err = otto.ToValue(nil)
 	}
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=%s error=%s", CalledBy(), err.Error())
+		e.LogErrorf("Function Error: function=%s error=%s", CalledBy(), err.Error())
 	}
 	return ret
 }
@@ -283,7 +283,7 @@ func (e *Engine) VMB64Encode(call otto.FunctionCall) otto.Value {
 			rawBytes := []byte{}
 			expVal, err := arg.Export()
 			if err != nil {
-				e.Logger.Errorf("Function Error: function=B64Encode() error=ARY_ARG_NOT_STRINGABLE arg=%s", spew.Sdump(arg))
+				e.LogErrorf("Function Error: function=B64Encode() error=ARY_ARG_NOT_STRINGABLE arg=%s", spew.Sdump(arg))
 				return otto.Value{}
 			}
 			for _, i := range expVal.([]interface{}) {
@@ -293,7 +293,7 @@ func (e *Engine) VMB64Encode(call otto.FunctionCall) otto.Value {
 		default:
 			val, err := call.ArgumentList[0].ToString()
 			if err != nil {
-				e.Logger.Errorf("Function Error: function=B64Encode() error=ARG_NOT_STRINGABLE arg=%s", spew.Sdump(arg))
+				e.LogErrorf("Function Error: function=B64Encode() error=ARG_NOT_STRINGABLE arg=%s", spew.Sdump(arg))
 				return otto.Value{}
 			}
 			EncVal = base64.StdEncoding.EncodeToString([]byte(val))
@@ -307,7 +307,7 @@ func (e *Engine) VMB64Encode(call otto.FunctionCall) otto.Value {
 		ret, err = otto.ToValue(nil)
 	}
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=%s error=%s", CalledBy(), err.Error())
+		e.LogErrorf("Function Error: function=%s error=%s", CalledBy(), err.Error())
 	}
 	return ret
 }
@@ -316,7 +316,7 @@ func (e *Engine) VMTimestamp(call otto.FunctionCall) otto.Value {
 	ts := time.Now().Unix()
 	ret, err := otto.ToValue(ts)
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=%s error=%s", CalledBy(), err.Error())
+		e.LogErrorf("Function Error: function=%s error=%s", CalledBy(), err.Error())
 	}
 	return ret
 }
@@ -342,7 +342,7 @@ func (e *Engine) VMSleep(call otto.FunctionCall) otto.Value {
 		if arg.IsNumber() {
 			intArg, err := arg.ToInteger()
 			if err != nil {
-				e.Logger.Errorf("Function Error: function=%s error=%s", CalledBy(), err.Error())
+				e.LogErrorf("Function Error: function=%s error=%s", CalledBy(), err.Error())
 				return otto.Value{}
 			}
 			time.Sleep(time.Duration(intArg) * time.Second)
