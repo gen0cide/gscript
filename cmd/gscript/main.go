@@ -1,16 +1,25 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"runtime"
 	"sort"
+	"time"
 
 	"github.com/gen0cide/gscript"
 	"github.com/urfave/cli"
 )
 
 func main() {
+
+	var outputFile string
+	var compilerOS string
+	var compilerArch string
+
 	app := cli.NewApp()
 	app.Name = "gscript"
 	app.Usage = "Interact with the Genesis Scripting Engine (GSE)"
@@ -87,9 +96,35 @@ func main() {
 			Name:    "compile",
 			Aliases: []string{"c"},
 			Usage:   "Compile a Genesis script into a stand alone Golang package.",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:        "outfile",
+					Value:       filepath.Join(os.TempDir(), fmt.Sprintf("%d_genesis.bin", time.Now().Unix())),
+					Usage:       "Location of the compiled binary",
+					Destination: &outputFile,
+				},
+				cli.StringFlag{
+					Name:        "os",
+					Value:       runtime.GOOS,
+					Usage:       "The GOOS you wish to use for your compiled binary.",
+					Destination: &compilerOS,
+				},
+				cli.StringFlag{
+					Name:        "arch",
+					Value:       runtime.GOARCH,
+					Usage:       "The GOARCH you wish to use for your compiled binary.",
+					Destination: &compilerArch,
+				},
+			},
 			Action: func(c *cli.Context) error {
-				compiler := gscript.NewCompiler("cmd/gscript/real.gs", "hades", "", []string{"/Users/flint/Downloads/tater.jpg"})
+				if c.NArg() == 0 {
+					gse := gscript.NewCompiler("", "", "", "")
+					gse.Logger.Critf("You did not specify a genesis script!")
+				}
+				scriptFile := c.Args()[0]
+				compiler := gscript.NewCompiler(scriptFile, outputFile, compilerOS, compilerArch)
 				compiler.Do()
+				compiler.Logger.Logf("Your binary is located at: %s", outputFile)
 				return nil
 			},
 		},

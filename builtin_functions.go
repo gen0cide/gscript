@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"time"
+
 	"github.com/davecgh/go-spew/spew"
 	"github.com/robertkrimen/otto"
 )
@@ -92,6 +93,25 @@ func (e *Engine) VMExecuteFile(call otto.FunctionCall) otto.Value {
 	return otto.FalseValue()
 }
 
+func (e *Engine) VMAsset(call otto.FunctionCall) otto.Value {
+	filename := call.Argument(0).String()
+	if len(filename) == 0 {
+		e.LogErrorf("Empty Asset Call")
+		return otto.FalseValue()
+	}
+	if dataFunc, ok := e.Imports[filename]; ok {
+		byteData := dataFunc()
+		vmVal, err := e.VM.ToValue(byteData)
+		if err != nil {
+			e.LogErrorf("Function Error: function=%s error=VM_BYTE_CONVERSION_FAILED details=%s", CalledBy(), spew.Sdump(err))
+			return otto.FalseValue()
+		}
+		return vmVal
+	}
+	e.LogErrorf("Asset File Not Found: asset=%s", filename)
+	return otto.FalseValue()
+}
+
 func (e *Engine) VMAppendFile(call otto.FunctionCall) otto.Value {
 	// Arg0 is the string path of the new file to write
 	// Arg1 is a byte array of bytes of the file
@@ -133,7 +153,7 @@ func (e *Engine) VMReplaceInFile(call otto.FunctionCall) otto.Value {
 		e.LogErrorf("Function Error: function=%s error=ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(sReplace))
 		return otto.FalseValue()
 	}
-  	err = LocalFileReplace(filePathAsString.(string), sFindAsString.(string), sReplaceAsString.(string))
+	err = LocalFileReplace(filePathAsString.(string), sFindAsString.(string), sReplaceAsString.(string))
 	if err != nil {
 		e.LogErrorf("Function Error: function=%s error=Failed to run LocalFileReplace info=%s", CalledBy(), spew.Sdump(err))
 		return otto.FalseValue()
