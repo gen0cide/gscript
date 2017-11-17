@@ -5,7 +5,6 @@ builds:
   - main: ./cmd/gscript/main.go
     binary: gscript
     goos:
-      - windows
       - darwin
       - linux
     goarch:
