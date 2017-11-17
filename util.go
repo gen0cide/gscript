@@ -8,10 +8,14 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"fmt"
 	"os/exec"
 	"runtime"
 	"strings"
 	"time"
+	"path/filepath"
+	"github.com/matishsiao/goInfo"
+	"unicode"
 )
 
 func CalledBy() string {
@@ -33,6 +37,49 @@ func LocalFileExists(path string) bool {
 		return true
 	}
 	return false
+}
+
+func LocalDirCreate(path string) error {
+	err := os.MkdirAll(path, 0700)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func LocalDirRemoveAll(dir string) error {
+	d, err := os.Open(dir)
+	if err != nil {
+		return err
+	}
+	defer d.Close()
+	names, err := d.Readdirnames(-1)
+	if err != nil {
+		return err
+	}
+	for _, name := range names {
+		err = os.RemoveAll(filepath.Join(dir, name))
+		if err != nil {
+			return err
+		}
+	}
+	err = os.RemoveAll(dir)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func LocalFileDelete(path string) error {
+	if LocalFileExists(path) {
+	  err := os.Remove(path)
+	  if err != nil {
+	  	return err
+	  }
+	  return nil
+  } else {
+		return errors.New("The file dosn't exist to delete")
+	}
 }
 
 func LocalFileCreate(path string, bytes []byte) error {
@@ -153,6 +200,54 @@ func LocalFileRead(path string) ([]byte, error) {
 	return nil, errors.New("The file to read does not exist")
 }
 
+func XorFiles(file1 string, file2 string, outPut string) error {
+  dat1, err := ioutil.ReadFile(file1)
+  if err != nil{
+    return err
+  }
+  dat2, err := ioutil.ReadFile(file2)
+  if err != nil{
+    return err
+  }
+  dat3 := XorBytes(dat1[:], dat2[:])
+  err = LocalFileCreate(outPut, dat3[:])
+  if err != nil{
+    return err
+  }
+  return nil
+}
+
+func XorBytes(a []byte, b []byte) []byte {
+  n := len(a)
+	if len(b) < n {
+		n = len(b)
+	}
+  var byte_dst [20]byte
+	for i := 0; i < n; i++ {
+		byte_dst[i] = a[i] ^ b[i]
+	}
+	return byte_dst[:]
+}
+
+func LocalSystemInfo() ([]string, error) {
+  var InfoDump []string
+	gi := goInfo.GetInfo()
+	// later when we define these objects we can just set the values to the object vs the string slice
+  InfoDump = append(InfoDump, fmt.Sprintf("GoOS: %s",gi.GoOS))
+	InfoDump = append(InfoDump, fmt.Sprintf("Kernel: %s",gi.Kernel))
+	InfoDump = append(InfoDump, fmt.Sprintf("Core: %s",gi.Core))
+	InfoDump = append(InfoDump, fmt.Sprintf("Platform: %s",gi.Platform))
+	InfoDump = append(InfoDump, fmt.Sprintf("OS: %s",gi.OS))
+	InfoDump = append(InfoDump, fmt.Sprintf("Hostname: %s",gi.Hostname))
+	InfoDump = append(InfoDump, fmt.Sprintf("CPUs: %v",gi.CPUs))
+	//gi.VarDump()
+	if InfoDump != nil {
+		return InfoDump, nil
+	} else {
+		return nil, errors.New("Failed to retrieve local system information")
+	}
+}
+
 // ExecuteCommand function
 func ExecuteCommand(c string, args ...string) VMExecResponse {
 	cmd := exec.Command(c, args...)
@@ -184,6 +279,34 @@ func HTTPGetFile(url string) ([]byte, error) {
 	pageData, err := ioutil.ReadAll(resp.Body)
 	resp.Body.Close()
 	return pageData, nil
+}
+
+// StripSpaces will remove the spaces from a single string and return the new string
+func StripSpaces(str string) string {
+	return strings.Map(func(r rune) rune {
+		if unicode.IsSpace(r) {
+			return -1
+		}
+		return r
+	}, str)
+}
+
+// DeobfuscateString from https://github.com/SaturnsVoid/GoBot2/blob/7d6609cd49f006f5aee76a4ffd97eb25d12a1a9b/components/Cryptography.go#L44
+func DeobfuscateString(Data string) string {
+	var ClearText string
+	for i := 0; i < len(Data); i++ {
+		ClearText += string(int(Data[i]) - 1)
+	}
+	return ClearText
+}
+
+// ObfuscateString from https://github.com/SaturnsVoid/GoBot2/blob/7d6609cd49f006f5aee76a4ffd97eb25d12a1a9b/components/Cryptography.go#L52
+func ObfuscateString(Data string) string {
+	var ObfuscateText string
+	for i := 0; i < len(Data); i++ {
+		ObfuscateText += string(int(Data[i]) + 1)
+	}
+	return ObfuscateText
 }
 
 // RandString returns a string the length of strlen
