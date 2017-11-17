@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"net/http"
+	"net"
 	"os"
 	"fmt"
 	"os/exec"
@@ -268,6 +269,84 @@ func ExecuteCommand(c string, args ...string) VMExecResponse {
 		respObj.Success = true
 	}
 	return respObj
+}
+
+func DNSQuestion(target, request string) (string, error) {
+	if request == "A" {
+		var stringAnswerArray []string
+		answerPTR, err := net.LookupIP(target)
+		if err != nil {
+			return "failed", err
+		}
+		// Formating output and debug strings here
+		for _, answrPTR := range answerPTR {
+			stringAnswerArray = append(stringAnswerArray, answrPTR.String())
+		}
+		stringAnswer := strings.Join(stringAnswerArray,"/n")
+		//fmt.Println(stringAnswer)
+		return stringAnswer, nil
+  	} else if request == "TXT" {
+		answerTXT, err := net.LookupTXT(target)
+		if err != nil {
+			return "failed", err
+		}
+		// Formating output and debug strings here
+		stringAnswer := strings.Join(answerTXT,"/n")
+		//fmt.Println(stringAnswer)
+		return stringAnswer, nil
+	} else if request == "PTR" {
+		answerA, err := net.LookupAddr(target)
+		if err != nil {
+			return "failed", err
+		}
+		// Formating output and debug strings here
+		stringAnswer := strings.Join(answerA,"/n")
+		//fmt.Println(stringAnswer)
+		return stringAnswer, nil
+	} else if request == "MX" {
+		var stringAnswerArray []string
+		answerMX, err := net.LookupMX(target)
+		if err != nil {
+			return "failed", err
+		}
+		// Formating output and debug strings here
+		for _, answrMX := range answerMX {
+			stringAnswerArray = append(stringAnswerArray, answrMX.Host)
+		}
+		stringAnswer := strings.Join(stringAnswerArray,"/n")
+		//fmt.Println(stringAnswer)
+		return stringAnswer, nil
+	} else if request == "NS" {
+		var stringAnswerArray []string
+		answerNS, err := net.LookupNS(target)
+		if err != nil {
+			return "failed", err
+		}
+		// Formating output and debug strings here
+		for _, answrNS := range answerNS {
+			stringAnswerArray = append(stringAnswerArray, answrNS.Host)
+		}
+		stringAnswer := strings.Join(stringAnswerArray,"/n")
+		//fmt.Println(stringAnswer)
+		return stringAnswer, nil
+	} else if request == "CNAME" {
+		answerCNAME, err := net.LookupCNAME(target)
+		if err != nil {
+			return "failed", err
+		}
+		// Formating output and debug strings here
+		//fmt.Println(string(answerCNAME))
+		return string(answerCNAME), nil
+	} else {
+		answerA, err := net.LookupHost(target)
+		if err != nil {
+			return "failed", err
+		}
+		// Formating output and debug strings here
+		stringAnswer := strings.Join(answerA,"/n")
+		//fmt.Println(stringAnswer)
+		return stringAnswer, nil
+	}
 }
 
 // HTTPGetFile takes a url and returns a byte slice of the file there
