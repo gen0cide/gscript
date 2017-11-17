@@ -1,4 +1,4 @@
-# gscript
+z# gscript
 
 Genesis Scripting Engine
 
