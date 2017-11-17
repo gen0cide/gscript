@@ -11,15 +11,21 @@ import (
 )
 
 type Engine struct {
-	VM     *otto.Otto
-	Logger *l.Logger
-	Name   string
+	VM      *otto.Otto
+	Logger  *l.Logger
+	Imports map[string]func() []byte
+	Name    string
 }
 
 func New(name string) *Engine {
 	return &Engine{
-		Name: name,
+		Name:    name,
+		Imports: map[string]func() []byte{},
 	}
+}
+
+func (e *Engine) AddImport(name string, data func() []byte) {
+	e.Imports[name] = data
 }
 
 func (e *Engine) SetName(name string) {
@@ -36,6 +42,7 @@ func (e *Engine) EnableLogging() {
 func (e *Engine) CreateVM() {
 	e.VM = otto.New()
 	e.VM.Set("Halt", e.VMHalt)
+	e.VM.Set("Asset", e.VMAsset)
 	e.VM.Set("DebugConsole", e.DebugConsole)
 	e.VM.Set("DeleteFile", e.VMDeleteFile)
 	e.VM.Set("CopyFile", e.VMCopyFile)
