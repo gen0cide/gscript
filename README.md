@@ -42,7 +42,7 @@ These variables are pre-defined and injected into the GENESIS VM at runtime for 
 These functions are available to you automatically within the GSE scripting context.
 
 
-### `Halt()`
+#### `Halt()`
 
 Terminates the current GSE VM gracefully.
 
@@ -56,7 +56,7 @@ None
 
 ---
 
-### `Asset(filename)`
+#### `Asset(filename)`
 
 Load an asset you previously imported during compilation from the packed store.
 
@@ -70,7 +70,7 @@ Load an asset you previously imported during compilation from the packed store.
 
 ---
 
-## `DeleteFile(path)`
+### `DeleteFile(path)`
 
 Delete the file located at `path`.
 
@@ -84,7 +84,7 @@ Delete the file located at `path`.
 
 ---
 
-## `CopyFile(srcPath, dstPath)`
+### `CopyFile(srcPath, dstPath)`
 
 Copy file from `srcPath` to `dstPath`.
 
@@ -99,7 +99,7 @@ Copy file from `srcPath` to `dstPath`.
 
 ---
 
-## `WriteFile(path, bytes, perms)`
+### `WriteFile(path, bytes, perms)`
 
 Write `bytes` to `path` and set perms to `perms`.
 
@@ -115,7 +115,7 @@ Write `bytes` to `path` and set perms to `perms`.
 
 ---
 
-## `ExecuteFile(path, args)`
+### `ExecuteFile(path, args)`
 
 Execute a file located at `path` with `args` as arguments.
 
@@ -130,7 +130,7 @@ Execute a file located at `path` with `args` as arguments.
 
 ---
 
-## `AppendFile(path, bytes)`
+### `AppendFile(path, bytes)`
 
 Append `bytes` to the file located at `path`.
 
@@ -145,7 +145,7 @@ Append `bytes` to the file located at `path`.
 
 ---
 
-## `ReplaceInFile(path, target, replace)`
+### `ReplaceInFile(path, target, replace)`
 
 Replace any instances of `target` with `replace` in the file located at `path`.
 
@@ -161,7 +161,7 @@ Replace any instances of `target` with `replace` in the file located at `path`.
 
 ---
 
-## `Signal(pid, signal)`
+### `Signal(pid, signal)`
 
 Send a signal to another process.
 
@@ -176,7 +176,7 @@ Send a signal to another process.
 
 ---
 
-## `RetrieveFileFromURL(url)`
+### `RetrieveFileFromURL(url)`
 
 Retrieve a file via `GET` for a given `url`.
 
@@ -190,7 +190,7 @@ Retrieve a file via `GET` for a given `url`.
 
 ---
 
-## `DNSQuery(question, type)`
+### `DNSQuery(question, type)`
 
 Perform a DNS lookup.
 
@@ -205,7 +205,7 @@ Perform a DNS lookup.
 
 ---
 
-## `HTTPRequest(method, url, body, headers)`
+### `HTTPRequest(method, url, body, headers)`
 
 Perform an HTTP/S request.
 
@@ -222,7 +222,7 @@ Perform an HTTP/S request.
 
 ---
 
-## `Exec(cmd, args)`
+### `Exec(cmd, args)`
 
 Execute the given command and arguments.
 
@@ -237,7 +237,7 @@ Execute the given command and arguments.
 
 ---
 
-## `MD5(bytes)`
+### `MD5(bytes)`
 
 Create a MD5 hash of the given bytes.
 
@@ -251,7 +251,7 @@ Create a MD5 hash of the given bytes.
 
 ---
 
-## `SHA1(bytes)`
+### `SHA1(bytes)`
 
 Create a SHA1 hash of the given bytes.
 
@@ -265,7 +265,7 @@ Create a SHA1 hash of the given bytes.
 
 ---
 
-## `B64Encode(bytes)`
+### `B64Encode(bytes)`
 
 Perform a Base64 encode on `bytes`.
 
@@ -279,7 +279,7 @@ Perform a Base64 encode on `bytes`.
 
 ---
 
-## `B64Decode(string)`
+### `B64Decode(string)`
 
 Perform a Base64 decode on `string`.
 
@@ -293,7 +293,7 @@ Perform a Base64 decode on `string`.
 
 ---
 
-## `Timestamp()`
+### `Timestamp()`
 
 Get current time in Epoch.
 
@@ -307,7 +307,7 @@ None
 
 ---
 
-## `CPUStats()`
+### `CPUStats()`
 
 Retreive specs about the machine's CPU.
 
@@ -321,7 +321,7 @@ None
 
 ---
 
-## `MemStats()`
+### `MemStats()`
 
 Retreive specs about the machine's memory.
 
@@ -335,7 +335,7 @@ None
 
 ---
 
-## `SSHExec(host, port, creds, cmds)`
+### `SSHExec(host, port, creds, cmds)`
 
 Executes SSH commands on the given host.
 
@@ -352,7 +352,7 @@ Executes SSH commands on the given host.
 
 ---
 
-## `Sleep(seconds)`
+### `Sleep(seconds)`
 
 Sleep for `seconds` number of seconds.
 
@@ -366,7 +366,7 @@ Sleep for `seconds` number of seconds.
 
 ---
 
-## `GetDirsInPath()`
+### `GetDirsInPath()`
 
 Get a list of all the directories currently in our PATH.
 
@@ -380,7 +380,7 @@ None
 
 ---
 
-## `EnvVars()`
+### `EnvVars()`
 
 Retrieve an array of all environment variables in the current execution.
 
@@ -394,7 +394,7 @@ None
 
 ---
 
-## `GetEnv(varname)`
+### `GetEnv(varname)`
 
 Retrieve the value for Environment Variable `varname`.
 
@@ -408,7 +408,7 @@ Retrieve the value for Environment Variable `varname`.
 
 ---
 
-## `FileCreateTime(path)`
+### `FileCreateTime(path)`
 
 Lookup the creation time for file located at `path`.
 
@@ -422,7 +422,7 @@ Lookup the creation time for file located at `path`.
 
 ---
 
-## `FileModifyTime(path)`
+### `FileModifyTime(path)`
 
 Lookup the last modified time for file located at `path`.
 
@@ -436,7 +436,7 @@ Lookup the last modified time for file located at `path`.
 
 ---
 
-## `LoggedInUsers()`
+### `LoggedInUsers()`
 
 Gets an array of unique users currently logged in.
 
@@ -450,7 +450,7 @@ None
 
 ---
 
-## `UsersRunningProcs()`
+### `UsersRunningProcs()`
 
 Gets an array of unique users currently running processes.
 
@@ -464,7 +464,7 @@ None
 
 ---
 
-## `ServeDataOverHTTP(data, port, timeout)`
+### `ServeDataOverHTTP(data, port, timeout)`
 
 Starts an HTTPServer that will respond to `GET /` with the `data` provided on port `port`.
 
