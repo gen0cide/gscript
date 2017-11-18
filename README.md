@@ -42,7 +42,7 @@ These variables are pre-defined and injected into the GENESIS VM at runtime for 
 These functions are available to you automatically within the GSE scripting context.
 
 
-#### `Halt()`
+### `Halt()`
 
 Terminates the current GSE VM gracefully.
 
@@ -56,7 +56,7 @@ None
 
 ---
 
-#### `Asset(filename)`
+### `Asset(filename)`
 
 Load an asset you previously imported during compilation from the packed store.
 
