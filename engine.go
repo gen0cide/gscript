@@ -4,6 +4,10 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"os"
+	"os/user"
+	"runtime"
+	"strings"
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/happierall/l"
@@ -39,8 +43,62 @@ func (e *Engine) EnableLogging() {
 	e.Logger.DisabledInfo = false
 }
 
+func (e *Engine) CurrentUser() map[string]string {
+	userInfo := map[string]string{}
+	u, err := user.Current()
+	if err != nil {
+		e.LogErrorf("User Loading Error: %s", err.Error())
+		return userInfo
+	}
+	userInfo["uid"] = u.Uid
+	userInfo["gid"] = u.Gid
+	userInfo["username"] = u.Username
+	userInfo["name"] = u.Name
+	userInfo["home_dir"] = u.HomeDir
+	groups, err := u.GroupIds()
+	if err != nil {
+		e.LogErrorf("Group Loading Error: %s", err.Error())
+		return userInfo
+	}
+	userInfo["groups"] = strings.Join(groups, ":")
+	return userInfo
+}
+
+func (e *Engine) InjectVars() {
+	userInfo, err := e.VM.ToValue(e.CurrentUser())
+	if err != nil {
+		e.LogErrorf("Could not inject user info into VM: %s", err.Error())
+	} else {
+		e.VM.Set("USER_INFO", userInfo)
+	}
+	osVal, err := e.VM.ToValue(runtime.GOOS)
+	if err != nil {
+		e.LogErrorf("Could not inject os info into VM: %s", err.Error())
+	} else {
+		e.VM.Set("OS", osVal)
+	}
+	hn, err := os.Hostname()
+	if err != nil {
+		e.LogErrorf("Could not obtain hostname info: %s", err.Error())
+	} else {
+		hostnameVal, err := e.VM.ToValue(hn)
+		if err != nil {
+			e.LogErrorf("Could not inject hostname info into VM: %s", err.Error())
+		} else {
+			e.VM.Set("HOSTNAME", hostnameVal)
+		}
+	}
+	archVal, err := e.VM.ToValue(runtime.GOARCH)
+	if err != nil {
+		e.LogErrorf("Could not inject arch info into VM: %s", err.Error())
+	} else {
+		e.VM.Set("ARCH", archVal)
+	}
+}
+
 func (e *Engine) CreateVM() {
 	e.VM = otto.New()
+	e.InjectVars()
 	e.VM.Set("Halt", e.VMHalt)
 	e.VM.Set("Asset", e.VMAsset)
 	e.VM.Set("DebugConsole", e.DebugConsole)

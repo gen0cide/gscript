@@ -22,5 +22,6 @@ function Deploy() {
 }
 
 function AfterDeploy() {
+  console.log(HOSTNAME);
   return true;
 }

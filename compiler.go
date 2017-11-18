@@ -137,5 +137,5 @@ func (c *Compiler) Do() {
 	cmd.Stderr = os.Stderr
 	cmd.Run()
 	os.Chdir(cwd)
-	c.Logger.Debugf("%s", c.BuildDir)
+	os.RemoveAll(c.BuildDir)
 }

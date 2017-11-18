@@ -28,30 +28,18 @@ GSE's goal is to allow intelligent deployment of those payloads.
 
 ## Variables
 
-### User Defined (You define/overwrite as needed)
-
-| Variable Name  | Type     | Default              | Purpose                                                                                                   |
-|----------------|----------|----------------------|-----------------------------------------------------------------------------------------------------------|
-| `source_url`   | `string` | `null`               | Location GSE should download implant from.                                                                |
-| `packed_file`  | `string` | `null`               | A packed GSE File (created with the GSE compiler)                                                         |
-| `source_bytes` | `array`  | Generated At Runtime | The contents to be written to `file_dest` during `Deploy()`                                               |
-| `file_dest`    | `string` | `null`               | The location where `source_bytes` get's written to, and subsequently executed.                            |
-| `exec_args`    | `array`  | `[]`                 | Array of strings that will be passed to the `dest_file` Exec() call.                                      |
-| `timeout`      | `int`    | `180000`             | The global timeout for the entire GSE VM. Default = 3 minutes. Can be overwritten to shorten or lengthen. |
-
-### Read Only (Defined at Runtime by GSE)
+These variables are pre-defined and injected into the GENESIS VM at runtime for your convenience.
 
 | Variable Name | Type     | Example                                                 | Purpose                                                                                                      |
 |---------------|----------|---------------------------------------------------------|--------------------------------------------------------------------------------------------------------------|
-| `user_info`   | `object` | `{uid: 0, gid: 0, username: "root", home_dir: "/root"}` | Information about the User. Will be basically whatever is returned with https://golang.org/pkg/os/user/#User |
-| `hostname`    | `string` | `example01`                                             | The hostname of the machine.                                                                                 |
-| `ip_addrs`    | `array`  | `["127.0.0.1","192.168.1.5"]`                           | The IP addresses of the machine.                                                                             |
-| `os`          | `string` | `linux`                                                 | The operating system (basically `runtime.GOOS`)                                                              |
-| `arch`        | `string` | `amd64`                                                 | The CPU architecture (basically `runtime.GOARCH`)                                                             |
+| `USER_INFO`   | `object` | `{uid: 0, gid: 0, username: "root", home_dir: "/root"}` | Information about the User. Will be basically whatever is returned with https://golang.org/pkg/os/user/#User |
+| `HOSTNAME`    | `string` | `example01`                                             | The hostname of the machine.                                                                                 |
+| `IP_ADDRS`    | `array`  | `["127.0.0.1","192.168.1.5"]`                           | The IP addresses of the machine.                                                                             |
+| `OS`          | `string` | `linux`                                                 | The operating system (basically `runtime.GOOS`)                                                              |
+| `ARCH`        | `string` | `amd64`                                                 | The CPU architecture (basically `runtime.GOARCH`)                                                            |
 
 ## Builtin Functions
 These functions are available to you automatically within the GSE scripting context.
-
 
 
 #### Halt()
@@ -65,6 +53,20 @@ None
 ##### Return Type
 
 `boolean` (true = success, false = error)
+
+---
+
+#### Asset(filename)
+
+Load an asset you previously imported during compilation from the packed store.
+
+#### Argument List
+
+  * `filename` (String) - The name of the file that you imported into your dropper.
+
+##### Return Type
+
+`[]byte` - Array of bytes of the file contents.
 
 ---
 

@@ -23,7 +23,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "gscript"
 	app.Usage = "Interact with the Genesis Scripting Engine (GSE)"
-	app.Version = "0.0.2"
+	app.Version = "0.0.3"
 	app.Authors = []cli.Author{
 		cli.Author{
 			Name:  "Alex Levinson",
@@ -128,14 +128,14 @@ func main() {
 				return nil
 			},
 		},
-		{
-			Name:    "build",
-			Aliases: []string{"b"},
-			Usage:   "Bundle multiple Genesis scripts and files into a single package.",
-			Action: func(c *cli.Context) error {
-				return nil
-			},
-		},
+		// {
+		// 	Name:    "build",
+		// 	Aliases: []string{"b"},
+		// 	Usage:   "Bundle multiple Genesis scripts and files into a single package.",
+		// 	Action: func(c *cli.Context) error {
+		// 		return nil
+		// 	},
+		// },
 		{
 			Name:    "run",
 			Aliases: []string{"r"},
