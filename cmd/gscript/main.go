@@ -33,7 +33,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "gscript"
 	app.Usage = "Interact with the Genesis Scripting Engine (GSE)"
-	app.Version = "0.0.5"
+	app.Version = "0.0.6"
 	app.Authors = []cli.Author{
 		cli.Author{
 			Name:  "Alex Levinson",

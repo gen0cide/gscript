@@ -12,12 +12,11 @@ import (
 )
 
 func (e *Engine) VMHalt(call otto.FunctionCall) otto.Value {
-	e.LogCritf("Function Not Implemented: %s", CalledBy())
+	e.LogErrorf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
 func (e *Engine) VMDeleteFile(call otto.FunctionCall) otto.Value {
-	// Arg0 is the string path of the file to delete
 	filePath := call.Argument(0)
 	filePathAsString, err := filePath.Export()
 	if err != nil {
@@ -33,8 +32,6 @@ func (e *Engine) VMDeleteFile(call otto.FunctionCall) otto.Value {
 }
 
 func (e *Engine) VMWriteFile(call otto.FunctionCall) otto.Value {
-	// Arg0 is the string path of the new file to write
-	// Arg1 is a byte array of bytes of the file
 	filePath := call.Argument(0)
 	fileData := call.Argument(1)
 	fileBytes := e.ValueToByteSlice(fileData)
@@ -52,8 +49,6 @@ func (e *Engine) VMWriteFile(call otto.FunctionCall) otto.Value {
 }
 
 func (e *Engine) VMCopyFile(call otto.FunctionCall) otto.Value {
-	// Arg0 is the string path of the first file we read
-	// Arg1 is the string path of the new file to write
 	readPath, err := call.ArgumentList[0].ToString()
 	if err != nil {
 		e.LogErrorf("Function Error: function=VMCopyFile() error=ARG_NOT_STRINGABLE arg=%s", spew.Sdump(call.ArgumentList[0]))
@@ -69,27 +64,17 @@ func (e *Engine) VMCopyFile(call otto.FunctionCall) otto.Value {
 		e.LogErrorf("Function Error: function=VMCopyFile() error='There was an error reading the file to copy'")
 		return otto.FalseValue()
 	}
-	//e.Logger.Errorf("Function Error: function=VMCopyFile() error=Debug; read local file at: %s", spew.Sdump(readPath))
 	err = LocalFileCreate(writePath, bytes)
 	if err != nil {
 		e.LogErrorf("Function Error: function=VMCopyFile() error='There was an error writing the file to that path'")
 		return otto.FalseValue()
 	}
-	// Testing Debug call function //
 	e.LogInfof("Function: function=%s msg='wrote local file at: %s'", CalledBy(), spew.Sdump(writePath))
-	//returnString := fmt.Sprintf("File created at: %s", string(writePath))
-	//var ret = otto.Value{}
-	//var er error
-	//ret, er = otto.ToValue(returnString)
-	//if er != nil {
-	//	e.Logger.Errorf("Function Error: function=VMCopyFile() error='Error returning value to VM'")
-	//	return otto.FalseValue()
-	//}
 	return otto.TrueValue()
 }
 
 func (e *Engine) VMExecuteFile(call otto.FunctionCall) otto.Value {
-	e.LogCritf("Function Not Implemented: %s", CalledBy())
+	e.LogErrorf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
@@ -113,8 +98,6 @@ func (e *Engine) VMAsset(call otto.FunctionCall) otto.Value {
 }
 
 func (e *Engine) VMAppendFile(call otto.FunctionCall) otto.Value {
-	// Arg0 is the string path of the new file to write
-	// Arg1 is a byte array of bytes of the file
 	filePath := call.Argument(0)
 	fileData := call.Argument(1)
 	fileBytes := e.ValueToByteSlice(fileData)
@@ -132,9 +115,6 @@ func (e *Engine) VMAppendFile(call otto.FunctionCall) otto.Value {
 }
 
 func (e *Engine) VMReplaceInFile(call otto.FunctionCall) otto.Value {
-	// Arg0 is the string path of the file to search / replace
-	// Arg1 is a string to find / match w/
-	// Arg2 is a to string to replace w/
 	filePath := call.Argument(0)
 	filePathAsString, err := filePath.Export()
 	if err != nil {
@@ -162,12 +142,12 @@ func (e *Engine) VMReplaceInFile(call otto.FunctionCall) otto.Value {
 }
 
 func (e *Engine) VMSignal(call otto.FunctionCall) otto.Value {
-	e.LogCritf("Function Not Implemented: %s", CalledBy())
+	e.LogErrorf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
 func (e *Engine) VMImplode(call otto.FunctionCall) otto.Value {
-	e.LogCritf("Function Not Implemented: %s", CalledBy())
+	e.LogErrorf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
@@ -190,10 +170,7 @@ func (e *Engine) VMRetrieveFileFromURL(call otto.FunctionCall) otto.Value {
 	return vmResponse
 }
 
-// Uses the native DNS client (including things like host files and resolution)
 func (e *Engine) VMDNSQuery(call otto.FunctionCall) otto.Value {
-	// Arg0 is the target string domain to do a DNS lookup
-	// Arg1 is string of the TYPE of DNS query
 	targetDomain := call.Argument(0)
 	queryType := call.Argument(1)
 	targetDomainAsString, err := targetDomain.Export()
@@ -216,7 +193,7 @@ func (e *Engine) VMDNSQuery(call otto.FunctionCall) otto.Value {
 }
 
 func (e *Engine) VMHTTPRequest(call otto.FunctionCall) otto.Value {
-	e.LogCritf("Function Not Implemented: %s", CalledBy())
+	e.LogErrorf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
@@ -421,12 +398,12 @@ func (e *Engine) VMCPUStats(call otto.FunctionCall) otto.Value {
 }
 
 func (e *Engine) VMMemStats(call otto.FunctionCall) otto.Value {
-	e.LogCritf("Function Not Implemented: %s", CalledBy())
+	e.LogErrorf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
 func (e *Engine) VMSSHCmd(call otto.FunctionCall) otto.Value {
-	e.LogCritf("Function Not Implemented: %s", CalledBy())
+	e.LogErrorf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
@@ -446,46 +423,46 @@ func (e *Engine) VMSleep(call otto.FunctionCall) otto.Value {
 }
 
 func (e *Engine) VMGetTweet(call otto.FunctionCall) otto.Value {
-	e.LogCritf("Function Not Implemented: %s", CalledBy())
+	e.LogErrorf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
 func (e *Engine) VMGetDirsInPath(call otto.FunctionCall) otto.Value {
-	e.LogCritf("Function Not Implemented: %s", CalledBy())
+	e.LogErrorf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
 func (e *Engine) VMEnvVars(call otto.FunctionCall) otto.Value {
-	e.LogCritf("Function Not Implemented: %s", CalledBy())
+	e.LogErrorf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
 func (e *Engine) VMGetEnv(call otto.FunctionCall) otto.Value {
-	e.LogCritf("Function Not Implemented: %s", CalledBy())
+	e.LogErrorf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
 func (e *Engine) VMFileCreateTime(call otto.FunctionCall) otto.Value {
-	e.LogCritf("Function Not Implemented: %s", CalledBy())
+	e.LogErrorf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
 func (e *Engine) VMFileModifyTime(call otto.FunctionCall) otto.Value {
-	e.LogCritf("Function Not Implemented: %s", CalledBy())
+	e.LogErrorf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
 func (e *Engine) VMLoggedInUsers(call otto.FunctionCall) otto.Value {
-	e.LogCritf("Function Not Implemented: %s", CalledBy())
+	e.LogErrorf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
 func (e *Engine) VMUsersRunningProcs(call otto.FunctionCall) otto.Value {
-	e.LogCritf("Function Not Implemented: %s", CalledBy())
+	e.LogErrorf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
 
 func (e *Engine) VMServeFileOverHTTP(call otto.FunctionCall) otto.Value {
-	e.LogCritf("Function Not Implemented: %s", CalledBy())
+	e.LogErrorf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }

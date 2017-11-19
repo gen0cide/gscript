@@ -23,13 +23,9 @@ type VMBundle struct {
 }
 
 type Compiler struct {
-	OS   string `json:"os"`
-	Arch string `json:"arch"`
-	// ScriptFile  string
-	// PackageName string
-	OutputFile string `json:"output"`
-	// AssetFiles  []string
-	// Embeds      []EmbeddedFile
+	OS           string      `json:"os"`
+	Arch         string      `json:"arch"`
+	OutputFile   string      `json:"output"`
 	VMs          []*VMBundle `json:"vms"`
 	BuildDir     string      `json:"build_dir"`
 	AssetDir     string      `json:"asset_dir"`
@@ -154,7 +150,6 @@ func (c *Compiler) BuildEntryPoint() {
 
 func (c *Compiler) WriteSource() {
 	if c.OutputSource {
-		c.Logger.Log("YEP")
 		quick.Highlight(os.Stdout, string(c.Source), "go", "terminal", "vim")
 		return
 	}
