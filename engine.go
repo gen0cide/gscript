@@ -94,6 +94,12 @@ func (e *Engine) InjectVars() {
 	} else {
 		e.VM.Set("ARCH", archVal)
 	}
+	ipVals, err := e.VM.ToValue(GetLocalIPs())
+	if err != nil {
+		e.LogErrorf("Could not inject ip info into VM: %s", err.Error())
+	} else {
+		e.VM.Set("IP_ADDRS", ipVals)
+	}
 }
 
 func (e *Engine) CreateVM() {

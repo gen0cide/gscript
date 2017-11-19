@@ -3,20 +3,21 @@ package gscript
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"math/rand"
-	"net/http"
 	"net"
+	"net/http"
 	"os"
-	"fmt"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
-	"path/filepath"
-	"github.com/matishsiao/goInfo"
 	"unicode"
+
+	"github.com/matishsiao/goInfo"
 )
 
 func CalledBy() string {
@@ -73,12 +74,12 @@ func LocalDirRemoveAll(dir string) error {
 
 func LocalFileDelete(path string) error {
 	if LocalFileExists(path) {
-	  err := os.Remove(path)
-	  if err != nil {
-	  	return err
-	  }
-	  return nil
-  } else {
+		err := os.Remove(path)
+		if err != nil {
+			return err
+		}
+		return nil
+	} else {
 		return errors.New("The file dosn't exist to delete")
 	}
 }
@@ -202,28 +203,28 @@ func LocalFileRead(path string) ([]byte, error) {
 }
 
 func XorFiles(file1 string, file2 string, outPut string) error {
-  dat1, err := ioutil.ReadFile(file1)
-  if err != nil{
-    return err
-  }
-  dat2, err := ioutil.ReadFile(file2)
-  if err != nil{
-    return err
-  }
-  dat3 := XorBytes(dat1[:], dat2[:])
-  err = LocalFileCreate(outPut, dat3[:])
-  if err != nil{
-    return err
-  }
-  return nil
+	dat1, err := ioutil.ReadFile(file1)
+	if err != nil {
+		return err
+	}
+	dat2, err := ioutil.ReadFile(file2)
+	if err != nil {
+		return err
+	}
+	dat3 := XorBytes(dat1[:], dat2[:])
+	err = LocalFileCreate(outPut, dat3[:])
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func XorBytes(a []byte, b []byte) []byte {
-  n := len(a)
+	n := len(a)
 	if len(b) < n {
 		n = len(b)
 	}
-  var byte_dst [20]byte
+	var byte_dst [20]byte
 	for i := 0; i < n; i++ {
 		byte_dst[i] = a[i] ^ b[i]
 	}
@@ -231,16 +232,16 @@ func XorBytes(a []byte, b []byte) []byte {
 }
 
 func LocalSystemInfo() ([]string, error) {
-  var InfoDump []string
+	var InfoDump []string
 	gi := goInfo.GetInfo()
 	// later when we define these objects we can just set the values to the object vs the string slice
-  InfoDump = append(InfoDump, fmt.Sprintf("GoOS: %s",gi.GoOS))
-	InfoDump = append(InfoDump, fmt.Sprintf("Kernel: %s",gi.Kernel))
-	InfoDump = append(InfoDump, fmt.Sprintf("Core: %s",gi.Core))
-	InfoDump = append(InfoDump, fmt.Sprintf("Platform: %s",gi.Platform))
-	InfoDump = append(InfoDump, fmt.Sprintf("OS: %s",gi.OS))
-	InfoDump = append(InfoDump, fmt.Sprintf("Hostname: %s",gi.Hostname))
-	InfoDump = append(InfoDump, fmt.Sprintf("CPUs: %v",gi.CPUs))
+	InfoDump = append(InfoDump, fmt.Sprintf("GoOS: %s", gi.GoOS))
+	InfoDump = append(InfoDump, fmt.Sprintf("Kernel: %s", gi.Kernel))
+	InfoDump = append(InfoDump, fmt.Sprintf("Core: %s", gi.Core))
+	InfoDump = append(InfoDump, fmt.Sprintf("Platform: %s", gi.Platform))
+	InfoDump = append(InfoDump, fmt.Sprintf("OS: %s", gi.OS))
+	InfoDump = append(InfoDump, fmt.Sprintf("Hostname: %s", gi.Hostname))
+	InfoDump = append(InfoDump, fmt.Sprintf("CPUs: %v", gi.CPUs))
 	//gi.VarDump()
 	if InfoDump != nil {
 		return InfoDump, nil
@@ -282,16 +283,16 @@ func DNSQuestion(target, request string) (string, error) {
 		for _, answrPTR := range answerPTR {
 			stringAnswerArray = append(stringAnswerArray, answrPTR.String())
 		}
-		stringAnswer := strings.Join(stringAnswerArray,"/n")
+		stringAnswer := strings.Join(stringAnswerArray, "/n")
 		//fmt.Println(stringAnswer)
 		return stringAnswer, nil
-  	} else if request == "TXT" {
+	} else if request == "TXT" {
 		answerTXT, err := net.LookupTXT(target)
 		if err != nil {
 			return "failed", err
 		}
 		// Formating output and debug strings here
-		stringAnswer := strings.Join(answerTXT,"/n")
+		stringAnswer := strings.Join(answerTXT, "/n")
 		//fmt.Println(stringAnswer)
 		return stringAnswer, nil
 	} else if request == "PTR" {
@@ -300,7 +301,7 @@ func DNSQuestion(target, request string) (string, error) {
 			return "failed", err
 		}
 		// Formating output and debug strings here
-		stringAnswer := strings.Join(answerA,"/n")
+		stringAnswer := strings.Join(answerA, "/n")
 		//fmt.Println(stringAnswer)
 		return stringAnswer, nil
 	} else if request == "MX" {
@@ -313,7 +314,7 @@ func DNSQuestion(target, request string) (string, error) {
 		for _, answrMX := range answerMX {
 			stringAnswerArray = append(stringAnswerArray, answrMX.Host)
 		}
-		stringAnswer := strings.Join(stringAnswerArray,"/n")
+		stringAnswer := strings.Join(stringAnswerArray, "/n")
 		//fmt.Println(stringAnswer)
 		return stringAnswer, nil
 	} else if request == "NS" {
@@ -326,7 +327,7 @@ func DNSQuestion(target, request string) (string, error) {
 		for _, answrNS := range answerNS {
 			stringAnswerArray = append(stringAnswerArray, answrNS.Host)
 		}
-		stringAnswer := strings.Join(stringAnswerArray,"/n")
+		stringAnswer := strings.Join(stringAnswerArray, "/n")
 		//fmt.Println(stringAnswer)
 		return stringAnswer, nil
 	} else if request == "CNAME" {
@@ -343,7 +344,7 @@ func DNSQuestion(target, request string) (string, error) {
 			return "failed", err
 		}
 		// Formating output and debug strings here
-		stringAnswer := strings.Join(answerA,"/n")
+		stringAnswer := strings.Join(answerA, "/n")
 		//fmt.Println(stringAnswer)
 		return stringAnswer, nil
 	}
@@ -436,4 +437,21 @@ func LocalCopyFile(src, dst string) error {
 		return err
 	}
 	return nil
+}
+
+func GetLocalIPs() []string {
+	addresses := []string{}
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		return addresses
+	}
+
+	for _, a := range addrs {
+		if ipnet, ok := a.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				addresses = append(addresses, ipnet.IP.String())
+			}
+		}
+	}
+	return addresses
 }
