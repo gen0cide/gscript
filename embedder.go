@@ -3,7 +3,6 @@ package gscript
 import (
 	"bytes"
 	"compress/flate"
-	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"path/filepath"
@@ -37,26 +36,7 @@ func (e *EmbeddedFile) ResolveFilename() {
 }
 
 func (e *EmbeddedFile) ResolveVariableName() {
-	e.NameHash = RandLowerAlphaString(18)
-}
-
-func (e *EmbeddedFile) GenerateVariableDef() {
-	if len(e.Compressed) == 0 {
-		return
-	}
-	function := ""
-	fHeader := "var %s = func() []byte {\n\ts, _ := ioutil.ReadAll(flate.NewReader(bytes.NewBuffer([]byte{"
-	function += fmt.Sprintf(fHeader, e.NameHash)
-	for idx, b := range e.Compressed {
-		if idx%15 == 0 {
-			function += "\n\t\t"
-		}
-		function += fmt.Sprintf("0x%02x, ", b)
-	}
-	function += "\n\t"
-	fCloser := "})))\n\treturn s\n}\n"
-	function += fCloser
-	e.VariableDef = function
+	e.NameHash = RandUpperAlphaString(18)
 }
 
 func (e *EmbeddedFile) Embed() {
@@ -64,7 +44,6 @@ func (e *EmbeddedFile) Embed() {
 	e.ResolveVariableName()
 	e.ResolveData()
 	e.Compress()
-	e.GenerateVariableDef()
 }
 
 func BytesToCompressed(b []byte) []byte {
@@ -80,7 +59,7 @@ func CompressedToBytes(b []byte) []byte {
 	return buf
 }
 
-func RandLowerAlphaString(strlen int) string {
+func RandUpperAlphaString(strlen int) string {
 	var r = rand.New(rand.NewSource(time.Now().UnixNano()))
 	const chars = "abcdefghijklmnopqrstuvwxyz"
 	result := make([]byte, strlen)

@@ -19,6 +19,7 @@ func main() {
 	var outputFile string
 	var compilerOS string
 	var compilerArch string
+	var outputSource = false
 
 	app := cli.NewApp()
 	app.Name = "gscript"
@@ -95,12 +96,12 @@ func main() {
 		{
 			Name:    "compile",
 			Aliases: []string{"c"},
-			Usage:   "Compile a Genesis script into a stand alone Golang package.",
+			Usage:   "Compile genesis scripts into a stand alone binary.",
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:        "outfile",
-					Value:       filepath.Join(os.TempDir(), fmt.Sprintf("%d_genesis.bin", time.Now().Unix())),
-					Usage:       "Location of the compiled binary",
+					Value:       "-",
+					Usage:       "Location of the compiled binary (STDOUT if none specified)",
 					Destination: &outputFile,
 				},
 				cli.StringFlag{
@@ -115,16 +116,26 @@ func main() {
 					Usage:       "The GOARCH you wish to use for your compiled binary.",
 					Destination: &compilerArch,
 				},
+				cli.BoolFlag{
+					Name:        "source",
+					Usage:       "Do not compile the generated code. Output source instead.",
+					Destination: &outputSource,
+				},
 			},
 			Action: func(c *cli.Context) error {
 				if c.NArg() == 0 {
-					gse := gscript.NewCompiler("", "", "", "")
+					gse := gscript.NewCompiler([]string{}, "", "", "", false)
 					gse.Logger.Critf("You did not specify a genesis script!")
 				}
-				scriptFile := c.Args()[0]
-				compiler := gscript.NewCompiler(scriptFile, outputFile, compilerOS, compilerArch)
+				scriptFiles := c.Args()
+				if !outputSource && outputFile == "-" {
+					outputFile = filepath.Join(os.TempDir(), fmt.Sprintf("%d_genesis.bin", time.Now().Unix()))
+				}
+				compiler := gscript.NewCompiler(scriptFiles, outputFile, compilerOS, compilerArch, outputSource)
 				compiler.Do()
-				compiler.Logger.Logf("Your binary is located at: %s", outputFile)
+				if !outputSource {
+					compiler.Logger.Logf("Your binary is located at: %s", outputFile)
+				}
 				return nil
 			},
 		},
