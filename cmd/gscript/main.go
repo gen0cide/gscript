@@ -24,7 +24,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "gscript"
 	app.Usage = "Interact with the Genesis Scripting Engine (GSE)"
-	app.Version = "0.0.4"
+	app.Version = "0.0.3"
 	app.Authors = []cli.Author{
 		cli.Author{
 			Name:  "Alex Levinson",
@@ -92,6 +92,12 @@ func main() {
 				gse.InteractiveSession()
 				return nil
 			},
+		},
+		{
+			Name:    "update",
+			Aliases: []string{"u"},
+			Usage:   "Update Genesis Scripting Engine to the latest version.",
+			Action:  UpdateCLI,
 		},
 		{
 			Name:    "compile",

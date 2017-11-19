@@ -15,14 +15,6 @@ import (
 	"github.com/happierall/l"
 )
 
-var TempStart = "package %s\n\nimport (\n\t\"bytes\"\n\t\"compress/flate\"\n\t\"io/ioutil\"\n\n\t\"github.com/gen0cide/gscript\"\n)\n"
-
-var TempMain = "func main() {\n\tgse := gscript.New(\"\")\n\tgse.CreateVM()"
-
-var TempEnd = "\tgse.LoadScript(gse.Imports[\"genesis_entry_point.gs\"]())\n\tgse.ExecutePlan()\n}\n"
-
-const EntryPoint = `genesis_entry_point.gs`
-
 type VMBundle struct {
 	ID         string         `json:"id"`
 	ScriptFile string         `json:"source"`
