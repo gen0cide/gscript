@@ -394,6 +394,18 @@ func TCPWrite(writeData []byte, ip, port string) ([]byte, error) {
 	return buffer2, nil
 }
 
+// UDPWrite will send a basic udp stream to the target ip and port
+func UDPWrite(writeData []byte, ip, port string) (error) {
+	host := ip+":"+port
+	conn, err := net.Dial("tcp", host)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+	conn.Write(writeData)
+	return nil
+}
+
 // StripSpaces will remove the spaces from a single string and return the new string
 func StripSpaces(str string) string {
 	return strings.Map(func(r rune) rune {
