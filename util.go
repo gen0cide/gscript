@@ -356,12 +356,9 @@ func TCPWrite(writeData []byte, ip, port string) ([]byte, error) {
 	buffer := make([]byte, 1024)
 	conn.Read(buffer)
 	conn.Write(writeData)
-	return buffer, nil
-	// @ahhh: This Code doesn't compile!
-	// Unreachable code because of "return buffer, nil" above.
-	// buffer2 := make([]byte, 1024)
-	// conn.Read(buffer2)
-	// return buffer2, nil
+	buffer2 := make([]byte, 1024)
+	conn.Read(buffer2)
+	return buffer2, nil
 }
 
 func UDPWrite(writeData []byte, ip, port string) error {

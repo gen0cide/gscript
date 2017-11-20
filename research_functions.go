@@ -3,12 +3,29 @@ package gscript
 import (
 	"github.com/robertkrimen/otto"
 	"github.com/davecgh/go-spew/spew"
+	"strings"
 
 )
 
 func (e *Engine) VMLocalUserExists(call otto.FunctionCall) otto.Value {
-	e.LogErrorf("Function Not Implemented: %s", CalledBy())
-	return otto.FalseValue()
+	filePathString := "/etc/passwd"
+	search := call.Argument(0)
+	searchString, err := search.Export()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(err))
+		return otto.FalseValue()
+	}
+  fileData, err := LocalFileRead(filePathString)
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=LocalFileRead_Error arg=%s", CalledBy(), spew.Sdump(err))
+		return otto.FalseValue()
+	}
+	fileStrings := string(fileData)
+	if strings.Contains(fileStrings, searchString.(string)) {
+		return otto.TrueValue()
+	} else {
+		return otto.FalseValue()
+	}
 }
 
 func (e *Engine) VMProcExistsWithName(call otto.FunctionCall) otto.Value {
@@ -42,8 +59,29 @@ func (e *Engine) VMDirExists(call otto.FunctionCall) otto.Value {
 }
 
 func (e *Engine) VMFileContains(call otto.FunctionCall) otto.Value {
-	e.LogErrorf("Function Not Implemented: %s", CalledBy())
-	return otto.FalseValue()
+	filePath := call.Argument(0)
+	filePathString, err := filePath.Export()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(err))
+		return otto.FalseValue()
+	}
+	search := call.Argument(1)
+	searchString, err := search.Export()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(err))
+		return otto.FalseValue()
+	}
+  fileData, err := LocalFileRead(filePathString.(string))
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=LocalFileRead_Error arg=%s", CalledBy(), spew.Sdump(err))
+		return otto.FalseValue()
+	}
+	fileStrings := string(fileData)
+	if strings.Contains(fileStrings, searchString.(string)) {
+		return otto.TrueValue()
+	} else {
+		return otto.FalseValue()
+	}
 }
 
 func (e *Engine) VMIsVM(call otto.FunctionCall) otto.Value {

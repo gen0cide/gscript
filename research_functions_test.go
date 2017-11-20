@@ -80,3 +80,42 @@ func TestVMIsAWS(t *testing.T) {
 
 	assert.Equal(t, "false", retValAsString)
 }
+
+func TestVMFileContains(t *testing.T) {
+	testScript := `
+    var wordz = "root";
+		var file = "/etc/passwd";
+		var return_value = FileContains(file, wordz);
+  `
+	e := New("FileContainsTest")
+	e.EnableLogging()
+	e.CreateVM()
+
+	e.VM.Run(testScript)
+	retVal, err := e.VM.Get("return_value")
+	assert.Nil(t, err)
+
+	retValAsString, err := retVal.ToString()
+	assert.Nil(t, err)
+
+	assert.Equal(t, "true", retValAsString)
+}
+
+func TestVMLocalUserExists(t *testing.T) {
+	testScript := `
+    var user = "root";
+		var return_value = LocalUserExists(user);
+  `
+	e := New("LocaUserTest")
+	e.EnableLogging()
+	e.CreateVM()
+
+	e.VM.Run(testScript)
+	retVal, err := e.VM.Get("return_value")
+	assert.Nil(t, err)
+
+	retValAsString, err := retVal.ToString()
+	assert.Nil(t, err)
+
+	assert.Equal(t, "true", retValAsString)
+}
