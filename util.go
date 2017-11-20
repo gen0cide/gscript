@@ -362,6 +362,38 @@ func HTTPGetFile(url string) (int, []byte, error) {
 	return respCode, pageData, nil
 }
 
+// TCPRead returns a byte slice from the initial connection and an error
+func TCPRead(ip, port string) ([]byte, error) {
+	host := ip+":"+port
+	conn, err := net.Dial("tcp", host)
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+	buffer := make([]byte, 1024)
+	conn.Read(buffer)
+	return buffer, nil
+}
+
+// TCPWrite returns a byte slice which is the response to our write and an error
+func TCPWrite(writeData []byte, ip, port string) ([]byte, error) {
+	host := ip+":"+port
+	conn, err := net.Dial("tcp", host)
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+	buffer := make([]byte, 1024)
+	conn.Read(buffer)
+	// Write our response
+	conn.Write(writeData)
+	return buffer, nil
+	// Read the reply
+	buffer2 := make([]byte, 1024)
+	conn.Read(buffer2)
+	return buffer2, nil
+}
+
 // StripSpaces will remove the spaces from a single string and return the new string
 func StripSpaces(str string) string {
 	return strings.Map(func(r rune) rune {
