@@ -79,9 +79,8 @@ func LocalFileDelete(path string) error {
 			return err
 		}
 		return nil
-	} else {
-		return errors.New("The file dosn't exist to delete")
 	}
+	return errors.New("The file dosn't exist to delete")
 }
 
 func LocalFileCreate(path string, bytes []byte) error {
@@ -95,7 +94,6 @@ func LocalFileCreate(path string, bytes []byte) error {
 	return nil
 }
 
-// LocalFileAppendBytes adds bytes to the end of filename's path.
 func LocalFileAppendBytes(filename string, bytes []byte) error {
 	if LocalFileExists(filename) {
 		fileInfo, err := os.Stat(filename)
@@ -110,19 +108,15 @@ func LocalFileAppendBytes(filename string, bytes []byte) error {
 			return err
 		}
 		file.Close()
-		// Appened the bytes w/o error
-		return nil
-	} else {
-		err := LocalFileCreate(filename, bytes)
-		if err != nil {
-			return err
-		}
-		// Created a new file w/o error
 		return nil
 	}
+	err := LocalFileCreate(filename, bytes)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-// LocalFileAppendString adds input as strings to the end of filename's path.
 func LocalFileAppendString(input, filename string) error {
 	fileInfo, err := os.Stat(filename)
 	if err != nil {
@@ -139,7 +133,6 @@ func LocalFileAppendString(input, filename string) error {
 	return nil
 }
 
-// Replace will replace all instances of match with replace in file.
 func LocalFileReplace(file, match, replacement string) error {
 	if LocalFileExists(file) {
 		fileInfo, err := os.Stat(file)
@@ -164,7 +157,6 @@ func LocalFileReplace(file, match, replacement string) error {
 	}
 }
 
-// ReplaceMulti will replace all instances of possible matches with replacement in file.
 func LocalFileReplaceMulti(file string, matches []string, replacement string) error {
 	if LocalFileExists(file) {
 		fileInfo, err := os.Stat(file)
@@ -190,7 +182,6 @@ func LocalFileReplaceMulti(file string, matches []string, replacement string) er
 	}
 }
 
-// LocalReadFile takes a file path and returns the byte array of the file there
 func LocalFileRead(path string) ([]byte, error) {
 	if LocalFileExists(path) {
 		dat, err := ioutil.ReadFile(path)
@@ -224,17 +215,16 @@ func XorBytes(a []byte, b []byte) []byte {
 	if len(b) < n {
 		n = len(b)
 	}
-	var byte_dst [20]byte
+	var byteDst [20]byte
 	for i := 0; i < n; i++ {
-		byte_dst[i] = a[i] ^ b[i]
+		byteDst[i] = a[i] ^ b[i]
 	}
-	return byte_dst[:]
+	return byteDst[:]
 }
 
 func LocalSystemInfo() ([]string, error) {
 	var InfoDump []string
 	gi := goInfo.GetInfo()
-	// later when we define these objects we can just set the values to the object vs the string slice
 	InfoDump = append(InfoDump, fmt.Sprintf("GoOS: %s", gi.GoOS))
 	InfoDump = append(InfoDump, fmt.Sprintf("Kernel: %s", gi.Kernel))
 	InfoDump = append(InfoDump, fmt.Sprintf("Core: %s", gi.Core))
@@ -242,15 +232,12 @@ func LocalSystemInfo() ([]string, error) {
 	InfoDump = append(InfoDump, fmt.Sprintf("OS: %s", gi.OS))
 	InfoDump = append(InfoDump, fmt.Sprintf("Hostname: %s", gi.Hostname))
 	InfoDump = append(InfoDump, fmt.Sprintf("CPUs: %v", gi.CPUs))
-	//gi.VarDump()
 	if InfoDump != nil {
 		return InfoDump, nil
-	} else {
-		return nil, errors.New("Failed to retrieve local system information")
 	}
+	return nil, errors.New("Failed to retrieve local system information")
 }
 
-// ExecuteCommand function
 func ExecuteCommand(c string, args ...string) VMExecResponse {
 	cmd := exec.Command(c, args...)
 	var stdout bytes.Buffer
@@ -279,30 +266,24 @@ func DNSQuestion(target, request string) (string, error) {
 		if err != nil {
 			return "failed", err
 		}
-		// Formating output and debug strings here
 		for _, answrPTR := range answerPTR {
 			stringAnswerArray = append(stringAnswerArray, answrPTR.String())
 		}
 		stringAnswer := strings.Join(stringAnswerArray, "/n")
-		//fmt.Println(stringAnswer)
 		return stringAnswer, nil
 	} else if request == "TXT" {
 		answerTXT, err := net.LookupTXT(target)
 		if err != nil {
 			return "failed", err
 		}
-		// Formating output and debug strings here
 		stringAnswer := strings.Join(answerTXT, "/n")
-		//fmt.Println(stringAnswer)
 		return stringAnswer, nil
 	} else if request == "PTR" {
 		answerA, err := net.LookupAddr(target)
 		if err != nil {
 			return "failed", err
 		}
-		// Formating output and debug strings here
 		stringAnswer := strings.Join(answerA, "/n")
-		//fmt.Println(stringAnswer)
 		return stringAnswer, nil
 	} else if request == "MX" {
 		var stringAnswerArray []string
@@ -310,12 +291,10 @@ func DNSQuestion(target, request string) (string, error) {
 		if err != nil {
 			return "failed", err
 		}
-		// Formating output and debug strings here
 		for _, answrMX := range answerMX {
 			stringAnswerArray = append(stringAnswerArray, answrMX.Host)
 		}
 		stringAnswer := strings.Join(stringAnswerArray, "/n")
-		//fmt.Println(stringAnswer)
 		return stringAnswer, nil
 	} else if request == "NS" {
 		var stringAnswerArray []string
@@ -323,34 +302,27 @@ func DNSQuestion(target, request string) (string, error) {
 		if err != nil {
 			return "failed", err
 		}
-		// Formating output and debug strings here
 		for _, answrNS := range answerNS {
 			stringAnswerArray = append(stringAnswerArray, answrNS.Host)
 		}
 		stringAnswer := strings.Join(stringAnswerArray, "/n")
-		//fmt.Println(stringAnswer)
 		return stringAnswer, nil
 	} else if request == "CNAME" {
 		answerCNAME, err := net.LookupCNAME(target)
 		if err != nil {
 			return "failed", err
 		}
-		// Formating output and debug strings here
-		//fmt.Println(string(answerCNAME))
 		return string(answerCNAME), nil
 	} else {
 		answerA, err := net.LookupHost(target)
 		if err != nil {
 			return "failed", err
 		}
-		// Formating output and debug strings here
 		stringAnswer := strings.Join(answerA, "/n")
-		//fmt.Println(stringAnswer)
 		return stringAnswer, nil
 	}
 }
 
-// HTTPGetFile takes a url and returns a status code, a byte slice of the file there, and an error
 func HTTPGetFile(url string) (int, []byte, error) {
 	resp, err := http.Get(url)
 	if err != nil {
@@ -362,9 +334,8 @@ func HTTPGetFile(url string) (int, []byte, error) {
 	return respCode, pageData, nil
 }
 
-// TCPRead returns a byte slice from the initial connection and an error
 func TCPRead(ip, port string) ([]byte, error) {
-	host := ip+":"+port
+	host := ip + ":" + port
 	conn, err := net.Dial("tcp", host)
 	if err != nil {
 		return nil, err
@@ -375,9 +346,8 @@ func TCPRead(ip, port string) ([]byte, error) {
 	return buffer, nil
 }
 
-// TCPWrite returns a byte slice which is the response to our write and an error
 func TCPWrite(writeData []byte, ip, port string) ([]byte, error) {
-	host := ip+":"+port
+	host := ip + ":" + port
 	conn, err := net.Dial("tcp", host)
 	if err != nil {
 		return nil, err
@@ -385,18 +355,17 @@ func TCPWrite(writeData []byte, ip, port string) ([]byte, error) {
 	defer conn.Close()
 	buffer := make([]byte, 1024)
 	conn.Read(buffer)
-	// Write our response
 	conn.Write(writeData)
 	return buffer, nil
-	// Read the reply
-	buffer2 := make([]byte, 1024)
-	conn.Read(buffer2)
-	return buffer2, nil
+	// @ahhh: This Code doesn't compile!
+	// Unreachable code because of "return buffer, nil" above.
+	// buffer2 := make([]byte, 1024)
+	// conn.Read(buffer2)
+	// return buffer2, nil
 }
 
-// UDPWrite will send a basic udp stream to the target ip and port
-func UDPWrite(writeData []byte, ip, port string) (error) {
-	host := ip+":"+port
+func UDPWrite(writeData []byte, ip, port string) error {
+	host := ip + ":" + port
 	conn, err := net.Dial("tcp", host)
 	if err != nil {
 		return err
@@ -406,7 +375,6 @@ func UDPWrite(writeData []byte, ip, port string) (error) {
 	return nil
 }
 
-// StripSpaces will remove the spaces from a single string and return the new string
 func StripSpaces(str string) string {
 	return strings.Map(func(r rune) rune {
 		if unicode.IsSpace(r) {
@@ -416,7 +384,6 @@ func StripSpaces(str string) string {
 	}, str)
 }
 
-// DeobfuscateString from https://github.com/SaturnsVoid/GoBot2/blob/7d6609cd49f006f5aee76a4ffd97eb25d12a1a9b/components/Cryptography.go#L44
 func DeobfuscateString(Data string) string {
 	var ClearText string
 	for i := 0; i < len(Data); i++ {
@@ -425,7 +392,6 @@ func DeobfuscateString(Data string) string {
 	return ClearText
 }
 
-// ObfuscateString from https://github.com/SaturnsVoid/GoBot2/blob/7d6609cd49f006f5aee76a4ffd97eb25d12a1a9b/components/Cryptography.go#L52
 func ObfuscateString(Data string) string {
 	var ObfuscateText string
 	for i := 0; i < len(Data); i++ {
@@ -434,7 +400,6 @@ func ObfuscateString(Data string) string {
 	return ObfuscateText
 }
 
-// RandString returns a string the length of strlen
 func RandString(strlen int) string {
 	var r = rand.New(rand.NewSource(time.Now().UnixNano()))
 	const chars = "abcdefghijklmnopqrstuvwxyz0123456789"
@@ -445,7 +410,6 @@ func RandString(strlen int) string {
 	return string(result)
 }
 
-// RandomInt returns an int inbetween min and max.
 func RandomInt(min, max int) int {
 	return rand.Intn(max-min) + min
 }

@@ -23,13 +23,12 @@ import (
 	"github.com/urfave/cli"
 )
 
+var outputFile string
+var compilerOS string
+var compilerArch string
+var outputSource = false
+
 func main() {
-
-	var outputFile string
-	var compilerOS string
-	var compilerArch string
-	var outputSource = false
-
 	app := cli.NewApp()
 	app.Name = "gscript"
 	app.Usage = "Interact with the Genesis Scripting Engine (GSE)"
@@ -58,49 +57,13 @@ func main() {
 			Name:    "test",
 			Aliases: []string{"t"},
 			Usage:   "Check a GSE script for syntax errors.",
-			Action: func(c *cli.Context) error {
-				gse := gscript.New("main")
-				gse.EnableLogging()
-				filename := c.Args().Get(0)
-				if len(filename) == 0 {
-					gse.LogCritf("You did not supply a filename!")
-				}
-				if _, err := os.Stat(filename); os.IsNotExist(err) {
-					gse.LogCritf("File does not exist: %s", filename)
-				}
-				_, err := exec.LookPath("jshint")
-				if err != nil {
-					gse.LogCritf("You do not have jshint in your path. Run: npm install -g jshint")
-				}
-
-				jshCmd := exec.Command("jshint", filename)
-				jshOutput, err := jshCmd.CombinedOutput()
-				if err != nil {
-					gse.LogCritf("File Not Valid Javascript!\n -- JSHint Output:\n%s", jshOutput)
-				}
-				data, err := ioutil.ReadFile(filename)
-				gse.SetName(filename)
-				gse.CreateVM()
-				err = gse.ValidateAST(data)
-				if err != nil {
-					gse.LogErrorf("Invalid Script Error: %s", err.Error())
-				} else {
-					gse.LogInfof("Script Valid: %s", filename)
-				}
-				return nil
-			},
+			Action:  TestScript,
 		},
 		{
 			Name:    "shell",
 			Aliases: []string{"s"},
 			Usage:   "Run an interactive GSE console session.",
-			Action: func(c *cli.Context) error {
-				gse := gscript.New("shell")
-				gse.EnableLogging()
-				gse.CreateVM()
-				gse.InteractiveSession()
-				return nil
-			},
+			Action:  InteractiveShell,
 		},
 		{
 			Name:    "update",
@@ -137,53 +100,13 @@ func main() {
 					Destination: &outputSource,
 				},
 			},
-			Action: func(c *cli.Context) error {
-				if c.NArg() == 0 {
-					gse := gscript.NewCompiler([]string{}, "", "", "", false)
-					gse.Logger.Critf("You did not specify a genesis script!")
-				}
-				scriptFiles := c.Args()
-				if !outputSource && outputFile == "-" {
-					outputFile = filepath.Join(os.TempDir(), fmt.Sprintf("%d_genesis.bin", time.Now().Unix()))
-				}
-				compiler := gscript.NewCompiler(scriptFiles, outputFile, compilerOS, compilerArch, outputSource)
-				compiler.Do()
-				if !outputSource {
-					compiler.Logger.Logf("Your binary is located at: %s", outputFile)
-				}
-				return nil
-			},
+			Action: CompileScript,
 		},
 		{
 			Name:    "run",
 			Aliases: []string{"r"},
 			Usage:   "Run a Genesis script (Careful, don't infect yourself!).",
-			Action: func(c *cli.Context) error {
-				gse := gscript.New("main")
-				gse.EnableLogging()
-				filename := c.Args().Get(0)
-				if len(filename) == 0 {
-					gse.LogCritf("You did not supply a filename!")
-				}
-				if _, err := os.Stat(filename); os.IsNotExist(err) {
-					gse.LogCritf("File does not exist: %s", filename)
-				}
-				data, err := ioutil.ReadFile(filename)
-				gse.SetName(filename)
-				gse.CreateVM()
-				err = gse.LoadScript(data)
-				if err != nil {
-					gse.LogErrorf("Script Error: %s", err.Error())
-				} else {
-					gse.LogInfof("Script loaded successfully")
-				}
-				err = gse.ExecutePlan()
-				if err != nil {
-					gse.LogCritf("Hooks Failure: %s", err.Error())
-				}
-				gse.LogInfof("Hooks executed successfully")
-				return nil
-			},
+			Action:  RunScript,
 		},
 	}
 
@@ -191,6 +114,90 @@ func main() {
 	sort.Sort(cli.CommandsByName(app.Commands))
 
 	app.Run(os.Args)
+}
+
+func TestScript(c *cli.Context) error {
+	gse := gscript.New("main")
+	gse.EnableLogging()
+	filename := c.Args().Get(0)
+	if len(filename) == 0 {
+		gse.LogCritf("You did not supply a filename!")
+	}
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		gse.LogCritf("File does not exist: %s", filename)
+	}
+	_, err := exec.LookPath("jshint")
+	if err != nil {
+		gse.LogCritf("You do not have jshint in your path. Run: npm install -g jshint")
+	}
+
+	jshCmd := exec.Command("jshint", filename)
+	jshOutput, err := jshCmd.CombinedOutput()
+	if err != nil {
+		gse.LogCritf("File Not Valid Javascript!\n -- JSHint Output:\n%s", jshOutput)
+	}
+	data, err := ioutil.ReadFile(filename)
+	gse.SetName(filename)
+	gse.CreateVM()
+	err = gse.ValidateAST(data)
+	if err != nil {
+		gse.LogErrorf("Invalid Script Error: %s", err.Error())
+	} else {
+		gse.LogInfof("Script Valid: %s", filename)
+	}
+	return nil
+}
+
+func InteractiveShell(c *cli.Context) error {
+	gse := gscript.New("shell")
+	gse.EnableLogging()
+	gse.CreateVM()
+	gse.InteractiveSession()
+	return nil
+}
+
+func CompileScript(c *cli.Context) error {
+	if c.NArg() == 0 {
+		gse := gscript.NewCompiler([]string{}, "", "", "", false)
+		gse.Logger.Critf("You did not specify a genesis script!")
+	}
+	scriptFiles := c.Args()
+	if !outputSource && outputFile == "-" {
+		outputFile = filepath.Join(os.TempDir(), fmt.Sprintf("%d_genesis.bin", time.Now().Unix()))
+	}
+	compiler := gscript.NewCompiler(scriptFiles, outputFile, compilerOS, compilerArch, outputSource)
+	compiler.Do()
+	if !outputSource {
+		compiler.Logger.Logf("Your binary is located at: %s", outputFile)
+	}
+	return nil
+}
+
+func RunScript(c *cli.Context) error {
+	gse := gscript.New("main")
+	gse.EnableLogging()
+	filename := c.Args().Get(0)
+	if len(filename) == 0 {
+		gse.LogCritf("You did not supply a filename!")
+	}
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		gse.LogCritf("File does not exist: %s", filename)
+	}
+	data, err := ioutil.ReadFile(filename)
+	gse.SetName(filename)
+	gse.CreateVM()
+	err = gse.LoadScript(data)
+	if err != nil {
+		gse.LogErrorf("Script Error: %s", err.Error())
+	} else {
+		gse.LogInfof("Script loaded successfully")
+	}
+	err = gse.ExecutePlan()
+	if err != nil {
+		gse.LogCritf("Hooks Failure: %s", err.Error())
+	}
+	gse.LogInfof("Hooks executed successfully")
+	return nil
 }
 
 func UpdateCLI(c *cli.Context) error {
