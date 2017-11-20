@@ -350,15 +350,16 @@ func DNSQuestion(target, request string) (string, error) {
 	}
 }
 
-// HTTPGetFile takes a url and returns a byte slice of the file there
-func HTTPGetFile(url string) ([]byte, error) {
+// HTTPGetFile takes a url and returns a status code, a byte slice of the file there, and an error
+func HTTPGetFile(url string) (int, []byte, error) {
 	resp, err := http.Get(url)
 	if err != nil {
-		return nil, err
+		return 0, nil, err
 	}
+	respCode := resp.StatusCode
 	pageData, err := ioutil.ReadAll(resp.Body)
 	resp.Body.Close()
-	return pageData, nil
+	return respCode, pageData, nil
 }
 
 // StripSpaces will remove the spaces from a single string and return the new string
