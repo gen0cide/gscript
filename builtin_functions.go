@@ -157,7 +157,7 @@ func (e *Engine) VMRetrieveFileFromURL(call otto.FunctionCall) otto.Value {
 		e.LogErrorf("Function Error: function=%s error=ARG_NOT_STRINGABLE arg=%s", CalledBy(), spew.Sdump(call.ArgumentList[0]))
 		return otto.FalseValue()
 	}
-	bytes, err := HTTPGetFile(readURL)
+	_, bytes, err := HTTPGetFile(readURL)
 	if err != nil {
 		e.LogErrorf("Function Error: function=VMRetrieveFileFromURL() error='There was an error fetching the file: %v'", spew.Sdump(err))
 		return otto.FalseValue()

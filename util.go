@@ -79,9 +79,8 @@ func LocalFileDelete(path string) error {
 			return err
 		}
 		return nil
-	} else {
-		return errors.New("The file dosn't exist to delete")
 	}
+	return errors.New("The file dosn't exist to delete")
 }
 
 func LocalFileCreate(path string, bytes []byte) error {
@@ -109,16 +108,13 @@ func LocalFileAppendBytes(filename string, bytes []byte) error {
 			return err
 		}
 		file.Close()
-		// Appened the bytes w/o error
-		return nil
-	} else {
-		err := LocalFileCreate(filename, bytes)
-		if err != nil {
-			return err
-		}
-		// Created a new file w/o error
 		return nil
 	}
+	err := LocalFileCreate(filename, bytes)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func LocalFileAppendString(input, filename string) error {
@@ -219,11 +215,11 @@ func XorBytes(a []byte, b []byte) []byte {
 	if len(b) < n {
 		n = len(b)
 	}
-	var byte_dst [20]byte
+	var byteDst [20]byte
 	for i := 0; i < n; i++ {
-		byte_dst[i] = a[i] ^ b[i]
+		byteDst[i] = a[i] ^ b[i]
 	}
-	return byte_dst[:]
+	return byteDst[:]
 }
 
 func LocalSystemInfo() ([]string, error) {
@@ -238,12 +234,10 @@ func LocalSystemInfo() ([]string, error) {
 	InfoDump = append(InfoDump, fmt.Sprintf("CPUs: %v", gi.CPUs))
 	if InfoDump != nil {
 		return InfoDump, nil
-	} else {
-		return nil, errors.New("Failed to retrieve local system information")
 	}
+	return nil, errors.New("Failed to retrieve local system information")
 }
 
-// ExecuteCommand function
 func ExecuteCommand(c string, args ...string) VMExecResponse {
 	cmd := exec.Command(c, args...)
 	var stdout bytes.Buffer
@@ -329,14 +323,56 @@ func DNSQuestion(target, request string) (string, error) {
 	}
 }
 
-func HTTPGetFile(url string) ([]byte, error) {
+func HTTPGetFile(url string) (int, []byte, error) {
 	resp, err := http.Get(url)
+	if err != nil {
+		return 0, nil, err
+	}
+	respCode := resp.StatusCode
+	pageData, err := ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
+	return respCode, pageData, nil
+}
+
+func TCPRead(ip, port string) ([]byte, error) {
+	host := ip + ":" + port
+	conn, err := net.Dial("tcp", host)
 	if err != nil {
 		return nil, err
 	}
-	pageData, err := ioutil.ReadAll(resp.Body)
-	resp.Body.Close()
-	return pageData, nil
+	defer conn.Close()
+	buffer := make([]byte, 1024)
+	conn.Read(buffer)
+	return buffer, nil
+}
+
+func TCPWrite(writeData []byte, ip, port string) ([]byte, error) {
+	host := ip + ":" + port
+	conn, err := net.Dial("tcp", host)
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+	buffer := make([]byte, 1024)
+	conn.Read(buffer)
+	conn.Write(writeData)
+	return buffer, nil
+	// @ahhh: This Code doesn't compile!
+	// Unreachable code because of "return buffer, nil" above.
+	// buffer2 := make([]byte, 1024)
+	// conn.Read(buffer2)
+	// return buffer2, nil
+}
+
+func UDPWrite(writeData []byte, ip, port string) error {
+	host := ip + ":" + port
+	conn, err := net.Dial("tcp", host)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+	conn.Write(writeData)
+	return nil
 }
 
 func StripSpaces(str string) string {
