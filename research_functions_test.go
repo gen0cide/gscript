@@ -119,3 +119,22 @@ func TestVMLocalUserExists(t *testing.T) {
 
 	assert.Equal(t, "true", retValAsString)
 }
+
+func TestVMTCPPortInUse(t *testing.T) {
+	testScript := `
+    var port = 8080;
+		var return_value = TCPPortInUse(port);
+  `
+	e := New("TCPPortInUseTest")
+	e.EnableLogging()
+	e.CreateVM()
+
+	e.VM.Run(testScript)
+	retVal, err := e.VM.Get("return_value")
+	assert.Nil(t, err)
+
+	retValAsString, err := retVal.ToString()
+	assert.Nil(t, err)
+
+	assert.Equal(t, "false", retValAsString)
+}
