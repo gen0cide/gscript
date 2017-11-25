@@ -30,8 +30,23 @@ func (e *Engine) VMLocalUserExists(call otto.FunctionCall) otto.Value {
 }
 
 func (e *Engine) VMProcExistsWithName(call otto.FunctionCall) otto.Value {
-	e.LogErrorf("Function Not Implemented: %s", CalledBy())
-	return otto.FalseValue()
+	searchProc := call.Argument(0)
+	searchProcString, err := searchProc.Export()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(err))
+		return otto.FalseValue()
+	}
+	ProcPID, err := FindProcessPid(searchProcString.(string))
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=error_finding_process arg=%s", CalledBy(), spew.Sdump(err))
+		return otto.FalseValue()
+	}
+	ProcExistsResult := ProcExists2(ProcPID)
+	if ProcExistsResult {
+		return otto.TrueValue()
+	} else {
+		return otto.FalseValue()
+	}
 }
 
 func (e *Engine) VMCanReadFile(call otto.FunctionCall) otto.Value {

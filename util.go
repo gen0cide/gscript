@@ -16,8 +16,9 @@ import (
 	"strings"
 	"time"
 	"unicode"
-
+	"syscall"
 	"github.com/matishsiao/goInfo"
+	"github.com/mitchellh/go-ps"
 )
 
 func CalledBy() string {
@@ -370,6 +371,35 @@ func UDPWrite(writeData []byte, ip, port string) error {
 	defer conn.Close()
 	conn.Write(writeData)
 	return nil
+}
+
+func ProcExists1(pidBoi int) bool {
+	killErr := syscall.Kill(pidBoi, syscall.Signal(0))
+	procExistsBoi := (killErr == nil || killErr == syscall.EPERM)
+	return procExistsBoi
+}
+
+func ProcExists2(pidBoi int) bool {
+  process, err := ps.FindProcess(pidBoi)
+	if (err == nil && process == nil) {
+		return false
+	} else {
+		return true
+	}
+}
+
+func FindProcessPid(key string) (int, error) {
+	pid := 0
+	err := errors.New("Not found")
+	ps, _ := ps.Processes()
+	for i, _ := range ps {
+		if ps[i].Executable() == key {
+			pid = ps[i].Pid()
+			err = nil
+			break
+		}
+	}
+	return pid, err
 }
 
 func StripSpaces(str string) string {
