@@ -4,7 +4,8 @@ import (
 	"github.com/robertkrimen/otto"
 	"github.com/davecgh/go-spew/spew"
 	"strings"
-
+	"fmt"
+	"net"
 )
 
 func (e *Engine) VMLocalUserExists(call otto.FunctionCall) otto.Value {
@@ -185,12 +186,42 @@ func (e *Engine) VMCanPing(call otto.FunctionCall) otto.Value {
 }
 
 func (e *Engine) VMTCPPortInUse(call otto.FunctionCall) otto.Value {
-	e.LogErrorf("Function Not Implemented: %s", CalledBy())
+	var minTCPPort int64 = 0
+	var maxTCPPort int64 = 65535
+	port := call.Argument(0)
+	portInt, err := port.Export()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=ARY_ARG_NOT_Int arg=%s", CalledBy(), spew.Sdump(portInt))
+		return otto.FalseValue()
+	}
+	if portInt.(int64) < minTCPPort || portInt.(int64) > maxTCPPort {
+		return otto.FalseValue()
+	}
+	conn, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", portInt.(int64)))
+	if err != nil {
+		return otto.TrueValue()
+	}
+	conn.Close()
 	return otto.FalseValue()
 }
 
 func (e *Engine) VMUDPPortInUse(call otto.FunctionCall) otto.Value {
-	e.LogErrorf("Function Not Implemented: %s", CalledBy())
+	var minUDPPort int64 = 0
+	var maxUDPPort int64 = 65535
+	port := call.Argument(0)
+	portInt, err := port.Export()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=ARY_ARG_NOT_Int arg=%s", CalledBy(), spew.Sdump(portInt))
+		return otto.FalseValue()
+	}
+	if portInt.(int64) < minUDPPort || portInt.(int64) > maxUDPPort {
+		return otto.FalseValue()
+	}
+	conn, err := net.Listen("udp", fmt.Sprintf("127.0.0.1:%d", portInt.(int64)))
+	if err != nil {
+		return otto.TrueValue()
+	}
+	conn.Close()
 	return otto.FalseValue()
 }
 
