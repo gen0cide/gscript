@@ -138,3 +138,22 @@ func TestVMTCPPortInUse(t *testing.T) {
 
 	assert.Equal(t, "false", retValAsString)
 }
+
+func TestVMProcExistsWithName(t *testing.T) {
+	testScript := `
+    var name = "notbash";
+		var return_value = ProcExistsWithName(name);
+  `
+	e := New("TestProcExists")
+	e.EnableLogging()
+	e.CreateVM()
+
+	e.VM.Run(testScript)
+	retVal, err := e.VM.Get("return_value")
+	assert.Nil(t, err)
+
+	retValAsString, err := retVal.ToString()
+	assert.Nil(t, err)
+
+	assert.Equal(t, "false", retValAsString)
+}
