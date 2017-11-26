@@ -50,8 +50,22 @@ func (e *Engine) VMProcExistsWithName(call otto.FunctionCall) otto.Value {
 }
 
 func (e *Engine) VMCanReadFile(call otto.FunctionCall) otto.Value {
-	e.LogErrorf("Function Not Implemented: %s", CalledBy())
-	return otto.FalseValue()
+	filePath := call.Argument(0)
+	filePathString, err := filePath.Export()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(err))
+		return otto.FalseValue()
+	}
+	data, err := LocalFileRead(filePathString.(string))
+	if data != nil && err == nil {
+		e.LogInfof("Function Results: function=%s result=%s", CalledBy(), spew.Sdump(data))
+		return otto.TrueValue()
+	} else if err != nil {
+		e.LogErrorf("Function Error: function=%s error=ERR_READING_LOCAL_FILE arg=%s", CalledBy(), spew.Sdump(err))
+		return otto.FalseValue()
+	} else {
+		return otto.FalseValue()
+	}
 }
 
 func (e *Engine) VMCanWriteFile(call otto.FunctionCall) otto.Value {
