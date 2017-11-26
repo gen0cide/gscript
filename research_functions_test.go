@@ -157,3 +157,22 @@ func TestVMProcExistsWithName(t *testing.T) {
 
 	assert.Equal(t, "false", retValAsString)
 }
+
+func TestVMCanReadFile(t *testing.T) {
+	testScript := `
+    var name = "/etc/passwd";
+		var return_value = CanReadFile(name);
+  `
+	e := New("TestCanReadFile")
+	e.EnableLogging()
+	e.CreateVM()
+
+	e.VM.Run(testScript)
+	retVal, err := e.VM.Get("return_value")
+	assert.Nil(t, err)
+
+	retValAsString, err := retVal.ToString()
+	assert.Nil(t, err)
+
+	assert.Equal(t, "true", retValAsString)
+}
