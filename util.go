@@ -16,6 +16,7 @@ import (
 	"strings"
 	"time"
 	"unicode"
+	"golang.org/x/sys/unix"
 	"syscall"
 	"github.com/matishsiao/goInfo"
 	"github.com/mitchellh/go-ps"
@@ -40,6 +41,14 @@ func LocalFileExists(path string) bool {
 		return true
 	}
 	return false
+}
+
+func LocalFileWritable(path string) bool {
+    return unix.Access(path, unix.W_OK) == nil
+}
+
+func LocalFileExecutable(path string) bool {
+    return unix.Access(path, unix.X_OK) == nil
 }
 
 func LocalDirCreate(path string) error {
