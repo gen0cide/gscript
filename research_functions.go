@@ -79,13 +79,31 @@ func (e *Engine) VMCanExecFile(call otto.FunctionCall) otto.Value {
 }
 
 func (e *Engine) VMFileExists(call otto.FunctionCall) otto.Value {
-	e.LogErrorf("Function Not Implemented: %s", CalledBy())
-	return otto.FalseValue()
+	filePath := call.Argument(0)
+	filePathString, err := filePath.Export()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(err))
+		return otto.FalseValue()
+	}
+	if LocalFileExists(filePathString.(string)) {
+		return otto.TrueValue()
+	} else {
+		return otto.FalseValue()
+	}
 }
 
 func (e *Engine) VMDirExists(call otto.FunctionCall) otto.Value {
-	e.LogErrorf("Function Not Implemented: %s", CalledBy())
-	return otto.FalseValue()
+	filePath := call.Argument(0)
+	filePathString, err := filePath.Export()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(err))
+		return otto.FalseValue()
+	}
+	if LocalFileExists(filePathString.(string)) {
+		return otto.TrueValue()
+	} else {
+		return otto.FalseValue()
+	}
 }
 
 func (e *Engine) VMFileContains(call otto.FunctionCall) otto.Value {
