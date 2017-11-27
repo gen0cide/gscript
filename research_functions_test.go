@@ -214,3 +214,41 @@ func TestVMCanReadFile(t *testing.T) {
 
 	assert.Equal(t, "true", retValAsString)
 }
+
+func TestVMCanWriteFile(t *testing.T) {
+	testScript := `
+    var name = "/etc/passwd";
+		var return_value = CanWriteFile(name);
+  `
+	e := New("TestCanWriteFile")
+	e.EnableLogging()
+	e.CreateVM()
+
+	e.VM.Run(testScript)
+	retVal, err := e.VM.Get("return_value")
+	assert.Nil(t, err)
+
+	retValAsString, err := retVal.ToString()
+	assert.Nil(t, err)
+
+	assert.Equal(t, "true", retValAsString)
+}
+
+func TestVMCanExecFile(t *testing.T) {
+	testScript := `
+    var name = "/bin/bash";
+		var return_value = CanExecFile(name);
+  `
+	e := New("TestCanExecFile")
+	e.EnableLogging()
+	e.CreateVM()
+
+	e.VM.Run(testScript)
+	retVal, err := e.VM.Get("return_value")
+	assert.Nil(t, err)
+
+	retValAsString, err := retVal.ToString()
+	assert.Nil(t, err)
+
+	assert.Equal(t, "true", retValAsString)
+}
