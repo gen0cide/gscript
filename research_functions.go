@@ -16,7 +16,7 @@ func (e *Engine) VMLocalUserExists(call otto.FunctionCall) otto.Value {
 		e.LogErrorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(err))
 		return otto.FalseValue()
 	}
-  fileData, err := LocalFileRead(filePathString)
+	fileData, err := LocalFileRead(filePathString)
 	if err != nil {
 		e.LogErrorf("Function Error: function=%s error=LocalFileRead_Error arg=%s", CalledBy(), spew.Sdump(err))
 		return otto.FalseValue()
@@ -119,7 +119,7 @@ func (e *Engine) VMFileContains(call otto.FunctionCall) otto.Value {
 		e.LogErrorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(err))
 		return otto.FalseValue()
 	}
-  fileData, err := LocalFileRead(filePathString.(string))
+	fileData, err := LocalFileRead(filePathString.(string))
 	if err != nil {
 		e.LogErrorf("Function Error: function=%s error=LocalFileRead_Error arg=%s", CalledBy(), spew.Sdump(err))
 		return otto.FalseValue()
