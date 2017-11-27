@@ -252,3 +252,23 @@ func TestVMCanExecFile(t *testing.T) {
 
 	assert.Equal(t, "true", retValAsString)
 }
+
+func TestVMCmdSuccessful(t *testing.T) {
+	testScript := `
+    var name = "ls";
+		var arg = "-al"
+		var return_value = CmdSuccessful(name, arg);
+  `
+	e := New("TestCmdSuccessful")
+	e.EnableLogging()
+	e.CreateVM()
+
+	e.VM.Run(testScript)
+	retVal, err := e.VM.Get("return_value")
+	assert.Nil(t, err)
+
+	retValAsString, err := retVal.ToString()
+	assert.Nil(t, err)
+
+	assert.Equal(t, "true", retValAsString)
+}

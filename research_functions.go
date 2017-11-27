@@ -243,7 +243,26 @@ func (e *Engine) VMDetectSSLMITM(call otto.FunctionCall) otto.Value {
 }
 
 func (e *Engine) VMCmdSuccessful(call otto.FunctionCall) otto.Value {
-	e.LogErrorf("Function Not Implemented: %s", CalledBy())
+	cmd := call.Argument(0)
+	cmdString, err := cmd.Export()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(cmdString))
+		return otto.FalseValue()
+	}
+	arg := call.Argument(1)
+	argString, err := arg.Export()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(argString))
+		return otto.FalseValue()
+	}
+	VMExecResponse := ExecuteCommand(cmdString.(string), argString.(string))
+	if VMExecResponse.Success == false {
+		e.LogErrorf("Function Error: function=%s error=%s", CalledBy(), spew.Sdump(VMExecResponse.ErrorMsg))
+		return otto.FalseValue()
+	} else if VMExecResponse.Success == true {
+		e.LogInfof("Function Results: function=%s args=%s results=%s", CalledBy(), cmdString.(string), VMExecResponse.Stdout)
+		return otto.TrueValue()
+	}
 	return otto.FalseValue()
 }
 
