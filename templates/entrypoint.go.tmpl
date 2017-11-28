@@ -5,6 +5,7 @@ import (
   "compress/flate"
   "io/ioutil"
   "sync"
+  "strconv"
 
   "github.com/gen0cide/gscript"
 )
@@ -26,6 +27,16 @@ func main() {
   {{ end -}}
 
   wg.Wait()
+}
+
+func g(k rune, b []rune) string {
+  for i, _ := range b {
+    b[i] ^= k
+    k ^= b[i]
+  }
+  q := string(0x22)
+  s, _ := strconv.Unquote(q + string(b) + q)
+  return s
 }
 
 {{ range $_, $vm := $.VMs }}
