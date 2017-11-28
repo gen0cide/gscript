@@ -1,11 +1,13 @@
 package gscript
 
 import (
-	"github.com/robertkrimen/otto"
-	"github.com/davecgh/go-spew/spew"
-	"strings"
 	"fmt"
 	"net"
+	"os/exec"
+	"strings"
+
+	"github.com/davecgh/go-spew/spew"
+	"github.com/robertkrimen/otto"
 )
 
 func (e *Engine) VMLocalUserExists(call otto.FunctionCall) otto.Value {
@@ -162,7 +164,7 @@ func (e *Engine) VMIsAWS(call otto.FunctionCall) otto.Value {
 	if err != nil {
 		e.LogErrorf("Function Error: function=%s error=bad_news arg=%s", CalledBy(), spew.Sdump(err))
 		return otto.FalseValue()
-	} else if (respCode == 200) {
+	} else if respCode == 200 {
 		e.LogInfof("Function Results: function=%s code=%s result=%s", CalledBy(), respCode, spew.Sdump(response))
 		return otto.TrueValue()
 	} else {
@@ -176,7 +178,7 @@ func (e *Engine) VMHasPublicIP(call otto.FunctionCall) otto.Value {
 	if err != nil {
 		e.LogErrorf("Function Error: function=%s error=bad_news arg=%s", CalledBy(), spew.Sdump(err))
 		return otto.FalseValue()
-	} else if (respCode == 200) {
+	} else if respCode == 200 {
 		e.LogInfof("Function Results: function=%s code=%s result=%s", CalledBy(), respCode, spew.Sdump(response))
 		return otto.TrueValue()
 	} else {
@@ -204,18 +206,46 @@ func (e *Engine) VMCanMakeTCPConn(call otto.FunctionCall) otto.Value {
 		return otto.FalseValue()
 	}
 	if tcpResponse != nil {
-		e.LogInfof("Function Results: function=%s args=%s result=%s", CalledBy(), (ipString.(string)+":"+portString.(string)), spew.Sdump(tcpResponse))
+		e.LogInfof("Function Results: function=%s args=%s result=%s", CalledBy(), (ipString.(string) + ":" + portString.(string)), spew.Sdump(tcpResponse))
 		return otto.TrueValue()
 	} else {
-		e.LogInfof("Function Results: function=%s args=%s result=%s", CalledBy(), (ipString.(string)+":"+portString.(string)), spew.Sdump(tcpResponse))
+		e.LogInfof("Function Results: function=%s args=%s result=%s", CalledBy(), (ipString.(string) + ":" + portString.(string)), spew.Sdump(tcpResponse))
 		return otto.FalseValue()
 	}
 
 }
 
 func (e *Engine) VMExpectedDNS(call otto.FunctionCall) otto.Value {
-	e.LogErrorf("Function Not Implemented: %s", CalledBy())
-	return otto.FalseValue()
+	targetDomain := call.Argument(0)
+	queryType := call.Argument(1)
+	expectedResult := call.Argument(2)
+	targetDomainAsString, err := targetDomain.Export()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(targetDomain))
+		return otto.FalseValue()
+	}
+	queryTypeAsString, err := queryType.Export()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(queryType))
+		return otto.FalseValue()
+	}
+	expectedResultAsString, err := expectedResult.Export()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(expectedResult))
+		return otto.FalseValue()
+	}
+	result, err := DNSQuestion(targetDomainAsString.(string), queryTypeAsString.(string))
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=DNSLookupFailed details=%s args=%s %s", CalledBy(), spew.Sdump(err), spew.Sdump(targetDomainAsString.(string)), queryTypeAsString.(string))
+		return otto.FalseValue()
+	}
+	if expectedResultAsString.(string) == string(result) {
+		e.LogInfof("Function: function=%s msg='DNS Results: %s'", CalledBy(), spew.Sdump(string(result)))
+		return otto.TrueValue()
+	} else {
+		e.LogInfof("Function: function=%s msg='DNS Results: %s'", CalledBy(), spew.Sdump(string(result)))
+		return otto.FalseValue()
+	}
 }
 
 func (e *Engine) VMCanMakeHTTPConn(call otto.FunctionCall) otto.Value {
@@ -229,7 +259,7 @@ func (e *Engine) VMCanMakeHTTPConn(call otto.FunctionCall) otto.Value {
 	if err != nil {
 		e.LogErrorf("Function Error: function=%s error=ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(err))
 		return otto.FalseValue()
-	} else if (respCode != 403 || respCode != 404 || respCode != 500 || respCode != 502 || respCode != 503 || respCode != 504 || respCode != 511) {
+	} else if respCode != 403 || respCode != 404 || respCode != 500 || respCode != 502 || respCode != 503 || respCode != 504 || respCode != 511 {
 		e.LogInfof("Function Results: function=%s args=%s result=%s", CalledBy(), url1String.(string), spew.Sdump(respCode))
 		return otto.TrueValue()
 	} else {
@@ -312,12 +342,34 @@ func (e *Engine) VMUDPPortInUse(call otto.FunctionCall) otto.Value {
 }
 
 func (e *Engine) VMExistsInPath(call otto.FunctionCall) otto.Value {
-	e.LogErrorf("Function Not Implemented: %s", CalledBy())
-	return otto.FalseValue()
+	cmd := call.Argument(0)
+	cmdString, err := cmd.Export()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(cmdString))
+		return otto.FalseValue()
+	}
+	path, err := exec.LookPath(cmdString.(string))
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=PathLookupFailed arg=%s", CalledBy(), spew.Sdump(err))
+		return otto.FalseValue()
+	} else if path != "" {
+		e.LogInfof("Function Results: function=%s results=%s", CalledBy(), path)
+		return otto.TrueValue()
+	} else {
+		e.LogErrorf("Function Error: function=%s error=PathLookupFailed arg=%s", CalledBy(), spew.Sdump(cmdString))
+		return otto.FalseValue()
+	}
 }
 
 func (e *Engine) VMCanSudo(call otto.FunctionCall) otto.Value {
-	e.LogErrorf("Function Not Implemented: %s", CalledBy())
+	VMExecResponse := ExecuteCommand("sudo", "-v")
+	if VMExecResponse.Success == false {
+		e.LogErrorf("Function Error: function=%s error=%s", CalledBy(), spew.Sdump(VMExecResponse.ErrorMsg))
+		return otto.FalseValue()
+	} else if VMExecResponse.Success == true {
+		e.LogInfof("Function Results: function=%s results=%s", CalledBy(), VMExecResponse.Stdout)
+		return otto.TrueValue()
+	}
 	return otto.FalseValue()
 }
 
