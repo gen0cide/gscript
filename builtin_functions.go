@@ -74,8 +74,30 @@ func (e *Engine) VMCopyFile(call otto.FunctionCall) otto.Value {
 }
 
 func (e *Engine) VMExecuteFile(call otto.FunctionCall) otto.Value {
-	e.LogErrorf("Function Not Implemented: %s", CalledBy())
-	return otto.FalseValue()
+	filePath := call.Argument(0)
+	filePathAsString, err := filePath.ToString()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=CMD_BASE_NOT_PARSABLE arg=%s", CalledBy(), spew.Sdump(filePath))
+		return otto.FalseValue()
+	}
+	cmdArgs := call.Argument(1)
+	argList := []string{}
+	if !cmdArgs.IsNull() {
+		argArray, err := cmdArgs.Export()
+		if err != nil {
+			e.LogErrorf("Function Error: function=%s error=CMD_ARGS_NOT_PARSABLE arg=%s", CalledBy(), spew.Sdump(cmdArgs))
+			return otto.FalseValue()
+		}
+		argList = argArray.([]string)
+	}
+
+	cmdOutput := ExecuteCommand(filePathAsString, argList...)
+	vmResponse, err := e.VM.ToValue(cmdOutput)
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=CMD_OUTPUT_OBJECT_CAST_FAILED arg=%s", CalledBy(), spew.Sdump(err))
+		return otto.FalseValue()
+	}
+	return vmResponse
 }
 
 func (e *Engine) VMAsset(call otto.FunctionCall) otto.Value {

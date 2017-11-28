@@ -1,11 +1,12 @@
 package gscript
 
 import (
+	"fmt"
 	"testing"
 	"time"
-  "fmt"
-	"github.com/stretchr/testify/assert"
+
 	"github.com/davecgh/go-spew/spew"
+	"github.com/stretchr/testify/assert"
 )
 
 var g_file_1 = fmt.Sprintf("/tmp/%s", RandString(6))
@@ -105,26 +106,26 @@ func TestVMReplaceInFile(t *testing.T) {
 }
 
 func TestVMRetrieveFileFromURL(t *testing.T) {
-  url := "https://alexlevinson.com/"
+	url := "https://alexlevinson.com/"
 	file_3 := g_file_3
-  testScript2 := fmt.Sprintf(`
+	testScript2 := fmt.Sprintf(`
 	  var url = "%s";
 		var file_3 = "%s";
 	  var response2 = RetrieveFileFromURL(url);
 	  var return_value2 = response2;
 		var response3 = WriteFile(file_3, response2);
   `, url, file_3)
-  e := New("RetrieveFileFromURL")
-  e.EnableLogging()
-  e.CreateVM()
+	e := New("RetrieveFileFromURL")
+	e.EnableLogging()
+	e.CreateVM()
 
-  e.VM.Run(testScript2)
+	e.VM.Run(testScript2)
 	e.LogInfof("Function: function=%s msg='wrote local file at: %s'", CalledBy(), spew.Sdump(file_3))
-  retVal, err := e.VM.Get("return_value2")
-  assert.Nil(t, err)
-  retValAsString, err := retVal.ToString()
-  assert.Nil(t, err)
-  assert.Equal(t, "60,104,116,109,108,62,10,32,32,60,98,111,100,121,62,10,32,32,32,32,60,99,101,110,116,101,114,62,10,32,32,32,32,32,32,60,105,109,103,32,115,114,99,61,34,114,111,111,116,46,106,112,103,34,32,47,62,10,32,32,32,32,60,47,99,101,110,116,101,114,62,10,32,32,60,47,98,111,100,121,62,10,60,47,104,116,109,108,62,10", retValAsString)
+	retVal, err := e.VM.Get("return_value2")
+	assert.Nil(t, err)
+	retValAsString, err := retVal.ToString()
+	assert.Nil(t, err)
+	assert.Equal(t, "60,104,116,109,108,62,10,32,32,60,98,111,100,121,62,10,32,32,32,32,60,99,101,110,116,101,114,62,10,32,32,32,32,32,32,60,105,109,103,32,115,114,99,61,34,114,111,111,116,46,106,112,103,34,32,47,62,10,32,32,32,32,60,47,99,101,110,116,101,114,62,10,32,32,60,47,98,111,100,121,62,10,60,47,104,116,109,108,62,10", retValAsString)
 }
 
 func TestVMDeleteFile(t *testing.T) {
@@ -269,4 +270,25 @@ func TestCPUStats(t *testing.T) {
 	retValAsString, err := retVal.ToString()
 	assert.Nil(t, err)
 	assert.Equal(t, "true", retValAsString)
+}
+
+func TestVMExecuteFile(t *testing.T) {
+	testScript := `
+			var file_path = "/usr/bin/whoami";
+			var args = [""]
+      var results = ExecuteFile(file_path, args);
+    `
+	e := New("ExecuteFileTest")
+	e.EnableLogging()
+	e.CreateVM()
+
+	e.VM.Run(testScript)
+	retVal, err := e.VM.Get("results")
+	assert.Nil(t, err)
+	assert.True(t, retVal.IsObject())
+	retValAsInterface, err := retVal.Export()
+	assert.Nil(t, err)
+	realRetVal := retValAsInterface.(VMExecResponse)
+	assert.Nil(t, err)
+	assert.Equal(t, "root", realRetVal.Stdout)
 }

@@ -1,7 +1,9 @@
 package gscript
 
 import (
+	"fmt"
 	"testing"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -271,4 +273,58 @@ func TestVMCmdSuccessful(t *testing.T) {
 	assert.Nil(t, err)
 
 	assert.Equal(t, "true", retValAsString)
+}
+
+func TestVMExpectedDNS(t *testing.T) {
+	testScript := fmt.Sprintf(`
+		var url = "google.com";
+		var type2 = "CNAME";
+    var return_value2 = ExpectedDNS(url, type2, "google.com.");
+  `)
+
+	e := New("DNSQueryTest")
+	e.EnableLogging()
+	e.CreateVM()
+
+	e.VM.Run(testScript)
+	retVal2, err := e.VM.Get("return_value2")
+	assert.Nil(t, err)
+	retValAsString2, err := retVal2.ToString()
+	assert.Nil(t, err)
+	assert.Equal(t, "true", retValAsString2)
+}
+
+func TestVMCanSudo(t *testing.T) {
+	testScript := fmt.Sprintf(`
+    var return_value2 = CanSudo();
+  `)
+
+	e := New("SudoTest")
+	e.EnableLogging()
+	e.CreateVM()
+
+	e.VM.Run(testScript)
+	retVal2, err := e.VM.Get("return_value2")
+	assert.Nil(t, err)
+	retValAsString2, err := retVal2.ToString()
+	assert.Nil(t, err)
+	assert.Equal(t, "true", retValAsString2)
+}
+
+func TestVMExistsInPath(t *testing.T) {
+	testScript := fmt.Sprintf(`
+		var cmd = "whoami"
+    var return_value2 = ExistsInPath(cmd);
+  `)
+
+	e := New("CmdInPathTest")
+	e.EnableLogging()
+	e.CreateVM()
+
+	e.VM.Run(testScript)
+	retVal2, err := e.VM.Get("return_value2")
+	assert.Nil(t, err)
+	retValAsString2, err := retVal2.ToString()
+	assert.Nil(t, err)
+	assert.Equal(t, "true", retValAsString2)
 }
