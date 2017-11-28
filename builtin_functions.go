@@ -5,6 +5,8 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 	"encoding/hex"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
@@ -455,13 +457,34 @@ func (e *Engine) VMGetDirsInPath(call otto.FunctionCall) otto.Value {
 }
 
 func (e *Engine) VMEnvVars(call otto.FunctionCall) otto.Value {
-	e.LogErrorf("Function Not Implemented: %s", CalledBy())
-	return otto.FalseValue()
+	rezultz := map[string]string{}
+	for _, v := range os.Environ() {
+		pair := strings.Split(v, "=")
+		rezultz[pair[0]] = pair[1]
+		//e.LogInfof("Function: function=%s msg='wrote local file at: %s'", CalledBy(), spew.Sdump(pair))
+	}
+	vmResponse, err := e.VM.ToValue(rezultz)
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=CMD_OUTPUT_OBJECT_CAST_FAILED arg=%s", CalledBy(), spew.Sdump(rezultz))
+		return otto.FalseValue()
+	}
+	return vmResponse
 }
 
 func (e *Engine) VMGetEnv(call otto.FunctionCall) otto.Value {
-	e.LogErrorf("Function Not Implemented: %s", CalledBy())
-	return otto.FalseValue()
+	envVar := call.Argument(0)
+	envVarAsString, err := envVar.Export()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(envVar))
+		return otto.FalseValue()
+	}
+	finalVal := os.Getenv(envVarAsString.(string))
+	vmResponse, err := e.VM.ToValue(finalVal)
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=CMD_OUTPUT_OBJECT_CAST_FAILED arg=%s", CalledBy(), spew.Sdump(finalVal))
+		return otto.FalseValue()
+	}
+	return vmResponse
 }
 
 func (e *Engine) VMFileCreateTime(call otto.FunctionCall) otto.Value {
