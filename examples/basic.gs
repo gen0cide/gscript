@@ -1,6 +1,7 @@
 // genesis script
 
 //import:/Users/flint/Downloads/tater.jpg
+//url_import:https://alexlevinson.com/test_me.txt
 
 var hello_world;
 var hash;
