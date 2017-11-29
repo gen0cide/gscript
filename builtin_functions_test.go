@@ -335,3 +335,71 @@ func TestVMEGetEnv(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, "", retValAsString2)
 }
+
+func TestVMFileAccessTime(t *testing.T) {
+	testScript := `
+			var file = "/etc/passwd";
+			var results1 = FileAccessTime(file);
+    `
+	e := New("GetAccessTimeTest")
+	e.EnableLogging()
+	e.CreateVM()
+
+	e.VM.Run(testScript)
+	retVal1, err := e.VM.Get("results1")
+	assert.Nil(t, err)
+	_, er := retVal1.ToString()
+	assert.Nil(t, er)
+	//assert.Equal(t, "asdf", retValAsString1)
+}
+
+func TestVMFileModifyTime(t *testing.T) {
+	testScript := `
+			var file = "/etc/passwd";
+			var results1 = FileModifyTime(file);
+    `
+	e := New("GetModifyTimeTest")
+	e.EnableLogging()
+	e.CreateVM()
+
+	e.VM.Run(testScript)
+	retVal1, err := e.VM.Get("results1")
+	assert.Nil(t, err)
+	_, er := retVal1.ToString()
+	assert.Nil(t, er)
+	//assert.Equal(t, "asdf", retValAsString1)
+}
+
+func TestVMFileChangeTime(t *testing.T) {
+	testScript := `
+			var file = "/etc/passwd";
+			var results1 = FileChangeTime(file);
+    `
+	e := New("GetChangeTimeTest")
+	e.EnableLogging()
+	e.CreateVM()
+
+	e.VM.Run(testScript)
+	retVal1, err := e.VM.Get("results1")
+	assert.Nil(t, err)
+	_, er := retVal1.ToString()
+	assert.Nil(t, er)
+	//assert.Equal(t, "asdf", retValAsString1)
+}
+
+func TestVMFileBirthTime(t *testing.T) {
+	testScript := `
+			var file = "/etc/passwd";
+			var results1 = FileBirthTime(file);
+    `
+	e := New("GetChangeTimeTest")
+	e.EnableLogging()
+	e.CreateVM()
+
+	e.VM.Run(testScript)
+	retVal1, err := e.VM.Get("results1")
+	assert.Nil(t, err)
+	_, er := retVal1.ToString()
+	assert.Nil(t, er)
+	//assert.Equal(t, "asdf", retValAsString1)
+}
