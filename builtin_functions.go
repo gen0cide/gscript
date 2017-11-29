@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
+	"github.com/djherbis/times"
 	"github.com/robertkrimen/otto"
 )
 
@@ -487,14 +488,94 @@ func (e *Engine) VMGetEnv(call otto.FunctionCall) otto.Value {
 	return vmResponse
 }
 
-func (e *Engine) VMFileCreateTime(call otto.FunctionCall) otto.Value {
-	e.LogErrorf("Function Not Implemented: %s", CalledBy())
-	return otto.FalseValue()
+func (e *Engine) VMFileChangeTime(call otto.FunctionCall) otto.Value {
+	filePath := call.Argument(0)
+	filePathAsString, err := filePath.Export()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(filePath))
+		return otto.FalseValue()
+	}
+	t, err := times.Stat(filePathAsString.(string))
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=CMD_OUTPUT_OBJECT_CAST_FAILED arg=%s", CalledBy(), spew.Sdump(filePathAsString))
+		return otto.FalseValue()
+	}
+	if t.HasChangeTime() {
+		vmResponse, err := e.VM.ToValue(t.ChangeTime().String())
+		if err != nil {
+			e.LogErrorf("Function Error: function=%s error=CMD_OUTPUT_OBJECT_CAST_FAILED arg=%s", CalledBy(), spew.Sdump(t))
+			return otto.FalseValue()
+		}
+		return vmResponse
+	} else {
+		e.LogErrorf("Function Error: function=%s error=FILE_HAS_NO_CTIME arg=%s", CalledBy(), spew.Sdump(t))
+		return otto.FalseValue()
+	}
+}
+
+func (e *Engine) VMFileBirthTime(call otto.FunctionCall) otto.Value {
+	filePath := call.Argument(0)
+	filePathAsString, err := filePath.Export()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(filePath))
+		return otto.FalseValue()
+	}
+	t, err := times.Stat(filePathAsString.(string))
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=CMD_OUTPUT_OBJECT_CAST_FAILED arg=%s", CalledBy(), spew.Sdump(filePathAsString))
+		return otto.FalseValue()
+	}
+	if t.HasBirthTime() {
+		vmResponse, err := e.VM.ToValue(t.BirthTime().String())
+		if err != nil {
+			e.LogErrorf("Function Error: function=%s error=CMD_OUTPUT_OBJECT_CAST_FAILED arg=%s", CalledBy(), spew.Sdump(t))
+			return otto.FalseValue()
+		}
+		return vmResponse
+	} else {
+		e.LogErrorf("Function Error: function=%s error=FILE_HAS_NO_CTIME arg=%s", CalledBy(), spew.Sdump(t))
+		return otto.FalseValue()
+	}
 }
 
 func (e *Engine) VMFileModifyTime(call otto.FunctionCall) otto.Value {
-	e.LogErrorf("Function Not Implemented: %s", CalledBy())
-	return otto.FalseValue()
+	filePath := call.Argument(0)
+	filePathAsString, err := filePath.Export()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(filePath))
+		return otto.FalseValue()
+	}
+	t, err := times.Stat(filePathAsString.(string))
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=CMD_OUTPUT_OBJECT_CAST_FAILED arg=%s", CalledBy(), spew.Sdump(filePathAsString))
+		return otto.FalseValue()
+	}
+	vmResponse, err := e.VM.ToValue(t.ModTime().String())
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=CMD_OUTPUT_OBJECT_CAST_FAILED arg=%s", CalledBy(), spew.Sdump(t))
+		return otto.FalseValue()
+	}
+	return vmResponse
+}
+
+func (e *Engine) VMFileAccessTime(call otto.FunctionCall) otto.Value {
+	filePath := call.Argument(0)
+	filePathAsString, err := filePath.Export()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(filePath))
+		return otto.FalseValue()
+	}
+	t, err := times.Stat(filePathAsString.(string))
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=CMD_OUTPUT_OBJECT_CAST_FAILED arg=%s", CalledBy(), spew.Sdump(filePathAsString))
+		return otto.FalseValue()
+	}
+	vmResponse, err := e.VM.ToValue(t.AccessTime().String())
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=CMD_OUTPUT_OBJECT_CAST_FAILED arg=%s", CalledBy(), spew.Sdump(t))
+		return otto.FalseValue()
+	}
+	return vmResponse
 }
 
 func (e *Engine) VMLoggedInUsers(call otto.FunctionCall) otto.Value {
