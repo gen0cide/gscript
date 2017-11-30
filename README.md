@@ -99,6 +99,20 @@ Copy file from `srcPath` to `dstPath`.
 
 ---
 
+### `ReadFile(path)`
+
+Read provided `path`
+
+##### Argument List
+
+ * `path` (String) - Path to file you would like to read.
+
+##### Return Type
+
+`string` - Contents of target file
+
+---
+
 ### `WriteFile(path, bytes, perms)`
 
 Write `bytes` to `path` and set perms to `perms`.
