@@ -111,6 +111,7 @@ func (e *Engine) CreateVM() {
 	e.VM.Set("DeleteFile", e.VMDeleteFile)
 	e.VM.Set("CopyFile", e.VMCopyFile)
 	e.VM.Set("WriteFile", e.VMWriteFile)
+	e.VM.Set("ReadFile", e.VMReadFile)
 	e.VM.Set("ExecuteFile", e.VMExecuteFile)
 	e.VM.Set("AppendFile", e.VMAppendFile)
 	e.VM.Set("ReplaceInFile", e.VMReplaceInFile)

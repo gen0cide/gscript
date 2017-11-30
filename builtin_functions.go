@@ -51,6 +51,24 @@ func (e *Engine) VMWriteFile(call otto.FunctionCall) otto.Value {
 	return otto.TrueValue()
 }
 
+func (e *Engine) VMReadFile(call otto.FunctionCall) otto.Value {
+	filePath := call.Argument(0)
+	filePathAsString, err := filePath.Export()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(filePath))
+		return otto.FalseValue()
+	}
+	bytes, err := LocalFileRead(filePathAsString.(string))
+	if err != nil {
+		e.LogErrorf("Error reading the file: function=%s path=%s error=%s", CalledBy(), filePathAsString.(string), err.Error())
+		return otto.FalseValue()
+	}
+
+	vmResponse, err := e.VM.ToValue(string(bytes))
+
+  return vmResponse;
+}
+
 func (e *Engine) VMCopyFile(call otto.FunctionCall) otto.Value {
 	readPath, err := call.ArgumentList[0].ToString()
 	if err != nil {
@@ -119,6 +137,7 @@ func (e *Engine) VMAsset(call otto.FunctionCall) otto.Value {
 		return vmVal
 	}
 	e.LogErrorf("Asset File Not Found: asset=%s", filename)
+	e.LogErrorf("All Assets: %s", e.Imports)
 	return otto.FalseValue()
 }
 
