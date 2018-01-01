@@ -5,6 +5,7 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 	"encoding/hex"
+	"fmt"
 	"os"
 	"strings"
 	"time"
@@ -66,7 +67,7 @@ func (e *Engine) VMReadFile(call otto.FunctionCall) otto.Value {
 
 	vmResponse, err := e.VM.ToValue(string(bytes))
 
-  return vmResponse;
+	return vmResponse
 }
 
 func (e *Engine) VMCopyFile(call otto.FunctionCall) otto.Value {
@@ -263,12 +264,48 @@ func (e *Engine) VMExec(call otto.FunctionCall) otto.Value {
 		return otto.FalseValue()
 	}
 	cmdOutput := ExecuteCommand(baseCmdAsString, argList...)
+	//e.LogInfof("Function Info: function=%s deets=%s", CalledBy(), cmdOutput)
 	vmResponse, err := e.VM.ToValue(cmdOutput)
 	if err != nil {
 		e.LogErrorf("Function Error: function=%s error=CMD_OUTPUT_OBJECT_CAST_FAILED arg=%s", CalledBy(), spew.Sdump(baseCmd))
 		return otto.FalseValue()
 	}
 	return vmResponse
+}
+
+func (e *Engine) VMForkExec(call otto.FunctionCall) otto.Value {
+	baseCmd := call.Argument(0)
+	if !baseCmd.IsString() {
+		e.LogErrorf("Function Error: function=%s error=CMD_CALL_NOT_OF_TYPE_STRING arg=%s", CalledBy(), spew.Sdump(baseCmd))
+		return otto.FalseValue()
+	}
+	cmdArgs := call.Argument(1)
+	argList := []string{}
+	if !cmdArgs.IsNull() {
+		argArray, err := cmdArgs.Export()
+		if err != nil {
+			e.LogErrorf("Function Error: function=%s error=CMD_ARGS_NOT_PARSABLE arg=%s", CalledBy(), spew.Sdump(cmdArgs))
+			return otto.FalseValue()
+		}
+		argList = argArray.([]string)
+	}
+	baseCmdAsString, err := baseCmd.ToString()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=CMD_BASE_NOT_PARSABLE arg=%s", CalledBy(), spew.Sdump(baseCmd))
+		return otto.FalseValue()
+	}
+	pid, err := ForkExecuteCommand(baseCmdAsString, argList...)
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=CMD_BASE_NOT_PARSABLE arg=%s", CalledBy(), spew.Sdump(baseCmd))
+		return otto.FalseValue()
+	}
+	cmdDeets := fmt.Sprintf("Launched forked process w/ pid: %v, %s with arguments %v", pid, baseCmdAsString, argList)
+	e.LogInfof("Function Info: function=%s deets=%s", CalledBy(), cmdDeets)
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=CMD_OUTPUT_OBJECT_CAST_FAILED arg=%s", CalledBy(), spew.Sdump(baseCmd))
+		return otto.FalseValue()
+	}
+	return otto.TrueValue()
 }
 
 func (e *Engine) VMMD5(call otto.FunctionCall) otto.Value {

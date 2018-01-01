@@ -14,12 +14,13 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"syscall"
 	"time"
 	"unicode"
-	"golang.org/x/sys/unix"
-	"syscall"
+
 	"github.com/matishsiao/goInfo"
 	"github.com/mitchellh/go-ps"
+	"golang.org/x/sys/unix"
 )
 
 func CalledBy() string {
@@ -44,11 +45,11 @@ func LocalFileExists(path string) bool {
 }
 
 func LocalFileWritable(path string) bool {
-    return unix.Access(path, unix.W_OK) == nil
+	return unix.Access(path, unix.W_OK) == nil
 }
 
 func LocalFileExecutable(path string) bool {
-    return unix.Access(path, unix.X_OK) == nil
+	return unix.Access(path, unix.X_OK) == nil
 }
 
 func LocalDirCreate(path string) error {
@@ -269,6 +270,16 @@ func ExecuteCommand(c string, args ...string) VMExecResponse {
 	return respObj
 }
 
+func ForkExecuteCommand(c string, args ...string) (int, error) {
+	cmd := exec.Command(c, args...)
+	err := cmd.Start()
+	if err != nil {
+		return 0, err
+	}
+	pid := cmd.Process.Pid
+	return pid, nil
+}
+
 func DNSQuestion(target, request string) (string, error) {
 	if request == "A" {
 		var stringAnswerArray []string
@@ -389,8 +400,8 @@ func ProcExists1(pidBoi int) bool {
 }
 
 func ProcExists2(pidBoi int) bool {
-  process, err := ps.FindProcess(pidBoi)
-	if (err == nil && process == nil) {
+	process, err := ps.FindProcess(pidBoi)
+	if err == nil && process == nil {
 		return false
 	} else {
 		return true
