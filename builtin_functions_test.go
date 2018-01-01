@@ -255,6 +255,23 @@ func TestExec(t *testing.T) {
 	assert.Equal(t, testCmd.Stdout, realRetVal.Stdout)
 }
 
+func TestForkExec(t *testing.T) {
+
+	testScript := `
+      var test_exec = ForkExec("nc", ["-l", "8080"]);
+    `
+	e := New("ForkExec")
+	e.EnableLogging()
+	e.CreateVM()
+
+	e.VM.Run(testScript)
+	retVal, err := e.VM.Get("test_exec")
+	assert.Nil(t, err)
+	retValAsString, err := retVal.ToString()
+	assert.Nil(t, err)
+	assert.Equal(t, "true", retValAsString)
+}
+
 func TestCPUStats(t *testing.T) {
 	//resultz := CPUStats()
 	testScript := `
@@ -275,7 +292,7 @@ func TestCPUStats(t *testing.T) {
 func TestVMExecuteFile(t *testing.T) {
 	testScript := `
 			var file_path = "uname";
-			var args = ["-o"]
+			var args = ["-o"];
       var results = ExecuteFile(file_path, args);
     `
 	e := New("ExecuteFileTest")
