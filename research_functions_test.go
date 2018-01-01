@@ -65,7 +65,6 @@ func TestVMHasPublicIP(t *testing.T) {
 	assert.Equal(t, "true", retValAsString)
 }
 
-/*
 func TestVMIsAWS(t *testing.T) {
 	testScript := `
     var return_value = IsAWS();
@@ -83,7 +82,6 @@ func TestVMIsAWS(t *testing.T) {
 
 	assert.Equal(t, "false", retValAsString)
 }
-*/
 
 func TestVMFileContains(t *testing.T) {
 	testScript := `
