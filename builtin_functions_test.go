@@ -15,9 +15,9 @@ var g_file_3 = fmt.Sprintf("/tmp/%s", RandString(6))
 
 func TestVMMD5(t *testing.T) {
 	testScript := `
-    var hash_val = "helloworld";
-    var return_value = MD5(hash_val);
-  `
+		var hash_val = "helloworld";
+		var return_value = MD5(hash_val);
+	`
 	// "helloworld" = fc5e038d38a57032085441e7fe7010b0
 
 	e := New("MD5")
@@ -37,10 +37,10 @@ func TestVMMD5(t *testing.T) {
 func TestVMCopyFile(t *testing.T) {
 	file_2 := g_file_1
 	testScript := fmt.Sprintf(`
-    var file_1 = "/etc/passwd";
-    var file_2 = "%s";
-    var return_value = CopyFile(file_1, file_2);
-  `, file_2)
+    		var file_1 = "/etc/passwd";
+    		var file_2 = "%s";
+    		var return_value = CopyFile(file_1, file_2);
+	`, file_2)
 
 	e := New("CopyFile")
 	e.EnableLogging()
@@ -57,12 +57,12 @@ func TestVMCopyFile(t *testing.T) {
 func TestVMAppendFile(t *testing.T) {
 	bytes := "60,104,116,109,108,62,10,32,32,60,98,111,100,121,62,10,32,32,32,32"
 	testScript := fmt.Sprintf(`
-    var file_1 = "%s";
+		var file_1 = "%s";
 		var file_2 = "%s";
-    var bytes = [%s];
-    var return_value1 = AppendFile(file_1, bytes);
+		var bytes = [%s];
+		var return_value1 = AppendFile(file_1, bytes);
 		var return_value2 = AppendFile(file_2, bytes);
-  `, g_file_1, g_file_2, bytes)
+	`, g_file_1, g_file_2, bytes)
 
 	e := New("AppendFile")
 	e.EnableLogging()
@@ -87,11 +87,11 @@ func TestVMReplaceInFile(t *testing.T) {
 	string01 := "root"
 	string02 := "lol"
 	testScript := fmt.Sprintf(`
-    var file_1 = "%s";
-    var string01 = "%s";
+		var file_1 = "%s";
+		var string01 = "%s";
 		var string02 = "%s";
-    var return_value1 = ReplaceInFile(file_1, string01, string02);
-  `, g_file_1, string01, string02)
+		var return_value1 = ReplaceInFile(file_1, string01, string02);
+	`, g_file_1, string01, string02)
 
 	e := New("ReplaceInFile")
 	e.EnableLogging()
@@ -109,12 +109,12 @@ func TestVMRetrieveFileFromURL(t *testing.T) {
 	url := "https://alexlevinson.com/"
 	file_3 := g_file_3
 	testScript2 := fmt.Sprintf(`
-	  var url = "%s";
+		var url = "%s";
 		var file_3 = "%s";
-	  var response2 = RetrieveFileFromURL(url);
-	  var return_value2 = response2;
+		var response2 = RetrieveFileFromURL(url);
+		var return_value2 = response2;
 		var response3 = WriteFile(file_3, response2);
-  `, url, file_3)
+	`, url, file_3)
 	e := New("RetrieveFileFromURL")
 	e.EnableLogging()
 	e.CreateVM()
@@ -131,12 +131,12 @@ func TestVMRetrieveFileFromURL(t *testing.T) {
 func TestVMDeleteFile(t *testing.T) {
 	testScript := fmt.Sprintf(`
 		var file_1 = "%s";
-    var return_value1 = DeleteFile(file_1);
-    var file_2 = "%s";
-    var return_value2 = DeleteFile(file_2);
+		var return_value1 = DeleteFile(file_1);
+    		var file_2 = "%s";
+    		var return_value2 = DeleteFile(file_2);
 		var file_3 = "%s";
-    var return_value3 = DeleteFile(file_3);
-  `, g_file_1, g_file_2, g_file_3)
+    		var return_value3 = DeleteFile(file_3);
+  	`, g_file_1, g_file_2, g_file_3)
 
 	e := New("DeleteFile")
 	e.EnableLogging()
@@ -165,18 +165,18 @@ func TestVMDNSQuery(t *testing.T) {
 		var url = "google.com";
 		var ip = "8.8.8.8";
 		var type1 = "A";
-    var return_value1 = DNSQuery(url, type1);
+		var return_value1 = DNSQuery(url, type1);
 		var type2 = "CNAME";
-    var return_value2 = DNSQuery(url, type2);
+		var return_value2 = DNSQuery(url, type2);
 		var type3 = "TXT";
-    var return_value3 = DNSQuery(url, type3);
+		var return_value3 = DNSQuery(url, type3);
 		var type4 = "MX";
-    var return_value4 = DNSQuery(url, type4);
+ 		var return_value4 = DNSQuery(url, type4);
 		var type5 = "NS";
-    var return_value5 = DNSQuery(url, type5);
+ 		var return_value5 = DNSQuery(url, type5);
 		var type6 = "PTR";
-    var return_value6 = DNSQuery(ip, type6);
-  `)
+		var return_value6 = DNSQuery(ip, type6);
+	`)
 
 	e := New("DNSQuery")
 	e.EnableLogging()
@@ -219,8 +219,8 @@ func TestVMTimestamp(t *testing.T) {
 	currTime := time.Now().Unix()
 
 	testScript := `
-    var test_time = Timestamp();
-  `
+    		var test_time = Timestamp();
+	`
 	e := New("Timestamp")
 	e.EnableLogging()
 	e.CreateVM()
@@ -238,8 +238,8 @@ func TestExec(t *testing.T) {
 	testCmd := ExecuteCommand("ls", "-lah")
 
 	testScript := `
-      var test_exec = Exec("ls", ["-lah"]);
-    `
+      		var test_exec = Exec("ls", ["-lah"]);
+    	`
 	e := New("Exec")
 	e.EnableLogging()
 	e.CreateVM()
@@ -258,8 +258,8 @@ func TestExec(t *testing.T) {
 func TestForkExec(t *testing.T) {
 
 	testScript := `
-      var test_exec = ForkExec("nc", ["-l", "8080"]);
-    `
+      		var test_exec = ForkExec("nc", ["-l", "8080"]);
+    	`
 	e := New("ForkExec")
 	e.EnableLogging()
 	e.CreateVM()
@@ -275,8 +275,8 @@ func TestForkExec(t *testing.T) {
 func TestCPUStats(t *testing.T) {
 	//resultz := CPUStats()
 	testScript := `
-      var results = CPUStats();
-    `
+      		var results = CPUStats();
+    	`
 	e := New("CPUStats")
 	e.EnableLogging()
 	e.CreateVM()
@@ -291,10 +291,10 @@ func TestCPUStats(t *testing.T) {
 
 func TestVMExecuteFile(t *testing.T) {
 	testScript := `
-			var file_path = "uname";
-			var args = ["-o"];
-      var results = ExecuteFile(file_path, args);
-    `
+		var file_path = "uname";
+		var args = ["-o"];
+      		var results = ExecuteFile(file_path, args);
+    	`
 	e := New("ExecuteFileTest")
 	e.EnableLogging()
 	e.CreateVM()
@@ -312,8 +312,8 @@ func TestVMExecuteFile(t *testing.T) {
 
 func TestVMEnvVars(t *testing.T) {
 	testScript := `
-      var results = EnvVars();
-    `
+      		var results = EnvVars();
+    	`
 	e := New("EnvVarsTest")
 	e.EnableLogging()
 	e.CreateVM()
@@ -331,11 +331,11 @@ func TestVMEnvVars(t *testing.T) {
 
 func TestVMEGetEnv(t *testing.T) {
 	testScript := `
-			var envvar1 = "USERNAME";
-			var envvar2 = "DECKARDCAIN"
-			var results1 = GetEnv(envvar1);
-			var results2 = GetEnv(envvar2);
-    `
+		var envvar1 = "USERNAME";
+		var envvar2 = "DECKARDCAIN"
+		var results1 = GetEnv(envvar1);
+		var results2 = GetEnv(envvar2);
+    	`
 	e := New("GetEnvVarTest")
 	e.EnableLogging()
 	e.CreateVM()
@@ -355,9 +355,9 @@ func TestVMEGetEnv(t *testing.T) {
 
 func TestVMFileAccessTime(t *testing.T) {
 	testScript := `
-			var file = "/etc/passwd";
-			var results1 = FileAccessTime(file);
-    `
+		var file = "/etc/passwd";
+		var results1 = FileAccessTime(file);
+    	`
 	e := New("GetAccessTimeTest")
 	e.EnableLogging()
 	e.CreateVM()
@@ -372,9 +372,9 @@ func TestVMFileAccessTime(t *testing.T) {
 
 func TestVMFileModifyTime(t *testing.T) {
 	testScript := `
-			var file = "/etc/passwd";
-			var results1 = FileModifyTime(file);
-    `
+		var file = "/etc/passwd";
+		var results1 = FileModifyTime(file);
+    	`
 	e := New("GetModifyTimeTest")
 	e.EnableLogging()
 	e.CreateVM()
@@ -389,9 +389,9 @@ func TestVMFileModifyTime(t *testing.T) {
 
 func TestVMFileChangeTime(t *testing.T) {
 	testScript := `
-			var file = "/etc/passwd";
-			var results1 = FileChangeTime(file);
-    `
+		var file = "/etc/passwd";
+		var results1 = FileChangeTime(file);
+    	`
 	e := New("GetChangeTimeTest")
 	e.EnableLogging()
 	e.CreateVM()
@@ -406,9 +406,9 @@ func TestVMFileChangeTime(t *testing.T) {
 
 func TestVMFileBirthTime(t *testing.T) {
 	testScript := `
-			var file = "/etc/passwd";
-			var results1 = FileBirthTime(file);
-    `
+		var file = "/etc/passwd";
+		var results1 = FileBirthTime(file);
+    	`
 	e := New("GetChangeTimeTest")
 	e.EnableLogging()
 	e.CreateVM()
