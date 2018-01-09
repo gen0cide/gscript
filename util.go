@@ -14,13 +14,11 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-	"syscall"
 	"time"
 	"unicode"
 
 	"github.com/matishsiao/goInfo"
 	"github.com/mitchellh/go-ps"
-	"golang.org/x/sys/unix"
 )
 
 func CalledBy() string {
@@ -44,6 +42,8 @@ func LocalFileExists(path string) bool {
 	return false
 }
 
+//These two functions break compiling on windows
+/*
 func LocalFileWritable(path string) bool {
 	return unix.Access(path, unix.W_OK) == nil
 }
@@ -51,6 +51,7 @@ func LocalFileWritable(path string) bool {
 func LocalFileExecutable(path string) bool {
 	return unix.Access(path, unix.X_OK) == nil
 }
+*/
 
 func LocalDirCreate(path string) error {
 	err := os.MkdirAll(path, 0700)
@@ -393,11 +394,14 @@ func UDPWrite(writeData []byte, ip, port string) error {
 	return nil
 }
 
+//Function breaks compiling on windows
+/*
 func ProcExists1(pidBoi int) bool {
 	killErr := syscall.Kill(pidBoi, syscall.Signal(0))
 	procExistsBoi := (killErr == nil || killErr == syscall.EPERM)
 	return procExistsBoi
 }
+*/
 
 func ProcExists2(pidBoi int) bool {
 	process, err := ps.FindProcess(pidBoi)
