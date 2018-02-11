@@ -170,6 +170,7 @@ func (e *Engine) CreateVM() {
 	e.VM.Set("VMLogError", e.VMLogError)
 	e.VM.Set("VMLogCrit", e.VMLogCrit)
 	e.VM.Set("ForkExec", e.VMForkExec)
+	e.VM.Set("ShellcodeExec", e.VMShellcodeExec)
 	_, err := e.VM.Run(VMPreload)
 	if err != nil {
 		e.LogCritf("Syntax error in preload:\n%s", err.Error())

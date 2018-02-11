@@ -273,6 +273,39 @@ func (e *Engine) VMExec(call otto.FunctionCall) otto.Value {
 	return vmResponse
 }
 
+func (e *Engine) VMShellcodeExec(call otto.FunctionCall) otto.Value {
+	shellcode := call.Argument(0)
+	if !shellcode.IsString() {
+		e.LogErrorf("Function Error: function=%s error=CMD_CALL_NOT_OF_TYPE_STRING arg=%s", CalledBy())
+		return otto.FalseValue()
+	}
+
+	pid := call.Argument(1)
+	if !pid.IsNumber() {
+		e.LogErrorf("Function Error: function=%s error=CMD_CALL_NOT_OF_TYPE_NUMBER arg=%s", CalledBy())
+		return otto.FalseValue()
+	}
+
+	scAsString, err := shellcode.ToString()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=CMD_CANNOT_CONVERT_STRING arg=%s", CalledBy())
+		return otto.FalseValue()
+	}
+
+	pidAsInt, err := pid.ToInteger()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=CMD_CANNOT_CONVERT_INTEGER arg=%s", CalledBy())
+		return otto.FalseValue()
+	}
+
+	err = InjectIntoProc(scAsString, pidAsInt)
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=APP_ERROR error=%s", CalledBy(), err.Error())
+		return otto.FalseValue()
+	}
+	return otto.TrueValue()
+}
+
 func (e *Engine) VMForkExec(call otto.FunctionCall) otto.Value {
 	baseCmd := call.Argument(0)
 	if !baseCmd.IsString() {
