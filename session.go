@@ -28,7 +28,7 @@ func (e *Engine) SessionExecutor(in string) {
 	if err != nil {
 		e.LogErrorf("Console Error: %s", err.Error())
 	}
-	retVal, err := val.Export()
+	retVal, _ := val.Export()
 	if retVal != nil {
 		e.LogInfof(">>> %v", retVal)
 	}
