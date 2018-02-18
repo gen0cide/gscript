@@ -250,6 +250,15 @@ func LocalSystemInfo() ([]string, error) {
 	return nil, errors.New("Failed to retrieve local system information")
 }
 
+func GetHostname() (string, error) {
+	gi := goInfo.GetInfo()
+	hostname := gi.Hostname
+	if hostname != "" {
+		return hostname, nil
+	}
+	return "", errors.New("Failed to retrieve local hostname")
+}
+
 func ExecuteCommand(c string, args ...string) VMExecResponse {
 	cmd := exec.Command(c, args...)
 	var stdout bytes.Buffer
