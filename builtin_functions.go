@@ -681,3 +681,113 @@ func (e *Engine) VMServeFileOverHTTP(call otto.FunctionCall) otto.Value {
 	e.LogErrorf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
+
+func (e *Engine) VMGetHostname(call otto.FunctionCall) otto.Value {
+	hostString, err := GetHostname()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=CMD_OUTPUT_OBJECT_CAST_FAILED", CalledBy())
+		return otto.FalseValue()
+	}
+	vmResponse, err := e.VM.ToValue(hostString)
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=CMD_OUTPUT_OBJECT_CAST_FAILED arg=%s", CalledBy(), spew.Sdump(hostString))
+		return otto.FalseValue()
+	}
+	return vmResponse
+}
+
+func (e *Engine) VMAddRegKey(call otto.FunctionCall) otto.Value {
+	regHive := call.Argument(0)
+	keyPath := call.Argument(1)
+	keyObject := call.Argument(2)
+	keyValue := call.Argument(3)
+	keyValueInterface, err := keyValue.Export()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(keyValue))
+		return otto.FalseValue()
+	}
+	regHiveAsString, err := regHive.Export()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(regHive))
+		return otto.FalseValue()
+	}
+	keyPathAsString, err := keyPath.Export()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(keyPath))
+		return otto.FalseValue()
+	}
+	keyObjectAsString, err := keyObject.Export()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(keyObject))
+		return otto.FalseValue()
+	}
+	err = CreateRegKeyAndValue(regHiveAsString.(string), keyPathAsString.(string), keyObjectAsString.(string), keyValueInterface)
+	if err != nil {
+		e.LogErrorf("Error writing the file: function=%s path=%s error=%s", CalledBy(), regHiveAsString.(string), err.Error())
+		return otto.FalseValue()
+	}
+	return otto.TrueValue()
+}
+
+func (e *Engine) VMDelRegKey(call otto.FunctionCall) otto.Value {
+	regHive := call.Argument(0)
+	keyPath := call.Argument(1)
+	keyObject := call.Argument(2)
+	regHiveAsString, err := regHive.Export()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(regHive))
+		return otto.FalseValue()
+	}
+	keyPathAsString, err := keyPath.Export()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(keyPath))
+		return otto.FalseValue()
+	}
+	keyObjectAsString, err := keyObject.Export()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(keyObject))
+		return otto.FalseValue()
+	}
+	err = DeleteRegKeysValue(regHiveAsString.(string), keyPathAsString.(string), keyObjectAsString.(string))
+	if err != nil {
+		e.LogErrorf("Error writing the file: function=%s path=%s error=%s", CalledBy(), regHiveAsString.(string), err.Error())
+		return otto.FalseValue()
+	}
+	return otto.TrueValue()
+}
+
+func (e *Engine) VMQueryRegKey(call otto.FunctionCall) otto.Value {
+	regHive := call.Argument(0)
+	keyPath := call.Argument(1)
+	keyObject := call.Argument(2)
+	regHiveAsString, err := regHive.Export()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(regHive))
+		return otto.FalseValue()
+	}
+	e.LogInfof("Function: function=%s msg='var: %s'", CalledBy(), spew.Sdump(regHiveAsString))
+	keyPathAsString, err := keyPath.Export()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(keyPath))
+		return otto.FalseValue()
+	}
+	e.LogInfof("Function: function=%s msg='var: %s'", CalledBy(), spew.Sdump(keyPathAsString))
+	keyObjectAsString, err := keyObject.Export()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(keyObject))
+		return otto.FalseValue()
+	}
+	e.LogInfof("Function: function=%s msg='var: %s'", CalledBy(), spew.Sdump(keyObjectAsString))
+	resultStringValue, err := QueryRegKeyString(regHiveAsString.(string), keyPathAsString.(string), keyObjectAsString.(string))
+	if err != nil {
+		e.LogErrorf("Error writing the file: function=%s path=%s error=%s", CalledBy(), keyPathAsString.(string), err.Error())
+		return otto.FalseValue()
+	}
+	e.LogInfof("Function: function=%s msg='var: %s'", CalledBy(), spew.Sdump(resultStringValue))
+	vmResponse, err := e.VM.ToValue(resultStringValue)
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=CMD_OUTPUT_OBJECT_CAST_FAILED arg=%s", CalledBy(), spew.Sdump(resultStringValue))
+		return otto.FalseValue()
+	}
+	return vmResponse
+}
