@@ -681,3 +681,37 @@ func (e *Engine) VMServeFileOverHTTP(call otto.FunctionCall) otto.Value {
 	e.LogErrorf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
 }
+
+func (e *Engine) VMAddRegKey(call otto.FunctionCall) otto.Value {
+	regHive := call.Argument(0)
+	keyPath := call.Argument(1)
+	keyObject := call.Argument(2)
+	keyValue := call.Argument(3)
+	keyValueInterface, err := keyValue.Export()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(keyValue))
+		return otto.FalseValue()
+	}
+	regHiveAsString, err := regHive.Export()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(regHive))
+		return otto.FalseValue()
+	}
+	keyPathAsString, err := keyPath.Export()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(keyPath))
+		return otto.FalseValue()
+	}
+	keyObjectAsString, err := keyObject.Export()
+	if err != nil {
+		e.LogErrorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(keyObject))
+		return otto.FalseValue()
+	}
+
+	err = CreateRegKeyAndValue(regHiveAsString.(string), keyPathAsString.(string), keyObjectAsString.(string), keyValueInterface)
+	if err != nil {
+		e.LogErrorf("Error writing the file: function=%s path=%s error=%s", CalledBy(), regHiveAsString.(string), err.Error())
+		return otto.FalseValue()
+	}
+	return otto.TrueValue()
+}
