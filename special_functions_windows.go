@@ -59,3 +59,25 @@ func DeleteRegKeysValue(regHive string, keypath string, keyobject string) error 
 	k.DeleteValue(keyobject)
 	return nil
 }
+
+// QueryRegKeyString reads and returns a registry key for windows
+func QueryRegKeyString(regHive string, keypath string, keyobject string) (string, error) {
+	var hive reg.Key
+	if regHive == "LM" {
+		hive = reg.LOCAL_MACHINE
+	} else if regHive == "CU" {
+		hive = reg.CURRENT_USER
+	} else {
+		return "error", errors.New("invalid reg hive provided")
+	}
+	k, err := reg.OpenKey(hive, keypath, reg.QUERY_VALUE)
+	if err != nil {
+		return "error", errors.New("invalid reg path")
+	}
+	defer k.Close()
+	s, _, err := k.GetStringValue(keyobject)
+	if err != nil {
+		return "error", errors.New("invalid key to query for")
+	}
+	return s, nil
+}
