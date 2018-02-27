@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/user"
 	"runtime"
+	"strconv"
 	"strings"
 
 	"github.com/davecgh/go-spew/spew"
@@ -51,7 +52,7 @@ func (e *Engine) CurrentUser() map[string]string {
 	userInfo := map[string]string{}
 	u, err := user.Current()
 	if err != nil {
-		e.Logger.Errorf("User Loading Error: %s", err.Error())
+		e.Logger.WithField("trace", "true").Errorf("User Loading Error: %s", err.Error())
 		return userInfo
 	}
 	userInfo["uid"] = u.Uid
@@ -61,7 +62,7 @@ func (e *Engine) CurrentUser() map[string]string {
 	userInfo["home_dir"] = u.HomeDir
 	groups, err := u.GroupIds()
 	if err != nil {
-		e.Logger.Errorf("Group Loading Error: %s", err.Error())
+		e.Logger.WithField("trace", "true").Errorf("Group Loading Error: %s", err.Error())
 		return userInfo
 	}
 	userInfo["groups"] = strings.Join(groups, ":")
@@ -71,19 +72,19 @@ func (e *Engine) CurrentUser() map[string]string {
 func (e *Engine) InjectVars() {
 	userInfo, err := e.VM.ToValue(e.CurrentUser())
 	if err != nil {
-		e.Logger.Errorf("Could not inject user info into VM: %s", err.Error())
+		e.Logger.WithField("trace", "true").Errorf("Could not inject user info into VM: %s", err.Error())
 	} else {
 		e.VM.Set("USER_INFO", userInfo)
 	}
 	osVal, err := e.VM.ToValue(runtime.GOOS)
 	if err != nil {
-		e.Logger.Errorf("Could not inject os info into VM: %s", err.Error())
+		e.Logger.WithField("trace", "true").Errorf("Could not inject os info into VM: %s", err.Error())
 	} else {
 		e.VM.Set("OS", osVal)
 	}
 	hn, err := os.Hostname()
 	if err != nil {
-		e.Logger.Errorf("Could not obtain hostname info: %s", err.Error())
+		e.Logger.WithField("trace", "true").Errorf("Could not obtain hostname info: %s", err.Error())
 	} else {
 		hostnameVal, err := e.VM.ToValue(hn)
 		if err != nil {
@@ -94,13 +95,13 @@ func (e *Engine) InjectVars() {
 	}
 	archVal, err := e.VM.ToValue(runtime.GOARCH)
 	if err != nil {
-		e.Logger.Errorf("Could not inject arch info into VM: %s", err.Error())
+		e.Logger.WithField("trace", "true").Errorf("Could not inject arch info into VM: %s", err.Error())
 	} else {
 		e.VM.Set("ARCH", archVal)
 	}
 	ipVals, err := e.VM.ToValue(GetLocalIPs())
 	if err != nil {
-		e.Logger.Errorf("Could not inject ip info into VM: %s", err.Error())
+		e.Logger.WithField("trace", "true").Errorf("Could not inject ip info into VM: %s", err.Error())
 	} else {
 		e.VM.Set("IP_ADDRS", ipVals)
 	}
@@ -171,16 +172,17 @@ func (e *Engine) CreateVM() {
 	e.VM.Set("LogInfo", e.VMLogInfo)
 	e.VM.Set("LogWarn", e.VMLogWarn)
 	e.VM.Set("LogError", e.VMLogError)
-	e.VM.Set("LogCrit", e.VMLogCrit)
+	e.VM.Set("LogFatal", e.VMLogCrit)
 	e.VM.Set("ForkExec", e.VMForkExec)
 	e.VM.Set("ShellcodeExec", e.VMShellcodeExec)
 	e.VM.Set("AddRegKey", e.VMAddRegKey)
 	e.VM.Set("QueryRegKey", e.VMQueryRegKey)
 	e.VM.Set("DelRegKey", e.VMDelRegKey)
 	e.VM.Set("GetHost", e.VMGetHostname)
+	e.VM.Set("LogTester", e.VMLogTester)
 	_, err := e.VM.Run(VMPreload)
 	if err != nil {
-		e.Logger.Fatalf("Syntax error in preload: %s", err.Error())
+		e.Logger.WithField("trace", "true").Fatalf("Syntax error in preload: %s", err.Error())
 	}
 }
 
@@ -192,14 +194,14 @@ func (e *Engine) ValueToByteSlice(v otto.Value) []byte {
 	if v.IsString() {
 		str, err := v.Export()
 		if err != nil {
-			e.Logger.Errorf("Cannot convert string to byte slice: %s", v)
+			e.Logger.WithField("trace", "true").Errorf("Cannot convert string to byte slice: %s", v)
 			return valueBytes
 		}
 		valueBytes = []byte(str.(string))
 	} else if v.IsNumber() {
 		num, err := v.Export()
 		if err != nil {
-			e.Logger.Errorf("Cannot convert string to byte slice: %s", v)
+			e.Logger.WithField("trace", "true").Errorf("Cannot convert string to byte slice: %s", v)
 			return valueBytes
 		}
 		buf := new(bytes.Buffer)
@@ -211,7 +213,7 @@ func (e *Engine) ValueToByteSlice(v otto.Value) []byte {
 	} else if v.Class() == "Array" || v.Class() == "GoArray" {
 		arr, err := v.Export()
 		if err != nil {
-			e.Logger.Errorf("Cannot convert array to byte slice: %x", v)
+			e.Logger.WithField("trace", "true").Errorf("Cannot convert array to byte slice: %x", v)
 			return valueBytes
 		}
 		switch t := arr.(type) {
@@ -267,10 +269,10 @@ func (e *Engine) ValueToByteSlice(v otto.Value) []byte {
 			}
 		default:
 			_ = t
-			e.Logger.Errorf("Failed to cast array to byte slice array=%v", arr)
+			e.Logger.WithField("trace", "true").Errorf("Failed to cast array to byte slice array=%v", arr)
 		}
 	} else {
-		e.Logger.Errorf("Unknown class to cast to byte slice")
+		e.Logger.WithField("trace", "true").Errorf("Unknown class to cast to byte slice")
 	}
 
 	return valueBytes
@@ -281,10 +283,28 @@ func (e *Engine) VMLogWarn(call otto.FunctionCall) otto.Value {
 		for _, arg := range call.ArgumentList {
 			newArg, err := arg.ToString()
 			if err != nil {
-				e.Logger.Errorf("Logging Error - argument couldn't be converted to string: %s", spew.Sdump(arg))
+				e.Logger.WithField(
+					"script",
+					e.Name,
+				).WithField(
+					"line",
+					strconv.Itoa(e.VM.Context().Line),
+				).WithField(
+					"caller",
+					e.VM.Context().Callee,
+				).Errorf("Logging Error - argument couldn't be converted to string: %s", spew.Sdump(arg))
 				continue
 			}
-			e.Logger.Warnf("%s", newArg)
+			e.Logger.WithField(
+				"script",
+				e.Name,
+			).WithField(
+				"line",
+				strconv.Itoa(e.VM.Context().Line),
+			).WithField(
+				"caller",
+				e.VM.Context().Callee,
+			).Warnf("%s", newArg)
 		}
 	}
 	return otto.Value{}
@@ -295,10 +315,28 @@ func (e *Engine) VMLogError(call otto.FunctionCall) otto.Value {
 		for _, arg := range call.ArgumentList {
 			newArg, err := arg.ToString()
 			if err != nil {
-				e.Logger.Errorf("Logging Error - argument couldn't be converted to string: %s", spew.Sdump(arg))
+				e.Logger.WithField(
+					"script",
+					e.Name,
+				).WithField(
+					"line",
+					strconv.Itoa(e.VM.Context().Line),
+				).WithField(
+					"caller",
+					e.VM.Context().Callee,
+				).Errorf("Logging Error - argument couldn't be converted to string: %s", spew.Sdump(arg))
 				continue
 			}
-			e.Logger.Errorf("%s", newArg)
+			e.Logger.WithField(
+				"script",
+				e.Name,
+			).WithField(
+				"line",
+				strconv.Itoa(e.VM.Context().Line),
+			).WithField(
+				"caller",
+				e.VM.Context().Callee,
+			).Errorf("%s", newArg)
 		}
 	}
 	return otto.Value{}
@@ -309,10 +347,28 @@ func (e *Engine) VMLogDebug(call otto.FunctionCall) otto.Value {
 		for _, arg := range call.ArgumentList {
 			newArg, err := arg.ToString()
 			if err != nil {
-				e.Logger.Errorf("Logging Error - argument couldn't be converted to string: %s", spew.Sdump(arg))
+				e.Logger.WithField(
+					"script",
+					e.Name,
+				).WithField(
+					"line",
+					strconv.Itoa(e.VM.Context().Line),
+				).WithField(
+					"caller",
+					e.VM.Context().Callee,
+				).Errorf("Logging Error - argument couldn't be converted to string: %s", spew.Sdump(arg))
 				continue
 			}
-			e.Logger.Debugf("%s", newArg)
+			e.Logger.WithField(
+				"script",
+				e.Name,
+			).WithField(
+				"line",
+				strconv.Itoa(e.VM.Context().Line),
+			).WithField(
+				"caller",
+				e.VM.Context().Callee,
+			).Debugf("%s", newArg)
 		}
 	}
 	return otto.Value{}
@@ -323,10 +379,28 @@ func (e *Engine) VMLogCrit(call otto.FunctionCall) otto.Value {
 		for _, arg := range call.ArgumentList {
 			newArg, err := arg.ToString()
 			if err != nil {
-				e.Logger.Errorf("Logging Error - argument couldn't be converted to string: %s", spew.Sdump(arg))
+				e.Logger.WithField(
+					"script",
+					e.Name,
+				).WithField(
+					"line",
+					strconv.Itoa(e.VM.Context().Line),
+				).WithField(
+					"caller",
+					e.VM.Context().Callee,
+				).Errorf("Logging Error - argument couldn't be converted to string: %s", spew.Sdump(arg))
 				continue
 			}
-			e.Logger.Fatalf("%s", newArg)
+			e.Logger.WithField(
+				"script",
+				e.Name,
+			).WithField(
+				"line",
+				strconv.Itoa(e.VM.Context().Line),
+			).WithField(
+				"caller",
+				e.VM.Context().Callee,
+			).Fatalf("%s", newArg)
 		}
 	}
 	return otto.Value{}
@@ -337,10 +411,28 @@ func (e *Engine) VMLogInfo(call otto.FunctionCall) otto.Value {
 		for _, arg := range call.ArgumentList {
 			newArg, err := arg.ToString()
 			if err != nil {
-				e.Logger.Errorf("Logging Error - argument couldn't be converted to string: %s", spew.Sdump(arg))
+				e.Logger.WithField(
+					"script",
+					e.Name,
+				).WithField(
+					"line",
+					strconv.Itoa(e.VM.Context().Line),
+				).WithField(
+					"caller",
+					e.VM.Context().Callee,
+				).Errorf("Logging Error - argument couldn't be converted to string: %s", spew.Sdump(arg))
 				continue
 			}
-			e.Logger.Infof("%s", newArg)
+			e.Logger.WithField(
+				"script",
+				e.Name,
+			).WithField(
+				"line",
+				strconv.Itoa(e.VM.Context().Line),
+			).WithField(
+				"caller",
+				e.VM.Context().Callee,
+			).Infof("%s", newArg)
 		}
 	}
 	return otto.Value{}

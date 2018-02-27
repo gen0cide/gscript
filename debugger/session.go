@@ -21,6 +21,7 @@ func New(name string) *Debugger {
 	logger := logrus.New()
 	logger.Formatter = &logging.GSEFormatter{}
 	logger.Out = logging.LogWriter{Name: name}
+	logger.Level = logrus.DebugLevel
 	gse := engine.New(name)
 	return &Debugger{
 		Engine: gse,

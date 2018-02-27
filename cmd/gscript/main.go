@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"runtime"
 	"sort"
@@ -133,36 +134,33 @@ func main() {
 }
 
 func TestScript(c *cli.Context) error {
-	gse := engine.New("test")
 	logger := logrus.New()
 	logger.Formatter = &logging.GSEFormatter{}
 	logger.Out = logging.LogWriter{Name: "test"}
-	gse.SetLogger(logger)
+	logger.Level = logrus.DebugLevel
 	filename := c.Args().Get(0)
 	if len(filename) == 0 {
-		gse.Logger.Fatalf("You did not supply a filename!")
+		logger.Fatalf("You did not supply a filename!")
 	}
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
-		gse.Logger.Fatalf("File does not exist: %s", filename)
+		logger.Fatalf("File does not exist: %s", filename)
 	}
 	_, err := exec.LookPath("jshint")
 	if err != nil {
-		gse.Logger.Fatalf("You do not have jshint in your path. Run: npm install -g jshint")
+		logger.Fatalf("You do not have jshint in your path. Run: npm install -g jshint")
 	}
 
 	jshCmd := exec.Command("jshint", filename)
 	jshOutput, err := jshCmd.CombinedOutput()
 	if err != nil {
-		gse.Logger.Fatalf("File Not Valid Javascript!\n -- JSHint Output:\n%s", jshOutput)
+		logger.Fatalf("File Not Valid Javascript!\n -- JSHint Output:\n%s", jshOutput)
 	}
 	data, err := ioutil.ReadFile(filename)
-	gse.SetName(filename)
-	gse.CreateVM()
-	err = gse.ValidateAST(data)
+	err = compiler.ValidateAST(data)
 	if err != nil {
-		gse.Logger.Errorf("Invalid Script Error: %s", err.Error())
+		logger.Errorf("Invalid Script Error: %s", err.Error())
 	} else {
-		gse.Logger.Infof("Script Valid: %s", filename)
+		logger.Infof("Script Valid: %s", filename)
 	}
 	return nil
 }
@@ -223,6 +221,8 @@ func RunScript(c *cli.Context) error {
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
 		dbg.Engine.Logger.Fatalf("File does not exist: %s", filename)
 	}
+	dbg = debugger.New(path.Base(filename))
+	dbg.SetupDebugEngine()
 	data, err := ioutil.ReadFile(filename)
 	err = dbg.Engine.LoadScript(data)
 	if err != nil {

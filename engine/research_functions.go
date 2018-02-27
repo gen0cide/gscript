@@ -15,12 +15,12 @@ func (e *Engine) VMLocalUserExists(call otto.FunctionCall) otto.Value {
 	search := call.Argument(0)
 	searchString, err := search.Export()
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(err))
+		e.Logger.WithField("trace", "true").Errorf("Function Error: error=ARY_ARG_NOT_String arg=%s", err.Error())
 		return otto.FalseValue()
 	}
 	fileData, err := LocalFileRead(filePathString)
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=%s error=LocalFileRead_Error arg=%s", CalledBy(), spew.Sdump(err))
+		e.Logger.WithField("trace", "true").Errorf("Function Error: error=LocalFileRead_Error arg=%s", err.Error())
 		return otto.FalseValue()
 	}
 	fileStrings := string(fileData)
@@ -35,12 +35,12 @@ func (e *Engine) VMProcExistsWithName(call otto.FunctionCall) otto.Value {
 	searchProc := call.Argument(0)
 	searchProcString, err := searchProc.Export()
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(err))
+		e.Logger.WithField("trace", "true").Errorf("Function Error: error=ARY_ARG_NOT_String arg=%s", err.Error())
 		return otto.FalseValue()
 	}
 	ProcPID, err := FindProcessPid(searchProcString.(string))
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=%s error=error_finding_process arg=%s", CalledBy(), spew.Sdump(err))
+		e.Logger.WithField("trace", "true").Errorf("Function Error: error=error_finding_process arg=%s", err.Error())
 		return otto.FalseValue()
 	}
 	ProcExistsResult := ProcExists2(ProcPID)
@@ -55,15 +55,15 @@ func (e *Engine) VMCanReadFile(call otto.FunctionCall) otto.Value {
 	filePath := call.Argument(0)
 	filePathString, err := filePath.Export()
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(err))
+		e.Logger.WithField("trace", "true").Errorf("Function Error: error=ARY_ARG_NOT_String arg=%s", err.Error())
 		return otto.FalseValue()
 	}
 	data, err := LocalFileRead(filePathString.(string))
 	if data != nil && err == nil {
-		e.Logger.Infof("Function Results: function=%s result=%s", CalledBy(), spew.Sdump(data))
+		e.Logger.WithField("trace", "true").Infof("Function Results: result=%x", spew.Sdump(data))
 		return otto.TrueValue()
 	} else if err != nil {
-		e.Logger.Errorf("Function Error: function=%s error=ERR_READING_LOCAL_FILE arg=%s", CalledBy(), spew.Sdump(err))
+		e.Logger.WithField("trace", "true").Errorf("Function Error: error=ERR_READING_LOCAL_FILE arg=%s", err.Error())
 		return otto.FalseValue()
 	} else {
 		return otto.FalseValue()
@@ -71,14 +71,14 @@ func (e *Engine) VMCanReadFile(call otto.FunctionCall) otto.Value {
 }
 
 func (e *Engine) VMCanWriteFile(call otto.FunctionCall) otto.Value {
-	e.Logger.Errorf("Function Not Implemented: %s", CalledBy())
+	e.Logger.WithField("trace", "true").Errorf("Function Not Implemented: %s")
 	return otto.FalseValue()
 	//Following code breaks building for windows :(
 	/*
 		filePath := call.Argument(0)
 		filePathString, err := filePath.Export()
 		if err != nil {
-			e.Logger.Errorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(err))
+			e.Logger.WithField("trace", "true").Errorf("Function Error: error=ARY_ARG_NOT_String arg=%s", err.Error())
 			return otto.FalseValue()
 		}
 		result := LocalFileWritable(filePathString.(string))
@@ -91,14 +91,14 @@ func (e *Engine) VMCanWriteFile(call otto.FunctionCall) otto.Value {
 }
 
 func (e *Engine) VMCanExecFile(call otto.FunctionCall) otto.Value {
-	e.Logger.Errorf("Function Not Implemented: %s", CalledBy())
+	e.Logger.WithField("trace", "true").Errorf("Function Not Implemented: %s")
 	return otto.FalseValue()
 	//Following code breaks building for windows :(
 	/*
 		filePath := call.Argument(0)
 		filePathString, err := filePath.Export()
 		if err != nil {
-			e.Logger.Errorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(err))
+			e.Logger.WithField("trace", "true").Errorf("Function Error: error=ARY_ARG_NOT_String arg=%s", err.Error())
 			return otto.FalseValue()
 		}
 		result := LocalFileExecutable(filePathString.(string))
@@ -114,7 +114,7 @@ func (e *Engine) VMFileExists(call otto.FunctionCall) otto.Value {
 	filePath := call.Argument(0)
 	filePathString, err := filePath.Export()
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(err))
+		e.Logger.WithField("trace", "true").Errorf("Function Error: error=ARY_ARG_NOT_String arg=%s", err.Error())
 		return otto.FalseValue()
 	}
 	if LocalFileExists(filePathString.(string)) {
@@ -128,7 +128,7 @@ func (e *Engine) VMDirExists(call otto.FunctionCall) otto.Value {
 	filePath := call.Argument(0)
 	filePathString, err := filePath.Export()
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(err))
+		e.Logger.WithField("trace", "true").Errorf("Function Error: error=ARY_ARG_NOT_String arg=%s", err.Error())
 		return otto.FalseValue()
 	}
 	if LocalFileExists(filePathString.(string)) {
@@ -142,18 +142,18 @@ func (e *Engine) VMFileContains(call otto.FunctionCall) otto.Value {
 	filePath := call.Argument(0)
 	filePathString, err := filePath.Export()
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(err))
+		e.Logger.WithField("trace", "true").Errorf("Function Error: error=ARY_ARG_NOT_String arg=%s", err.Error())
 		return otto.FalseValue()
 	}
 	search := call.Argument(1)
 	searchString, err := search.Export()
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(err))
+		e.Logger.WithField("trace", "true").Errorf("Function Error: error=ARY_ARG_NOT_String arg=%s", err.Error())
 		return otto.FalseValue()
 	}
 	fileData, err := LocalFileRead(filePathString.(string))
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=%s error=LocalFileRead_Error arg=%s", CalledBy(), spew.Sdump(err))
+		e.Logger.WithField("trace", "true").Errorf("Function Error: error=LocalFileRead_Error arg=%s", err.Error())
 		return otto.FalseValue()
 	}
 	fileStrings := string(fileData)
@@ -165,20 +165,20 @@ func (e *Engine) VMFileContains(call otto.FunctionCall) otto.Value {
 }
 
 func (e *Engine) VMIsVM(call otto.FunctionCall) otto.Value {
-	e.Logger.Errorf("Function Not Implemented: %s", CalledBy())
+	e.Logger.WithField("trace", "true").Errorf("Function Not Implemented: %s")
 	return otto.FalseValue()
 }
 
 func (e *Engine) VMIsAWS(call otto.FunctionCall) otto.Value {
 	respCode, response, err := HTTPGetFile("http://169.254.169.254/latest/meta-data/")
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=%s error=bad_news arg=%s", CalledBy(), spew.Sdump(err))
+		e.Logger.WithField("trace", "true").Errorf("Function Error: error=bad_news arg=%s", err.Error())
 		return otto.FalseValue()
 	} else if respCode == 200 {
-		e.Logger.Infof("Function Results: function=%s code=%s result=%s", CalledBy(), respCode, spew.Sdump(response))
+		e.Logger.WithField("trace", "true").Infof("Function Results: code=%s result=%+v", respCode, string(response))
 		return otto.TrueValue()
 	} else {
-		e.Logger.Infof("Function Results: function=%s code=%s result=%s", CalledBy(), respCode, spew.Sdump(response))
+		e.Logger.WithField("trace", "true").Infof("Function Results: code=%s result=%+v", respCode, string(response))
 		return otto.FalseValue()
 	}
 }
@@ -186,13 +186,13 @@ func (e *Engine) VMIsAWS(call otto.FunctionCall) otto.Value {
 func (e *Engine) VMHasPublicIP(call otto.FunctionCall) otto.Value {
 	respCode, response, err := HTTPGetFile("http://icanhazip.com")
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=%s error=bad_news arg=%s", CalledBy(), spew.Sdump(err))
+		e.Logger.WithField("trace", "true").Errorf("Function Error: error=bad_news arg=%s", err.Error())
 		return otto.FalseValue()
 	} else if respCode == 200 {
-		e.Logger.Infof("Function Results: function=%s code=%s result=%s", CalledBy(), respCode, spew.Sdump(response))
+		e.Logger.WithField("trace", "true").Infof("Function Results: code=%s result=%+v", respCode, string(response))
 		return otto.TrueValue()
 	} else {
-		e.Logger.Infof("Function Results: function=%s code=%s result=%s", CalledBy(), respCode, spew.Sdump(response))
+		e.Logger.WithField("trace", "true").Infof("Function Results: code=%s result=%+v", respCode, string(response))
 		return otto.FalseValue()
 	}
 }
@@ -201,25 +201,25 @@ func (e *Engine) VMCanMakeTCPConn(call otto.FunctionCall) otto.Value {
 	ip := call.Argument(0)
 	ipString, err := ip.Export()
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(err))
+		e.Logger.WithField("trace", "true").Errorf("Function Error: error=ARY_ARG_NOT_String arg=%s", err.Error())
 		return otto.FalseValue()
 	}
 	port := call.Argument(1)
 	portString, err := port.Export()
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(err))
+		e.Logger.WithField("trace", "true").Errorf("Function Error: error=ARY_ARG_NOT_String arg=%s", err.Error())
 		return otto.FalseValue()
 	}
 	tcpResponse, err := TCPRead(ipString.(string), portString.(string))
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(err))
+		e.Logger.WithField("trace", "true").Errorf("Function Error: error=ARY_ARG_NOT_String arg=%s", err.Error())
 		return otto.FalseValue()
 	}
 	if tcpResponse != nil {
-		e.Logger.Infof("Function Results: function=%s args=%s result=%s", CalledBy(), (ipString.(string) + ":" + portString.(string)), spew.Sdump(tcpResponse))
+		e.Logger.WithField("trace", "true").Infof("Function Results: args=%s result=%+v", (ipString.(string) + ":" + portString.(string)), tcpResponse)
 		return otto.TrueValue()
 	} else {
-		e.Logger.Infof("Function Results: function=%s args=%s result=%s", CalledBy(), (ipString.(string) + ":" + portString.(string)), spew.Sdump(tcpResponse))
+		e.Logger.WithField("trace", "true").Infof("Function Results: args=%s result=%+v", (ipString.(string) + ":" + portString.(string)), tcpResponse)
 		return otto.FalseValue()
 	}
 
@@ -231,29 +231,29 @@ func (e *Engine) VMExpectedDNS(call otto.FunctionCall) otto.Value {
 	expectedResult := call.Argument(2)
 	targetDomainAsString, err := targetDomain.Export()
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=%s error=ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(targetDomain))
+		e.Logger.WithField("trace", "true").Errorf("Function Error: error=ARG_NOT_String arg=%+v", targetDomain)
 		return otto.FalseValue()
 	}
 	queryTypeAsString, err := queryType.Export()
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=%s error=ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(queryType))
+		e.Logger.WithField("trace", "true").Errorf("Function Error: error=ARG_NOT_String arg=%+v", queryType)
 		return otto.FalseValue()
 	}
 	expectedResultAsString, err := expectedResult.Export()
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=%s error=ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(expectedResult))
+		e.Logger.WithField("trace", "true").Errorf("Function Error: error=ARG_NOT_String arg=%+v", expectedResult)
 		return otto.FalseValue()
 	}
 	result, err := DNSQuestion(targetDomainAsString.(string), queryTypeAsString.(string))
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=%s error=DNSLookupFailed details=%s args=%s %s", CalledBy(), spew.Sdump(err), spew.Sdump(targetDomainAsString.(string)), queryTypeAsString.(string))
+		e.Logger.WithField("trace", "true").Errorf("Function Error: error=DNSLookupFailed details=%s args=%s query_type=%s", err.Error(), targetDomainAsString, queryTypeAsString.(string))
 		return otto.FalseValue()
 	}
 	if expectedResultAsString.(string) == string(result) {
-		e.Logger.Infof("Function: function=%s msg='DNS Results: %s'", CalledBy(), spew.Sdump(string(result)))
+		e.Logger.WithField("trace", "true").Infof("Function: msg='DNS Results: %s'", string(result))
 		return otto.TrueValue()
 	} else {
-		e.Logger.Infof("Function: function=%s msg='DNS Results: %s'", CalledBy(), spew.Sdump(string(result)))
+		e.Logger.WithField("trace", "true").Infof("Function: msg='DNS Results: %s'", string(result))
 		return otto.FalseValue()
 	}
 }
@@ -262,15 +262,15 @@ func (e *Engine) VMCanMakeHTTPConn(call otto.FunctionCall) otto.Value {
 	url1 := call.Argument(0)
 	url1String, err := url1.Export()
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(url1String))
+		e.Logger.WithField("trace", "true").Errorf("Function Error: error=ARY_ARG_NOT_String arg=%+v", url1String)
 		return otto.FalseValue()
 	}
 	respCode, _, err := HTTPGetFile(url1String.(string))
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=%s error=ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(err))
+		e.Logger.WithField("trace", "true").Errorf("Function Error: error=ARG_NOT_String arg=%s", err.Error())
 		return otto.FalseValue()
 	} else if respCode != 403 || respCode != 404 || respCode != 500 || respCode != 502 || respCode != 503 || respCode != 504 || respCode != 511 {
-		e.Logger.Infof("Function Results: function=%s args=%s result=%s", CalledBy(), url1String.(string), spew.Sdump(respCode))
+		e.Logger.WithField("trace", "true").Infof("Function Results: args=%+v result=%+v", url1String, respCode)
 		return otto.TrueValue()
 	} else {
 		return otto.FalseValue()
@@ -278,7 +278,7 @@ func (e *Engine) VMCanMakeHTTPConn(call otto.FunctionCall) otto.Value {
 }
 
 func (e *Engine) VMDetectSSLMITM(call otto.FunctionCall) otto.Value {
-	e.Logger.Errorf("Function Not Implemented: %s", CalledBy())
+	e.Logger.WithField("trace", "true").Errorf("Function Not Implemented: %s")
 	return otto.FalseValue()
 }
 
@@ -286,28 +286,28 @@ func (e *Engine) VMCmdSuccessful(call otto.FunctionCall) otto.Value {
 	cmd := call.Argument(0)
 	cmdString, err := cmd.Export()
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(cmdString))
+		e.Logger.WithField("trace", "true").Errorf("Function Error: error=ARY_ARG_NOT_String arg=%+v", cmdString)
 		return otto.FalseValue()
 	}
 	arg := call.Argument(1)
 	argString, err := arg.Export()
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(argString))
+		e.Logger.WithField("trace", "true").Errorf("Function Error: error=ARY_ARG_NOT_String arg=%+v", argString)
 		return otto.FalseValue()
 	}
 	VMExecResponse := ExecuteCommand(cmdString.(string), argString.(string))
 	if VMExecResponse.Success == false {
-		e.Logger.Errorf("Function Error: function=%s error=%s", CalledBy(), spew.Sdump(VMExecResponse.ErrorMsg))
+		e.Logger.WithField("trace", "true").Errorf("Function Error: error=%s", VMExecResponse.ErrorMsg)
 		return otto.FalseValue()
 	} else if VMExecResponse.Success == true {
-		e.Logger.Infof("Function Results: function=%s args=%s results=%s", CalledBy(), cmdString.(string), VMExecResponse.Stdout)
+		e.Logger.WithField("trace", "true").Infof("Function Results: args=%s results=%s", cmdString, VMExecResponse.Stdout)
 		return otto.TrueValue()
 	}
 	return otto.FalseValue()
 }
 
 func (e *Engine) VMCanPing(call otto.FunctionCall) otto.Value {
-	e.Logger.Errorf("Function Not Implemented: %s", CalledBy())
+	e.Logger.WithField("trace", "true").Errorf("Function Not Implemented: %s")
 	return otto.FalseValue()
 }
 
@@ -317,7 +317,7 @@ func (e *Engine) VMTCPPortInUse(call otto.FunctionCall) otto.Value {
 	port := call.Argument(0)
 	portInt, err := port.Export()
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=%s error=ARY_ARG_NOT_Int arg=%s", CalledBy(), spew.Sdump(portInt))
+		e.Logger.WithField("trace", "true").Errorf("Function Error: error=ARY_ARG_NOT_Int arg=%+v", portInt)
 		return otto.FalseValue()
 	}
 	if portInt.(int64) < minTCPPort || portInt.(int64) > maxTCPPort {
@@ -337,7 +337,7 @@ func (e *Engine) VMUDPPortInUse(call otto.FunctionCall) otto.Value {
 	port := call.Argument(0)
 	portInt, err := port.Export()
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=%s error=ARY_ARG_NOT_Int arg=%s", CalledBy(), spew.Sdump(portInt))
+		e.Logger.WithField("trace", "true").Errorf("Function Error: error=ARY_ARG_NOT_Int arg=%+v", portInt)
 		return otto.FalseValue()
 	}
 	if portInt.(int64) < minUDPPort || portInt.(int64) > maxUDPPort {
@@ -355,18 +355,18 @@ func (e *Engine) VMExistsInPath(call otto.FunctionCall) otto.Value {
 	cmd := call.Argument(0)
 	cmdString, err := cmd.Export()
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=%s error=ARY_ARG_NOT_String arg=%s", CalledBy(), spew.Sdump(cmdString))
+		e.Logger.WithField("trace", "true").Errorf("Function Error: error=ARY_ARG_NOT_String arg=%+v", cmdString)
 		return otto.FalseValue()
 	}
 	path, err := exec.LookPath(cmdString.(string))
 	if err != nil {
-		e.Logger.Errorf("Function Error: function=%s error=PathLookupFailed arg=%s", CalledBy(), spew.Sdump(err))
+		e.Logger.WithField("trace", "true").Errorf("Function Error: error=PathLookupFailed arg=%s", err.Error())
 		return otto.FalseValue()
 	} else if path != "" {
-		e.Logger.Infof("Function Results: function=%s results=%s", CalledBy(), path)
+		e.Logger.WithField("trace", "true").Infof("Function Results: results=%s", path)
 		return otto.TrueValue()
 	} else {
-		e.Logger.Errorf("Function Error: function=%s error=PathLookupFailed arg=%s", CalledBy(), spew.Sdump(cmdString))
+		e.Logger.WithField("trace", "true").Errorf("Function Error: error=PathLookupFailed arg=%+v", cmdString)
 		return otto.FalseValue()
 	}
 }
@@ -374,21 +374,21 @@ func (e *Engine) VMExistsInPath(call otto.FunctionCall) otto.Value {
 func (e *Engine) VMCanSudo(call otto.FunctionCall) otto.Value {
 	VMExecResponse := ExecuteCommand("sudo", "-v")
 	if VMExecResponse.Success == false {
-		e.Logger.Errorf("Function Error: function=%s error=%s", CalledBy(), spew.Sdump(VMExecResponse.ErrorMsg))
+		e.Logger.WithField("trace", "true").Errorf("Function Error: error=%s", VMExecResponse.ErrorMsg)
 		return otto.FalseValue()
 	} else if VMExecResponse.Success == true {
-		e.Logger.Infof("Function Results: function=%s results=%s", CalledBy(), VMExecResponse.Stdout)
+		e.Logger.WithField("trace", "true").Infof("Function Results: results=%s", VMExecResponse.Stdout)
 		return otto.TrueValue()
 	}
 	return otto.FalseValue()
 }
 
 func (e *Engine) VMMatches(call otto.FunctionCall) otto.Value {
-	e.Logger.Errorf("Function Not Implemented: %s", CalledBy())
+	e.Logger.WithField("trace", "true").Errorf("Function Not Implemented: %s", "VMMatches")
 	return otto.FalseValue()
 }
 
 func (e *Engine) VMCanSSHLogin(call otto.FunctionCall) otto.Value {
-	e.Logger.Errorf("Function Not Implemented: %s", CalledBy())
+	e.Logger.WithField("trace", "true").Errorf("Function Not Implemented: %s", "VMCanSSHLogin")
 	return otto.FalseValue()
 }
