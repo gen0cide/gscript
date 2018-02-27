@@ -69,8 +69,8 @@ func TestVMAppendFile(t *testing.T) {
 	e.CreateVM()
 
 	e.VM.Run(testScript)
-	e.Logger.Infof("Function: function=%s msg='Appended local file at: %s'", CalledBy(), spew.Sdump(g_file_1))
-	e.Logger.Infof("Function: function=%s msg='Appended local file at: %s'", CalledBy(), spew.Sdump(g_file_2))
+	e.Logger.WithField("trace", "true").Infof("Function: function=%s msg='Appended local file at: %s'", CalledBy(), spew.Sdump(g_file_1))
+	e.Logger.WithField("trace", "true").Infof("Function: function=%s msg='Appended local file at: %s'", CalledBy(), spew.Sdump(g_file_2))
 	retVal, err := e.VM.Get("return_value1")
 	assert.Nil(t, err)
 	retValAsString, err := retVal.ToString()
@@ -120,7 +120,7 @@ func TestVMRetrieveFileFromURL(t *testing.T) {
 	e.CreateVM()
 
 	e.VM.Run(testScript2)
-	e.Logger.Infof("Function: function=%s msg='wrote local file at: %s'", CalledBy(), spew.Sdump(file_3))
+	e.Logger.WithField("trace", "true").Infof("Function: function=%s msg='wrote local file at: %s'", CalledBy(), spew.Sdump(file_3))
 	retVal, err := e.VM.Get("return_value2")
 	assert.Nil(t, err)
 	retValAsString, err := retVal.ToString()

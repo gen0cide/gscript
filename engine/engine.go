@@ -185,6 +185,10 @@ func (e *Engine) CreateVM() {
 	e.VM.Set("DelRegKey", e.VMDelRegKey)
 	e.VM.Set("GetHost", e.VMGetHostname)
 	e.VM.Set("LogTester", e.VMLogTester)
+	e.VM.Set("InstallSystemService", e.VMInstallSystemService)
+	e.VM.Set("StartServiceByName", e.VMStartServiceByName)
+	e.VM.Set("StopServiceByName", e.VMStopServiceByName)
+	e.VM.Set("RemoveServiceByName", e.VMRemoveServiceByName)
 	_, err := e.VM.Run(VMPreload)
 	if err != nil {
 		e.Logger.WithField("trace", "true").Fatalf("Syntax error in preload: %s", err.Error())
