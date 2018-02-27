@@ -7,7 +7,7 @@ import (
   "sync"
   "strconv"
 
-  "github.com/gen0cide/gscript"
+  "github.com/gen0cide/gscript/engine"
 )
 
 func main() {
@@ -16,7 +16,7 @@ func main() {
   wg.Add(1)
   go func() {
     defer wg.Done()
-    gse := gscript.New("{{ $vm.ID }}")
+    gse := engine.New("{{ $vm.ID }}")
     gse.CreateVM()
     {{ range $_, $embed := $vm.Embeds -}}
     gse.AddImport("{{ $embed.Filename }}", {{ $embed.NameHash }})
