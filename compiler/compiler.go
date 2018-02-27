@@ -22,7 +22,6 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/alecthomas/chroma/quick"
 	"github.com/gen0cide/gscript/engine"
 	"github.com/gen0cide/gscript/logging"
 	"github.com/sirupsen/logrus"
@@ -303,7 +302,7 @@ func (c *Compiler) writeSource() {
 	newSource := c.LollerSkateDaStringz([]byte(c.Source))
 	newSourceB := fmt.Sprintf("%s\n\n%s\n", string(newSource), c.GenerateTangledHairs())
 	if c.OutputSource {
-		quick.Highlight(os.Stdout, newSourceB, "go", "terminal", "vim")
+		PrettyPrintSource(newSourceB)
 		return
 	}
 	err := ioutil.WriteFile(filepath.Join(c.BuildDir, "main.go"), []byte(newSourceB), 0644)
