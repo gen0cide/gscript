@@ -31,6 +31,7 @@ var outputFile string
 var compilerOS string
 var compilerArch string
 var outputSource = false
+var compressBinary = false
 
 func main() {
 	app := cli.NewApp()
@@ -76,6 +77,12 @@ func main() {
 			Action:  UpdateCLI,
 		},
 		{
+			Name:    "new",
+			Aliases: []string{"n"},
+			Usage:   "Writes an example gscript to either the given path or STDOUT.",
+			Action:  NewScript,
+		},
+		{
 			Name:    "compile",
 			Aliases: []string{"c"},
 			Usage:   "Compile genesis scripts into a stand alone binary.",
@@ -102,6 +109,11 @@ func main() {
 					Name:        "source",
 					Usage:       "Do not compile the generated code. Output source instead.",
 					Destination: &outputSource,
+				},
+				cli.BoolFlag{
+					Name:        "upx",
+					Usage:       "Attempts to UPX the final binary to reduce file size.",
+					Destination: &compressBinary,
 				},
 			},
 			Action: CompileScript,
@@ -173,10 +185,30 @@ func CompileScript(c *cli.Context) error {
 	if !outputSource && outputFile == "-" {
 		outputFile = filepath.Join(os.TempDir(), fmt.Sprintf("%d_genesis.bin", time.Now().Unix()))
 	}
-	gcc := compiler.NewCompiler(scriptFiles, outputFile, compilerOS, compilerArch, outputSource)
+	gcc := compiler.NewCompiler(scriptFiles, outputFile, compilerOS, compilerArch, outputSource, compressBinary)
 	gcc.Do()
 	if !outputSource {
 		gcc.Logger.Infof("Your binary is located at: %s", outputFile)
+	}
+	return nil
+}
+
+func NewScript(c *cli.Context) error {
+	logger := logrus.New()
+	logger.Formatter = new(logrus.TextFormatter)
+	logger.Out = logging.LogWriter{Name: "compiler"}
+	if c.NArg() == 0 {
+		fmt.Printf("%s\n", string(compiler.RetrieveExample()))
+		return nil
+	}
+	scriptFiles := c.Args()
+	for _, f := range scriptFiles {
+		if _, err := os.Stat(f); os.IsNotExist(err) {
+			ioutil.WriteFile(f, compiler.RetrieveExample(), 0644)
+			logger.Infof("Wrote Example File: %s", f)
+			continue
+		}
+		logger.Errorf("File either exists or has bad perms. Skipping %s", f)
 	}
 	return nil
 }

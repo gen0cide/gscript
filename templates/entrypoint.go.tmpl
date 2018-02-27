@@ -12,7 +12,8 @@ import (
 
 func main() {
   var wg sync.WaitGroup
-  {{- range $_, $vm := $.VMs }}
+  {{- range $_, $pri := $.UniqPriorities }}
+  {{- range $_, $vm := (index $.SortedVMs $pri) }}
   wg.Add(1)
   go func() {
     defer wg.Done()
@@ -25,8 +26,8 @@ func main() {
     gse.ExecutePlan()
   }()
   {{ end -}}
-
   wg.Wait()
+  {{ end -}}
 }
 
 func g(k rune, b []rune) string {
