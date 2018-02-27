@@ -8,6 +8,10 @@ import (
   "strconv"
 
   "github.com/gen0cide/gscript/engine"
+  {{- if eq $.EnableLogging true }}
+  "github.com/gen0cide/gscript/logging"
+  "github.com/sirupsen/logrus"
+  {{ end }}
 )
 
 func main() {
@@ -18,7 +22,13 @@ func main() {
   go func() {
     defer wg.Done()
     gse := engine.New("{{ $vm.ID }}")
+    {{- if eq $.EnableLogging true }}
+    gse.Logger.Formatter = &logging.GSEFormatter{}
+    gse.Logger.Out = logging.LogWriter{Name: "{{ $vm.ID }}"}
+    gse.Logger.Level = logrus.DebugLevel
+    {{- end }}
     gse.CreateVM()
+    gse.SetTimeout({{ $vm.Timeout }})
     {{ range $_, $embed := $vm.Embeds -}}
     gse.AddImport("{{ $embed.Filename }}", {{ $embed.NameHash }})
     {{ end -}}

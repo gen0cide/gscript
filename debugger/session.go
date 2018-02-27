@@ -2,10 +2,13 @@ package debugger
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 
 	prompt "github.com/c-bata/go-prompt"
+	"github.com/gen0cide/gscript/compiler"
 	"github.com/gen0cide/gscript/engine"
 	"github.com/gen0cide/gscript/logging"
 	"github.com/robertkrimen/otto"
@@ -57,6 +60,40 @@ func (d *Debugger) SessionExecutor(in string) {
 	if retVal != nil {
 		fmt.Printf(">>> %v\n", retVal)
 	}
+}
+
+func (d *Debugger) LoadScript(script, filename string) error {
+	ml := compiler.ParseMacros(string(script), d.Logger.WithField("file", filename))
+	if ml == nil {
+		d.Logger.WithField("file", filename).Fatalf("Compiler could not parse macros!")
+	}
+	d.Engine.SetTimeout(ml.Timeout)
+	if ml.Timeout != compiler.DEFAULT_TIMEOUT {
+		d.Logger.Infof("Timeout has been changed. Timeout is now %d seconds.", ml.Timeout)
+	}
+	for _, i := range ml.LocalFiles {
+		name := filepath.Base(i)
+		data, err := ioutil.ReadFile(i)
+		if err != nil {
+			d.Logger.WithField("file", filename).Fatalf("Compiler could not load file: %s", err.Error())
+		}
+		d.Engine.AddImport(name, func() []byte {
+			return data
+		})
+		d.Logger.WithField("file", filename).Debugf("Importing Local File: %s", name)
+	}
+	for _, i := range ml.RemoteFiles {
+		name := filepath.Base(i)
+		data, err := ioutil.ReadFile(i)
+		if err != nil {
+			d.Logger.WithField("file", filename).Fatalf("Compiler could not load file: %s", err.Error())
+		}
+		d.Engine.AddImport(name, func() []byte {
+			return data
+		})
+		d.Logger.WithField("file", filename).Debugf("Importing Remote File: %s", name)
+	}
+	return d.Engine.LoadScript([]byte(script))
 }
 
 func (d *Debugger) InteractiveSession() {

@@ -138,7 +138,7 @@ func (e *Engine) VMAsset(call otto.FunctionCall) otto.Value {
 		return vmVal
 	}
 	e.Logger.WithField("trace", "true").Errorf("Asset File Not Found: asset=%s", filename)
-	e.Logger.WithField("trace", "true").Errorf("All Assets: %s", e.Imports)
+	e.Logger.WithField("trace", "true").Debugf("All Assets: %s", e.Imports)
 	return otto.FalseValue()
 }
 
@@ -519,21 +519,6 @@ func (e *Engine) VMMemStats(call otto.FunctionCall) otto.Value {
 func (e *Engine) VMSSHCmd(call otto.FunctionCall) otto.Value {
 	e.Logger.WithField("trace", "true").Errorf("Function Not Implemented: %s", CalledBy())
 	return otto.FalseValue()
-}
-
-func (e *Engine) VMSleep(call otto.FunctionCall) otto.Value {
-	if len(call.ArgumentList) > 0 {
-		arg := call.ArgumentList[0]
-		if arg.IsNumber() {
-			intArg, err := arg.ToInteger()
-			if err != nil {
-				e.Logger.WithField("trace", "true").Errorf("Function Error: function=%s error=%s", CalledBy(), err.Error())
-				return otto.Value{}
-			}
-			time.Sleep(time.Duration(intArg) * time.Second)
-		}
-	}
-	return otto.Value{}
 }
 
 func (e *Engine) VMGetTweet(call otto.FunctionCall) otto.Value {

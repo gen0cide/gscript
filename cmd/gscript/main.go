@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"path"
 	"path/filepath"
 	"runtime"
 	"sort"
@@ -28,11 +27,15 @@ import (
 	"github.com/urfave/cli"
 )
 
-var outputFile string
-var compilerOS string
-var compilerArch string
-var outputSource = false
-var compressBinary = false
+var (
+	outputFile   string
+	compilerOS   string
+	compilerArch string
+
+	outputSource   = false
+	compressBinary = false
+	enableLogging  = false
+)
 
 func main() {
 	app := cli.NewApp()
@@ -116,6 +119,11 @@ func main() {
 					Usage:       "Attempts to UPX the final binary to reduce file size.",
 					Destination: &compressBinary,
 				},
+				cli.BoolFlag{
+					Name:        "enable-logging",
+					Usage:       "Enables debug logging in the finished binary. WARNING: Will create large binaries!",
+					Destination: &enableLogging,
+				},
 			},
 			Action: CompileScript,
 		},
@@ -183,7 +191,7 @@ func CompileScript(c *cli.Context) error {
 	if !outputSource && outputFile == "-" {
 		outputFile = filepath.Join(os.TempDir(), fmt.Sprintf("%d_genesis.bin", time.Now().Unix()))
 	}
-	gcc := compiler.NewCompiler(scriptFiles, outputFile, compilerOS, compilerArch, outputSource, compressBinary)
+	gcc := compiler.NewCompiler(scriptFiles, outputFile, compilerOS, compilerArch, outputSource, compressBinary, enableLogging)
 	gcc.Do()
 	if !outputSource {
 		gcc.Logger.Infof("Your binary is located at: %s", outputFile)
@@ -221,10 +229,13 @@ func RunScript(c *cli.Context) error {
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
 		dbg.Engine.Logger.Fatalf("File does not exist: %s", filename)
 	}
-	dbg = debugger.New(path.Base(filename))
+	dbg = debugger.New(filepath.Base(filename))
 	dbg.SetupDebugEngine()
 	data, err := ioutil.ReadFile(filename)
-	err = dbg.Engine.LoadScript(data)
+	if err != nil {
+		dbg.Engine.Logger.Fatalf("Error reading file: %s", err.Error())
+	}
+	dbg.LoadScript(string(data), filepath.Base(filename))
 	if err != nil {
 		dbg.Engine.Logger.Errorf("Script Error: %s", err.Error())
 	} else {

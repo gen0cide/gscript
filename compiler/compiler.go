@@ -7,18 +7,12 @@ import (
 	goparser "go/parser"
 	goprinter "go/printer"
 	gotoken "go/token"
-	"io"
 	"io/ioutil"
 	"math/rand"
-	"net/http"
-	"net/url"
 	"os"
 	"os/exec"
-	"path"
 	"path/filepath"
-	"regexp"
 	"sort"
-	"strconv"
 	"strings"
 	"text/template"
 
@@ -64,6 +58,7 @@ type Compiler struct {
 	AssetDir       string              `json:"asset_dir"`
 	OutputSource   bool                `json:"output_source"`
 	CompressBinary bool                `json:"compress_binary"`
+	EnableLogging  bool                `json:"enable_logging"`
 	Logger         *logrus.Logger      `json:"-"`
 	Source         string              `json:"-"`
 	StringDefs     []*StringDef        `json:"-"`
@@ -71,7 +66,7 @@ type Compiler struct {
 }
 
 // NewCompiler returns a basic Compiler object
-func NewCompiler(scripts []string, outfile, os, arch string, sourceOut, compression bool) *Compiler {
+func NewCompiler(scripts []string, outfile, os, arch string, sourceOut, compression bool, enableLogging bool) *Compiler {
 	logger := logrus.New()
 	logger.Formatter = &logging.GSEFormatter{}
 	logger.Out = logging.LogWriter{Name: "compiler"}
@@ -109,6 +104,7 @@ func NewCompiler(scripts []string, outfile, os, arch string, sourceOut, compress
 		OutputSource:   sourceOut,
 		StringDefs:     []*StringDef{},
 		CompressBinary: compression,
+		EnableLogging:  enableLogging,
 		SortedVMs:      make(map[int][]*VMBundle),
 		UniqPriorities: []int{},
 	}
@@ -128,76 +124,36 @@ func (c *Compiler) CreateBuildDir() {
 	c.AssetDir = ad
 }
 
-// ParseAssets normalizes the import files into localized assets
-func (c *Compiler) ParseAssets(vm *VMBundle) []string {
+// ParseMacros normalizes the import files into localized assets
+func (c *Compiler) ParseMacros(vm *VMBundle) []string {
 	imports := []string{}
 	script, err := ioutil.ReadFile(vm.ScriptFile)
 	if err != nil {
-		c.Logger.Fatalf("Error reading genesis script: %s", err.Error())
+		c.Logger.WithField("file", filepath.Base(vm.ScriptFile)).Fatalf("Error reading genesis script: %s", err.Error())
 	}
-	r := regexp.MustCompile(`^//import:(.*)\n`)
-	matches := r.FindAllString(string(script), -1)
-	for _, rawF := range matches {
-		f := strings.TrimSpace(strings.Replace(rawF, "//import:", "", -1))
-		if _, err := os.Stat(f); os.IsNotExist(err) {
-			c.Logger.Fatalf("Asset file does not exist: %s", f)
-			continue
-		}
-		imports = append(imports, f)
+
+	macroList := ParseMacros(string(script), c.Logger.WithField("file", filepath.Base(vm.ScriptFile)))
+	if macroList == nil {
+		c.Logger.WithField("file", filepath.Base(vm.ScriptFile)).Fatalf("Could not parse macros for script!")
 	}
-	r = regexp.MustCompile(`^//priority:(.*)\n`)
-	matches = r.FindAllString(string(script), -1)
-	for _, rawF := range matches {
-		f := strings.TrimSpace(strings.Replace(rawF, "//priority:", "", -1))
-		p, err := strconv.Atoi(f)
-		if err != nil {
-			c.Logger.Errorf("Priority macro is not a number in %s", vm.ScriptFile)
-		} else {
-			vm.Priority = p
-		}
+
+	vm.Timeout = macroList.Timeout
+	vm.Priority = macroList.Priority
+
+	for _, i := range macroList.LocalFiles {
+		imports = append(imports, i)
 	}
-	r = regexp.MustCompile(`^//url_import:(.*)\n`)
-	matches = r.FindAllString(string(script), -1)
-	for _, rawF := range matches {
-		f := strings.TrimSpace(strings.Replace(rawF, "//url_import:", "", -1))
-		u, err := url.Parse(f)
-		if err != nil {
-			c.Logger.Fatalf("Could not parse URL: %s", err.Error())
-		}
-		filename := path.Base(u.Path)
 
-		randVector := RandUpperAlphaString(12)
-
-		dir, err := ioutil.TempDir("", randVector)
-		if err != nil {
-			c.Logger.Fatalf("Could create temp directory: %s", err.Error())
-		}
-		filePath := filepath.Join(dir, filename)
-		out, err := os.Create(filePath)
-		if err != nil {
-			c.Logger.Fatalf("Could create temp file: %s", err.Error())
-		}
-		defer out.Close()
-
-		resp, err := http.Get(u.String())
-		if err != nil {
-			c.Logger.Fatalf("Could not retreive URL: %s", err.Error())
-		}
-		defer resp.Body.Close()
-
-		_, err = io.Copy(out, resp.Body)
-		if err != nil {
-			c.Logger.Fatalf("Could not save temp file: %s", err.Error())
-		}
-
-		imports = append(imports, filePath)
+	for _, i := range macroList.RemoteFiles {
+		imports = append(imports, i)
 	}
+
 	return imports
 }
 
-func (c *Compiler) gatherAssets() {
+func (c *Compiler) compileMacros() {
 	for _, vm := range c.VMs {
-		assets := c.ParseAssets(vm)
+		assets := c.ParseMacros(vm)
 		for _, asset := range assets {
 			tempFile := filepath.Join(c.AssetDir, filepath.Base(asset))
 			err := engine.LocalCopyFile(asset, tempFile)
@@ -314,7 +270,7 @@ func (c *Compiler) writeSource() {
 func (c *Compiler) Do() {
 	cwd, _ := os.Getwd()
 	c.CreateBuildDir()
-	c.gatherAssets()
+	c.compileMacros()
 	c.writeScript()
 	os.Chdir(c.BuildDir)
 	c.compileAssets()
@@ -329,8 +285,12 @@ func (c *Compiler) Do() {
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		cmd.Run()
-		c.Logger.Infof("Obfuscating Binary...")
-		c.ObfuscateBinary()
+		if c.EnableLogging == true {
+			c.Logger.Warnf("Not obfuscating binary because logging is enabled.")
+		} else {
+			c.Logger.Infof("Obfuscating Binary...")
+			c.ObfuscateBinary()
+		}
 		if c.CompressBinary {
 			c.Logger.Infof("Compressing binary with UPX")
 			cmd = exec.Command("upx", `-9`, `-f`, `-q`, c.OutputFile)

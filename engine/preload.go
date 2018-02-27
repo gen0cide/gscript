@@ -50,4 +50,13 @@ function AfterDeploy() {
 function OnError() {
   return false;
 }
+
+function Sleep(seconds) {
+  var start = new Date().getTime();
+  for (var i = 0; i < 1e7; i++) {
+    if ((new Date().getTime() - start) > (seconds * 1000)){
+      break;
+    }
+  }
+}
 `

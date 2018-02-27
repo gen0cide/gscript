@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"path"
+	"regexp"
 	"runtime"
 	"sort"
 	"strings"
@@ -15,10 +16,24 @@ import (
 
 var (
 	TraceEnabled = false
+
+	reg regexp.Regexp
 )
+
+func init() {
+	reg, err := regexp.Compile("[[:^alpha:]]+")
+	if err != nil {
+		panic(err)
+	}
+	_ = reg
+}
 
 type LogWriter struct {
 	Name string
+}
+
+func strip(src string) string {
+	return reg.ReplaceAllString(src, "")
 }
 
 func (w LogWriter) Write(p []byte) (int, error) {
@@ -82,7 +97,7 @@ func (g *GSEFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 		logLine = color.WhiteString(entry.Message)
 	case "warning":
 		logLvl = color.HiBlueString(strings.ToUpper(entry.Level.String()))
-		logLine = color.BlueString(entry.Message)
+		logLine = color.HiBlueString(entry.Message)
 	case "error":
 		logLvl = color.HiYellowString(strings.ToUpper(entry.Level.String()))
 		logLine = color.YellowString(entry.Message)

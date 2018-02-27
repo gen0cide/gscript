@@ -22,6 +22,7 @@ type Engine struct {
 	Imports         map[string]func() []byte
 	Name            string
 	DebuggerEnabled bool
+	Timeout         int
 }
 
 func New(name string) *Engine {
@@ -33,11 +34,16 @@ func New(name string) *Engine {
 		Imports:         map[string]func() []byte{},
 		Logger:          logger,
 		DebuggerEnabled: false,
+		Timeout:         30,
 	}
 }
 
 func (e *Engine) SetLogger(logger *logrus.Logger) {
 	e.Logger = logger
+}
+
+func (e *Engine) SetTimeout(timeout int) {
+	e.Timeout = timeout
 }
 
 func (e *Engine) AddImport(name string, data func() []byte) {
@@ -156,7 +162,6 @@ func (e *Engine) CreateVM() {
 	e.VM.Set("CPUStats", e.VMCPUStats)
 	e.VM.Set("MemStats", e.VMMemStats)
 	e.VM.Set("SSHCmd", e.VMSSHCmd)
-	e.VM.Set("Sleep", e.VMSleep)
 	e.VM.Set("GetTweet", e.VMGetTweet)
 	e.VM.Set("GetDirsInPath", e.VMGetDirsInPath)
 	e.VM.Set("EnvVars", e.VMEnvVars)
