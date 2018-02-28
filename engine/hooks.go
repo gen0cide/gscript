@@ -5,7 +5,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/robertkrimen/otto"
 )
 
@@ -59,7 +58,7 @@ func (e *Engine) RunBeforeDeploy() error {
 	}
 	boolResult, err := result.ToBoolean()
 	if err != nil {
-		e.Logger.WithField("trace", "true").Errorf("Boolean Conversion Error: function=%s result=%s error=%s", CalledBy(), spew.Sdump(result), err.Error())
+		e.Logger.WithField("trace", "true").Errorf("Return value casting error: %s", err.Error())
 		return err
 	}
 	if !boolResult {
@@ -77,7 +76,7 @@ func (e *Engine) RunDeploy() error {
 	}
 	boolResult, err := result.ToBoolean()
 	if err != nil {
-		e.Logger.WithField("trace", "true").Errorf("Boolean Conversion Error: function=%s result=%s error=%s", CalledBy(), spew.Sdump(result), err.Error())
+		e.Logger.WithField("trace", "true").Errorf("Return value casting error: %s", err.Error())
 		return err
 	}
 	if !boolResult {
@@ -95,7 +94,7 @@ func (e *Engine) RunAfterDeploy() error {
 	}
 	boolResult, err := result.ToBoolean()
 	if err != nil {
-		e.Logger.WithField("trace", "true").Errorf("Boolean Conversion Error: function=%s result=%s error=%s", CalledBy(), spew.Sdump(result), err.Error())
+		e.Logger.WithField("trace", "true").Errorf("Return value casting error: %s", err.Error())
 		return err
 	}
 	if !boolResult {

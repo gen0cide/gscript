@@ -11,7 +11,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/robertkrimen/otto"
 	"github.com/sirupsen/logrus"
 )
@@ -301,7 +300,7 @@ func (e *Engine) VMLogWarn(call otto.FunctionCall) otto.Value {
 				).WithField(
 					"caller",
 					e.VM.Context().Callee,
-				).Errorf("Logging Error - argument couldn't be converted to string: %s", spew.Sdump(arg))
+				).Errorf("Parameter parsing error: %s", err.Error())
 				continue
 			}
 			e.Logger.WithField(
@@ -333,7 +332,7 @@ func (e *Engine) VMLogError(call otto.FunctionCall) otto.Value {
 				).WithField(
 					"caller",
 					e.VM.Context().Callee,
-				).Errorf("Logging Error - argument couldn't be converted to string: %s", spew.Sdump(arg))
+				).Errorf("Parameter parsing error: %s", err.Error())
 				continue
 			}
 			e.Logger.WithField(
@@ -365,7 +364,7 @@ func (e *Engine) VMLogDebug(call otto.FunctionCall) otto.Value {
 				).WithField(
 					"caller",
 					e.VM.Context().Callee,
-				).Errorf("Logging Error - argument couldn't be converted to string: %s", spew.Sdump(arg))
+				).Errorf("Parameter parsing error: %s", err.Error())
 				continue
 			}
 			e.Logger.WithField(
@@ -397,7 +396,7 @@ func (e *Engine) VMLogCrit(call otto.FunctionCall) otto.Value {
 				).WithField(
 					"caller",
 					e.VM.Context().Callee,
-				).Errorf("Logging Error - argument couldn't be converted to string: %s", spew.Sdump(arg))
+				).Errorf("Parameter parsing error: %s", err.Error())
 				continue
 			}
 			e.Logger.WithField(
@@ -429,7 +428,7 @@ func (e *Engine) VMLogInfo(call otto.FunctionCall) otto.Value {
 				).WithField(
 					"caller",
 					e.VM.Context().Callee,
-				).Errorf("Logging Error - argument couldn't be converted to string: %s", spew.Sdump(arg))
+				).Errorf("Parameter parsing error: %s", err.Error())
 				continue
 			}
 			e.Logger.WithField(
