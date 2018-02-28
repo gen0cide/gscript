@@ -11,11 +11,6 @@ func (e *Engine) VMIsVM(call otto.FunctionCall) otto.Value {
 	return otto.FalseValue()
 }
 
-func (e *Engine) VMHalt(call otto.FunctionCall) otto.Value {
-	e.Logger.WithField("trace", "true").Errorf("Function Not Implemented")
-	return otto.FalseValue()
-}
-
 func (e *Engine) VMImplode(call otto.FunctionCall) otto.Value {
 	e.Logger.WithField("trace", "true").Errorf("Function Not Implemented")
 	return otto.FalseValue()
@@ -23,6 +18,14 @@ func (e *Engine) VMImplode(call otto.FunctionCall) otto.Value {
 
 func (e *Engine) VMMatches(call otto.FunctionCall) otto.Value {
 	e.Logger.WithField("trace", "true").Errorf("Function Not Implemented")
+	return otto.FalseValue()
+}
+
+func (e *Engine) VMHalt(call otto.FunctionCall) otto.Value {
+	e.Halted = true
+	e.VM.Interrupt <- func() {
+		panic(errTimeout)
+	}
 	return otto.FalseValue()
 }
 

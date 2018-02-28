@@ -52,6 +52,9 @@ func (e *Engine) RunWithTimeout(command string) (otto.Value, error) {
 }
 
 func (e *Engine) RunBeforeDeploy() error {
+	if e.Halted {
+		return errors.New("VM Halted")
+	}
 	result, err := e.RunWithTimeout(`BeforeDeploy()`)
 	if err != nil {
 		return err
@@ -70,6 +73,9 @@ func (e *Engine) RunBeforeDeploy() error {
 }
 
 func (e *Engine) RunDeploy() error {
+	if e.Halted {
+		return errors.New("VM Halted")
+	}
 	result, err := e.RunWithTimeout(`Deploy()`)
 	if err != nil {
 		return err
@@ -88,6 +94,9 @@ func (e *Engine) RunDeploy() error {
 }
 
 func (e *Engine) RunAfterDeploy() error {
+	if e.Halted {
+		return errors.New("VM Halted")
+	}
 	result, err := e.RunWithTimeout(`AfterDeploy()`)
 	if err != nil {
 		return err
@@ -106,6 +115,9 @@ func (e *Engine) RunAfterDeploy() error {
 }
 
 func (e *Engine) RunOnError() error {
+	if e.Halted {
+		return errors.New("VM Halted")
+	}
 	result, err := e.RunWithTimeout(`OnError()`)
 	if err != nil {
 		e.Logger.WithField("trace", "true").Errorf("OnError() Error: %s", err.Error())

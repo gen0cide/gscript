@@ -301,18 +301,6 @@ func (c *Compiler) Do() {
 			cmd.Stderr = os.Stderr
 			cmd.Run()
 		}
-		// TODO: Fix GOTTI Binary Obfuscator #sadpanda
-		// c.Logger.Infof("Mordor-ifying Binary...")
-		// switch c.OS {
-		// case "darwin":
-		// 	c.MordorifyDarwin()
-		// case "linux":
-		// 	c.MordorifyLinux()
-		// case "windows":
-		// 	c.MordorifyWindows()
-		// default:
-		// 	c.Logger.Fatalf("GOOS specified is not supported.")
-		// }
 	}
 	os.Chdir(cwd)
 	os.RemoveAll(c.BuildDir)

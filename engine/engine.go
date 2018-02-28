@@ -1,15 +1,7 @@
 package engine
 
 import (
-	"bytes"
-	"encoding/binary"
-	"fmt"
 	"io/ioutil"
-	"os"
-	"os/user"
-	"runtime"
-	"strconv"
-	"strings"
 
 	"github.com/robertkrimen/otto"
 	"github.com/sirupsen/logrus"
@@ -22,6 +14,7 @@ type Engine struct {
 	Name            string
 	DebuggerEnabled bool
 	Timeout         int
+	Halted          bool
 }
 
 func New(name string) *Engine {
@@ -33,6 +26,7 @@ func New(name string) *Engine {
 		Imports:         map[string]func() []byte{},
 		Logger:          logger,
 		DebuggerEnabled: false,
+		Halted:          false,
 		Timeout:         30,
 	}
 }
@@ -51,65 +45,6 @@ func (e *Engine) AddImport(name string, data func() []byte) {
 
 func (e *Engine) SetName(name string) {
 	e.Name = name
-}
-
-func (e *Engine) CurrentUser() map[string]string {
-	userInfo := map[string]string{}
-	u, err := user.Current()
-	if err != nil {
-		e.Logger.WithField("trace", "true").Errorf("User Loading Error: %s", err.Error())
-		return userInfo
-	}
-	userInfo["uid"] = u.Uid
-	userInfo["gid"] = u.Gid
-	userInfo["username"] = u.Username
-	userInfo["name"] = u.Name
-	userInfo["home_dir"] = u.HomeDir
-	groups, err := u.GroupIds()
-	if err != nil {
-		e.Logger.WithField("trace", "true").Errorf("Group Loading Error: %s", err.Error())
-		return userInfo
-	}
-	userInfo["groups"] = strings.Join(groups, ":")
-	return userInfo
-}
-
-func (e *Engine) InjectVars() {
-	userInfo, err := e.VM.ToValue(e.CurrentUser())
-	if err != nil {
-		e.Logger.WithField("trace", "true").Errorf("Could not inject user info into VM: %s", err.Error())
-	} else {
-		e.VM.Set("USER_INFO", userInfo)
-	}
-	osVal, err := e.VM.ToValue(runtime.GOOS)
-	if err != nil {
-		e.Logger.WithField("trace", "true").Errorf("Could not inject os info into VM: %s", err.Error())
-	} else {
-		e.VM.Set("OS", osVal)
-	}
-	hn, err := os.Hostname()
-	if err != nil {
-		e.Logger.WithField("trace", "true").Errorf("Could not obtain hostname info: %s", err.Error())
-	} else {
-		hostnameVal, err := e.VM.ToValue(hn)
-		if err != nil {
-			e.Logger.Errorf("Could not inject hostname info into VM: %s", err.Error())
-		} else {
-			e.VM.Set("HOSTNAME", hostnameVal)
-		}
-	}
-	archVal, err := e.VM.ToValue(runtime.GOARCH)
-	if err != nil {
-		e.Logger.WithField("trace", "true").Errorf("Could not inject arch info into VM: %s", err.Error())
-	} else {
-		e.VM.Set("ARCH", archVal)
-	}
-	ipVals, err := e.VM.ToValue(GetLocalIPs())
-	if err != nil {
-		e.Logger.WithField("trace", "true").Errorf("Could not inject ip info into VM: %s", err.Error())
-	} else {
-		e.VM.Set("IP_ADDRS", ipVals)
-	}
 }
 
 func (e *Engine) CreateVM() {
@@ -192,256 +127,4 @@ func (e *Engine) CreateVM() {
 	if err != nil {
 		e.Logger.WithField("trace", "true").Fatalf("Syntax error in preload: %s", err.Error())
 	}
-}
-
-func (e *Engine) ValueToByteSlice(v otto.Value) []byte {
-	valueBytes := []byte{}
-	if v.IsNull() || v.IsUndefined() {
-		return valueBytes
-	}
-	if v.IsString() {
-		str, err := v.Export()
-		if err != nil {
-			e.Logger.WithField("trace", "true").Errorf("Cannot convert string to byte slice: %s", v)
-			return valueBytes
-		}
-		valueBytes = []byte(str.(string))
-	} else if v.IsNumber() {
-		num, err := v.Export()
-		if err != nil {
-			e.Logger.WithField("trace", "true").Errorf("Cannot convert string to byte slice: %s", v)
-			return valueBytes
-		}
-		buf := new(bytes.Buffer)
-		err = binary.Write(buf, binary.LittleEndian, num)
-		if err != nil {
-			fmt.Println("binary.Write failed:", err)
-		}
-		valueBytes = buf.Bytes()
-	} else if v.Class() == "Array" || v.Class() == "GoArray" {
-		arr, err := v.Export()
-		if err != nil {
-			e.Logger.WithField("trace", "true").Errorf("Cannot convert array to byte slice: %x", v)
-			return valueBytes
-		}
-		switch t := arr.(type) {
-		case []uint:
-			for _, i := range t {
-				valueBytes = append(valueBytes, byte(i))
-			}
-		case []uint8:
-			for _, i := range t {
-				valueBytes = append(valueBytes, byte(i))
-			}
-		case []uint16:
-			for _, i := range t {
-				valueBytes = append(valueBytes, byte(i))
-			}
-		case []uint32:
-			for _, i := range t {
-				valueBytes = append(valueBytes, byte(i))
-			}
-		case []uint64:
-			for _, i := range t {
-				valueBytes = append(valueBytes, byte(i))
-			}
-		case []int:
-			for _, i := range t {
-				valueBytes = append(valueBytes, byte(i))
-			}
-		case []int16:
-			for _, i := range t {
-				valueBytes = append(valueBytes, byte(i))
-			}
-		case []int32:
-			for _, i := range t {
-				valueBytes = append(valueBytes, byte(i))
-			}
-		case []int64:
-			for _, i := range t {
-				valueBytes = append(valueBytes, byte(i))
-			}
-		case []float32:
-			for _, i := range t {
-				valueBytes = append(valueBytes, byte(i))
-			}
-		case []float64:
-			for _, i := range t {
-				valueBytes = append(valueBytes, byte(i))
-			}
-		case []string:
-			for _, i := range t {
-				for _, c := range i {
-					valueBytes = append(valueBytes, byte(c))
-				}
-			}
-		default:
-			_ = t
-			e.Logger.WithField("trace", "true").Errorf("Failed to cast array to byte slice array=%v", arr)
-		}
-	} else {
-		e.Logger.WithField("trace", "true").Errorf("Unknown class to cast to byte slice")
-	}
-
-	return valueBytes
-}
-
-func (e *Engine) VMLogWarn(call otto.FunctionCall) otto.Value {
-	if e.Logger != nil {
-		for _, arg := range call.ArgumentList {
-			newArg, err := arg.ToString()
-			if err != nil {
-				e.Logger.WithField(
-					"script",
-					e.Name,
-				).WithField(
-					"line",
-					strconv.Itoa(e.VM.Context().Line),
-				).WithField(
-					"caller",
-					e.VM.Context().Callee,
-				).Errorf("Parameter parsing error: %s", err.Error())
-				continue
-			}
-			e.Logger.WithField(
-				"script",
-				e.Name,
-			).WithField(
-				"line",
-				strconv.Itoa(e.VM.Context().Line),
-			).WithField(
-				"caller",
-				e.VM.Context().Callee,
-			).Warnf("%s", newArg)
-		}
-	}
-	return otto.Value{}
-}
-
-func (e *Engine) VMLogError(call otto.FunctionCall) otto.Value {
-	if e.Logger != nil {
-		for _, arg := range call.ArgumentList {
-			newArg, err := arg.ToString()
-			if err != nil {
-				e.Logger.WithField(
-					"script",
-					e.Name,
-				).WithField(
-					"line",
-					strconv.Itoa(e.VM.Context().Line),
-				).WithField(
-					"caller",
-					e.VM.Context().Callee,
-				).Errorf("Parameter parsing error: %s", err.Error())
-				continue
-			}
-			e.Logger.WithField(
-				"script",
-				e.Name,
-			).WithField(
-				"line",
-				strconv.Itoa(e.VM.Context().Line),
-			).WithField(
-				"caller",
-				e.VM.Context().Callee,
-			).Errorf("%s", newArg)
-		}
-	}
-	return otto.Value{}
-}
-
-func (e *Engine) VMLogDebug(call otto.FunctionCall) otto.Value {
-	if e.Logger != nil {
-		for _, arg := range call.ArgumentList {
-			newArg, err := arg.ToString()
-			if err != nil {
-				e.Logger.WithField(
-					"script",
-					e.Name,
-				).WithField(
-					"line",
-					strconv.Itoa(e.VM.Context().Line),
-				).WithField(
-					"caller",
-					e.VM.Context().Callee,
-				).Errorf("Parameter parsing error: %s", err.Error())
-				continue
-			}
-			e.Logger.WithField(
-				"script",
-				e.Name,
-			).WithField(
-				"line",
-				strconv.Itoa(e.VM.Context().Line),
-			).WithField(
-				"caller",
-				e.VM.Context().Callee,
-			).Debugf("%s", newArg)
-		}
-	}
-	return otto.Value{}
-}
-
-func (e *Engine) VMLogCrit(call otto.FunctionCall) otto.Value {
-	if e.Logger != nil {
-		for _, arg := range call.ArgumentList {
-			newArg, err := arg.ToString()
-			if err != nil {
-				e.Logger.WithField(
-					"script",
-					e.Name,
-				).WithField(
-					"line",
-					strconv.Itoa(e.VM.Context().Line),
-				).WithField(
-					"caller",
-					e.VM.Context().Callee,
-				).Errorf("Parameter parsing error: %s", err.Error())
-				continue
-			}
-			e.Logger.WithField(
-				"script",
-				e.Name,
-			).WithField(
-				"line",
-				strconv.Itoa(e.VM.Context().Line),
-			).WithField(
-				"caller",
-				e.VM.Context().Callee,
-			).Fatalf("%s", newArg)
-		}
-	}
-	return otto.Value{}
-}
-
-func (e *Engine) VMLogInfo(call otto.FunctionCall) otto.Value {
-	if e.Logger != nil {
-		for _, arg := range call.ArgumentList {
-			newArg, err := arg.ToString()
-			if err != nil {
-				e.Logger.WithField(
-					"script",
-					e.Name,
-				).WithField(
-					"line",
-					strconv.Itoa(e.VM.Context().Line),
-				).WithField(
-					"caller",
-					e.VM.Context().Callee,
-				).Errorf("Parameter parsing error: %s", err.Error())
-				continue
-			}
-			e.Logger.WithField(
-				"script",
-				e.Name,
-			).WithField(
-				"line",
-				strconv.Itoa(e.VM.Context().Line),
-			).WithField(
-				"caller",
-				e.VM.Context().Callee,
-			).Infof("%s", newArg)
-		}
-	}
-	return otto.Value{}
 }
