@@ -201,7 +201,7 @@ func CompileScript(c *cli.Context) error {
 
 func NewScript(c *cli.Context) error {
 	logger := logrus.New()
-	logger.Formatter = new(logrus.TextFormatter)
+	logger.Formatter = new(logging.GSEFormatter)
 	logger.Out = logging.LogWriter{Name: "compiler"}
 	if c.NArg() == 0 {
 		fmt.Printf("%s\n", string(compiler.RetrieveExample()))

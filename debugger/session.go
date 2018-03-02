@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	prompt "github.com/c-bata/go-prompt"
+	"github.com/fatih/color"
 	"github.com/gen0cide/gscript/compiler"
 	"github.com/gen0cide/gscript/engine"
 	"github.com/gen0cide/gscript/logging"
@@ -18,6 +19,7 @@ import (
 type Debugger struct {
 	Engine *engine.Engine
 	Logger *logrus.Logger
+	Prompt *prompt.Prompt
 }
 
 func New(name string) *Debugger {
@@ -101,7 +103,22 @@ func (d *Debugger) InteractiveSession() {
 		d.SessionExecutor,
 		d.SessionCompleter,
 		prompt.OptionPrefix("gscript> "),
+		prompt.OptionPrefixTextColor(prompt.Red),
 		prompt.OptionTitle("Genesis Scripting Engine Console"),
 	)
+	d.Prompt = p
+	entryText := []string{
+		fmt.Sprintf(
+			"%s %s %s %s",
+			color.HiWhiteString("***"),
+			color.HiRedString("GSCRIPT"),
+			color.YellowString("INTERACTIVE SHELL"),
+			color.HiWhiteString("***"),
+		),
+		fmt.Sprintf("%s %s", color.YellowString("NOTE:"), "To exit the debugger, use CONTROL+D"),
+	}
+	for _, l := range entryText {
+		fmt.Fprintf(color.Output, "%s\n", l)
+	}
 	p.Run()
 }

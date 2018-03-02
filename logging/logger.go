@@ -56,6 +56,14 @@ func (g *GSEFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	var logLvl, logLine, tracer string
 	var buffer bytes.Buffer
 	var deleteTrace = false
+
+	if val, ok := entry.Data["stripped"]; ok {
+		if val == "true" {
+			buffer.WriteString(fmt.Sprintf("%s", entry.Message))
+			return buffer.Bytes(), nil
+		}
+	}
+
 	if val, ok := entry.Data["trace"]; ok {
 		deleteTrace = true
 		if val == "true" {

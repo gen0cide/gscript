@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	services "github.com/gen0cide/service-go"
 	"github.com/matishsiao/goInfo"
 	ps "github.com/mitchellh/go-ps"
 )
@@ -54,4 +55,79 @@ func FindProcessPid(key string) (int, error) {
 		}
 	}
 	return pid, err
+}
+
+func (e *Engine) InstallSystemService(path, name, displayName, description string) error {
+	c := &services.Config{
+		Path:        path,
+		Name:        name,
+		DisplayName: displayName,
+		Description: description,
+	}
+
+	s, err := services.NewServiceConfig(c)
+	if err != nil {
+		return err
+	}
+
+	err = s.Install()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (e *Engine) StartServiceByName(name string) error {
+	c := &services.Config{
+		Name: name,
+	}
+
+	s, err := services.NewServiceConfig(c)
+	if err != nil {
+		return err
+	}
+
+	err = s.Start()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (e *Engine) StopServiceByName(name string) error {
+	c := &services.Config{
+		Name: name,
+	}
+
+	s, err := services.NewServiceConfig(c)
+	if err != nil {
+		return err
+	}
+
+	err = s.Stop()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (e *Engine) RemoveServiceByName(name string) error {
+	c := &services.Config{
+		Name: name,
+	}
+
+	s, err := services.NewServiceConfig(c)
+	if err != nil {
+		return err
+	}
+
+	err = s.Remove()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
