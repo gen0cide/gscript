@@ -16,6 +16,23 @@ GScript uses a JS V8 Virtual Machine to interpret your genesis script and allow 
 
 The Engine itself is referred commonly as "GSE" - Genesis Scripting Engine.
 
+## Installation
+
+We have created a command line SDK for gscript. You can download it from our Releases page:
+
+<https://github.com/gen0cide/gscript/releases>
+
+If you want to compile final binaries using gscripts compiler, you'll need the following dependencies installed and configured on your system:
+
+ * Golang v1.10 or higher
+ * jshint
+ 
+After you have both of those, run:
+
+```
+$ go get github.com/gen0cide/gscript/cmd/gscript
+```
+
 ## What is GENESIS btw?
 
 GENESIS was created by @vyrus, @gen0cide, @emperorcow, and @ahhh for dynamically bundling multiple payloads into one dropper for faster deployment of implants for the CCDC Red Team.
