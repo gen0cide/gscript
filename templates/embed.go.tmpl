@@ -1,0 +1,12 @@
+{{- range $_, $pri := $.UniqPriorities }}
+{{- range $_, $vm := (index $.SortedVMs $pri) }}
+{{- range $_, $embed := $vm.Embeds }}
+func {{ $embed.NameHash }}() []byte {
+  s, _ := ioutil.ReadAll(flate.NewReader(bytes.NewBuffer([]byte{
+    {{- $embed.Data }}
+  })))
+  return s
+}
+{{ end -}}
+{{ end -}}
+{{ end -}}

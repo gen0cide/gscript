@@ -49,19 +49,3 @@ func g(k rune, b []rune) string {
   s, _ := strconv.Unquote(q + string(b) + q)
   return s
 }
-
-{{ range $_, $vm := $.VMs }}
-{{- range $_, $embed := $vm.Embeds }}
-func {{ $embed.NameHash }}() []byte {
-  s, _ := ioutil.ReadAll(flate.NewReader(bytes.NewBuffer([]byte{
-    {{- range $idx, $b := $embed.Compressed -}}
-      {{- if mod $idx 12 -}}
-      {{ printf "\n    " }}
-      {{- end -}}
-      {{ printf "0x%02x, " $b -}}
-    {{ end }}
-  })))
-  return s
-}
-{{ end -}}
-{{ end -}}

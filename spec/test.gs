@@ -1,12 +1,14 @@
 function BeforeDeploy() {
+  LogInfo("BeforeDeploy()");
   return true;
 }
 
 function Deploy() {
-  console.log("hello, world");
+  LogInfo("Deploy()");
   return true;
 }
 
 function AfterDeploy() {
+  LogInfo("AfterDeploy()");
   return true;
 }

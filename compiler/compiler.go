@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
 	"text/template"
 
 	"github.com/gen0cide/gscript/engine"
@@ -25,14 +26,15 @@ import (
 
 // VMBundle defines a standalone GSE VM that will be bundled into a compiled binary
 type VMBundle struct {
-	ID           string         `json:"id"`
-	ScriptFile   string         `json:"source"`
-	AssetFiles   []string       `json:"imports"`
-	Embeds       []EmbeddedFile `json:"-"`
-	RequiredOS   string         `json:"required_os"`
-	RequiredArch string         `json:"required_arch"`
-	Priority     int            `json:"priority"`
-	Timeout      int            `json:"timeout"`
+	sync.RWMutex
+	ID           string          `json:"id"`
+	ScriptFile   string          `json:"source"`
+	AssetFiles   []string        `json:"imports"`
+	Embeds       []*EmbeddedFile `json:"-"`
+	RequiredOS   string          `json:"required_os"`
+	RequiredArch string          `json:"required_arch"`
+	Priority     int             `json:"priority"`
+	Timeout      int             `json:"timeout"`
 }
 
 type VMLibrary struct {
@@ -61,6 +63,7 @@ type Compiler struct {
 	EnableLogging  bool                `json:"enable_logging"`
 	Logger         *logrus.Logger      `json:"-"`
 	Source         string              `json:"-"`
+	SourceBuffer   bytes.Buffer        `json:"-"`
 	StringDefs     []*StringDef        `json:"-"`
 	UniqPriorities []int               `json:"-"`
 }
@@ -70,6 +73,7 @@ func NewCompiler(scripts []string, outfile, os, arch string, sourceOut, compress
 	logger := logrus.New()
 	logger.Formatter = &logging.GSEFormatter{}
 	logger.Out = logging.LogWriter{Name: "compiler"}
+	logger.Level = logrus.DebugLevel
 	if outfile == "-" && !sourceOut {
 		logger.Fatalf("You need either -outfile or -source specified to build.")
 	}
@@ -88,7 +92,7 @@ func NewCompiler(scripts []string, outfile, os, arch string, sourceOut, compress
 			ID:           RandUpperAlphaString(18),
 			ScriptFile:   s,
 			AssetFiles:   []string{},
-			Embeds:       []EmbeddedFile{},
+			Embeds:       []*EmbeddedFile{},
 			RequiredArch: "",
 			RequiredOS:   "",
 			Priority:     100,
@@ -160,8 +164,10 @@ func (c *Compiler) compileMacros() {
 			if err != nil {
 				c.Logger.Fatalf("Asset file copy error: file=%s, error=%s", asset, err.Error())
 			}
-			c.Logger.Infof("Packing File: %s", filepath.Base(asset))
+			c.Logger.Debugf("Packing File: %s", filepath.Base(asset))
+			vm.Lock()
 			vm.AssetFiles = append(vm.AssetFiles, tempFile)
+			vm.Unlock()
 		}
 	}
 }
@@ -188,23 +194,36 @@ func (c *Compiler) writeScript() {
 		}
 
 		miniFinal := miniVersion.Bytes()
-		c.Logger.Infof("Original Size: %d bytes", len(data))
-		c.Logger.Infof("Minified Size: %d bytes", len(miniFinal))
+		c.Logger.Debugf("Original Size: %d bytes", len(data))
+		c.Logger.Debugf("Minified Size: %d bytes", len(miniFinal))
 		engine.LocalFileCreate(entryFile, miniFinal)
 		vm.AssetFiles = append(vm.AssetFiles, entryFile)
 	}
 }
 
+func (c *Compiler) processAsset(vm *VMBundle, f string, wg *sync.WaitGroup) {
+	defer wg.Done()
+	e := &EmbeddedFile{
+		SourcePath: f,
+	}
+	c.Logger.Debugf("Embedding file: %s", f)
+	e.Embed()
+	vm.Lock()
+	vm.Embeds = append(vm.Embeds, e)
+	vm.Unlock()
+}
+
 func (c *Compiler) compileAssets() {
+	var wg sync.WaitGroup
 	for _, vm := range c.VMs {
 		for _, f := range vm.AssetFiles {
-			e := EmbeddedFile{
-				SourcePath: f,
-			}
-			e.Embed()
-			vm.Embeds = append(vm.Embeds, e)
+			wg.Add(1)
+			go func(f string, vm *VMBundle) {
+				c.processAsset(vm, f, &wg)
+			}(f, vm)
 		}
 	}
+	wg.Wait()
 }
 
 func RetrieveExample() []byte {
@@ -231,7 +250,7 @@ func (c *Compiler) buildEntryPoint() {
 	if err != nil {
 		c.Logger.Fatalf("Error generating source: %s", err.Error())
 	}
-	c.Source = buf.String()
+	c.SourceBuffer = buf
 }
 
 func (c *Compiler) GenerateTangledHairs() string {
@@ -254,68 +273,123 @@ func (c *Compiler) GenerateTangledHairs() string {
 	return totalBuf
 }
 
-func (c *Compiler) writeSource() {
-	newSource := c.LollerSkateDaStringz([]byte(c.Source))
-	newSourceB := fmt.Sprintf("%s\n\n%s\n", string(newSource), c.GenerateTangledHairs())
-	if c.OutputSource {
-		PrettyPrintSource(newSourceB)
-		return
+func (c *Compiler) tumbleAST() {
+	c.Logger.Debug("Obfuscating strings")
+	newSource := c.LollerSkateDaStringz(c.SourceBuffer.Bytes())
+	c.Logger.Debug("Generating runtime decryption keys")
+	newSource.WriteString("\n\n")
+	newSource.WriteString(c.GenerateTangledHairs())
+	c.Logger.Debug("Injecting embedded imports into source")
+	tmpl := template.New("embeds")
+	newTmpl, err := tmpl.Parse(string(MustAsset("templates/embed.go.tmpl")))
+	if err != nil {
+		c.Logger.Fatalf("Failed to parse embed template: %s", err.Error())
 	}
-	err := ioutil.WriteFile(filepath.Join(c.BuildDir, "main.go"), []byte(newSourceB), 0644)
+	var buf bytes.Buffer
+	err = newTmpl.Execute(&buf, &c)
+	if err != nil {
+		c.Logger.Fatalf("Failed to render embed template: %s", err.Error())
+	}
+	_, err = newSource.Write(buf.Bytes())
+	if err != nil {
+		c.Logger.Fatalf("Failed to append embeds: %s", err.Error())
+	}
+	c.Logger.Debug("Checking source for errors")
+	c.Logger.Debug("Commiting final source")
+	c.SourceBuffer.Reset()
+	c.SourceBuffer.Write(newSource.Bytes())
+}
+
+func (c *Compiler) writeSource() {
+	err := ioutil.WriteFile(filepath.Join(c.BuildDir, "main.go"), c.SourceBuffer.Bytes(), 0644)
 	if err != nil {
 		c.Logger.Fatalf("Error writing main.go: %s", err.Error())
 	}
 }
 
+func (c *Compiler) printSource() {
+	PrettyPrintSource(c.SourceBuffer.String())
+}
+
+func (c *Compiler) compileSource() {
+	os.Chdir(c.BuildDir)
+	cmd := exec.Command("go", "build", `-ldflags`, `-s -w`, "-o", c.OutputFile)
+	cmd.Env = os.Environ()
+	cmd.Env = append(cmd.Env, fmt.Sprintf("GOOS=%s", c.OS))
+	cmd.Env = append(cmd.Env, fmt.Sprintf("GOARCH=%s", c.Arch))
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Run()
+}
+
+func (c *Compiler) obfuscateBinary() {
+	if c.EnableLogging == true {
+		c.Logger.Warnf("Not obfuscating binary because logging is enabled.")
+		return
+	}
+	c.Logger.Infof("Obfuscating binary")
+	c.ObfuscateBinary()
+}
+
+func (c *Compiler) compressBinary() {
+	if c.CompressBinary == false {
+		c.Logger.Warnf("Binary compression NOT enabled")
+		return
+	}
+	c.Logger.Infof("Compressing binary with UPX")
+	cmd := exec.Command("upx", `-9`, `-f`, `-q`, c.OutputFile)
+	cmd.Env = os.Environ()
+	cmd.Env = append(cmd.Env, fmt.Sprintf("GOOS=%s", c.OS))
+	cmd.Env = append(cmd.Env, fmt.Sprintf("GOARCH=%s", c.Arch))
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Run()
+}
+
 func (c *Compiler) Do() {
 	cwd, _ := os.Getwd()
+	c.Logger.Debug("Creating build directory")
 	c.CreateBuildDir()
+	c.Logger.Debug("Processing compiler macros")
 	c.compileMacros()
+	c.Logger.Debug("Configuring build directory")
 	c.writeScript()
 	os.Chdir(c.BuildDir)
+	c.Logger.Debug("Compiling assets")
 	c.compileAssets()
+	c.Logger.Debug("Building entry point")
 	c.buildEntryPoint()
 	os.RemoveAll(c.AssetDir)
-	c.writeSource()
-	if !c.OutputSource {
-		cmd := exec.Command("go", "build", `-ldflags`, `-s -w`, "-o", c.OutputFile)
-		cmd.Env = os.Environ()
-		cmd.Env = append(cmd.Env, fmt.Sprintf("GOOS=%s", c.OS))
-		cmd.Env = append(cmd.Env, fmt.Sprintf("GOARCH=%s", c.Arch))
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		cmd.Run()
-		if c.EnableLogging == true {
-			c.Logger.Warnf("Not obfuscating binary because logging is enabled.")
-		} else {
-			c.Logger.Infof("Obfuscating Binary...")
-			c.ObfuscateBinary()
-		}
-		if c.CompressBinary {
-			c.Logger.Infof("Compressing binary with UPX")
-			cmd = exec.Command("upx", `-9`, `-f`, `-q`, c.OutputFile)
-			cmd.Env = os.Environ()
-			cmd.Env = append(cmd.Env, fmt.Sprintf("GOOS=%s", c.OS))
-			cmd.Env = append(cmd.Env, fmt.Sprintf("GOARCH=%s", c.Arch))
-			cmd.Stdout = os.Stdout
-			cmd.Stderr = os.Stderr
-			cmd.Run()
-		}
+	c.Logger.Debug("Randomizing AST nodes")
+	c.tumbleAST()
+	if c.OutputSource {
+		c.printSource()
+	} else {
+		c.Logger.Debug("Writing final source")
+		c.writeSource()
+		c.Logger.Debug("Compiling final binary")
+		c.compileSource()
+		c.obfuscateBinary()
+		c.compressBinary()
 	}
 	os.Chdir(cwd)
 	os.RemoveAll(c.BuildDir)
 }
 
-func (c *Compiler) LollerSkateDaStringz(source []byte) []byte {
+func (c *Compiler) LollerSkateDaStringz(source []byte) *bytes.Buffer {
+	c.Logger.Debug("Initializing token parser")
 	fset := gotoken.NewFileSet()
+	c.Logger.Debug("Ingesting source into token parser")
 	file, err := goparser.ParseFile(fset, "", source, 0)
 	if err != nil {
 		c.Logger.Fatalf("Could not parse Golang source: %s", err.Error())
 	}
+	c.Logger.Debug("Walking AST")
 	goast.Walk(c, file)
 	w := new(bytes.Buffer)
+	c.Logger.Debug("Writing to buffer")
 	goprinter.Fprint(w, fset, file)
-	return w.Bytes()
+	return w
 }
 
 func (c *Compiler) HairTangler(key rune, source string) string {

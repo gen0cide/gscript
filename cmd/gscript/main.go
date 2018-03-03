@@ -23,6 +23,7 @@ import (
 	"github.com/gen0cide/gscript/logging"
 	"github.com/google/go-github/github"
 	update "github.com/inconshreveable/go-update"
+	"github.com/pkg/profile"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
@@ -35,13 +36,15 @@ var (
 	outputSource   = false
 	compressBinary = false
 	enableLogging  = false
+	enableDebug    = false
 )
 
 func main() {
+	defer profile.Start(profile.MemProfile).Stop()
 	app := cli.NewApp()
 	app.Name = "gscript"
 	app.Usage = "Interact with the Genesis Scripting Engine (GSE)"
-	app.Version = "0.0.13"
+	app.Version = "0.0.14"
 	app.Authors = []cli.Author{
 		cli.Author{
 			Name:  "Alex Levinson",
@@ -52,8 +55,9 @@ func main() {
 
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{
-			Name:  "debug, d",
-			Usage: "Run gscript in debug mode.",
+			Name:        "debug, d",
+			Usage:       "Run gscript in debug mode.",
+			Destination: &enableDebug,
 		},
 		cli.BoolFlag{
 			Name:  "quiet, q",
@@ -182,8 +186,11 @@ func InteractiveShell(c *cli.Context) error {
 
 func CompileScript(c *cli.Context) error {
 	logger := logrus.New()
-	logger.Formatter = new(logrus.TextFormatter)
+	logger.Formatter = &logging.GSEFormatter{}
 	logger.Out = logging.LogWriter{Name: "compiler"}
+	if enableDebug {
+		logger.Level = logrus.DebugLevel
+	}
 	if c.NArg() == 0 {
 		logger.Fatalf("You did not specify a genesis script!")
 	}
@@ -192,6 +199,7 @@ func CompileScript(c *cli.Context) error {
 		outputFile = filepath.Join(os.TempDir(), fmt.Sprintf("%d_genesis.bin", time.Now().Unix()))
 	}
 	gcc := compiler.NewCompiler(scriptFiles, outputFile, compilerOS, compilerArch, outputSource, compressBinary, enableLogging)
+	gcc.Logger = logger
 	gcc.Do()
 	if !outputSource {
 		gcc.Logger.Infof("Your binary is located at: %s", outputFile)

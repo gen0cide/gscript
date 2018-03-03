@@ -3,6 +3,7 @@ package compiler
 import (
 	"bytes"
 	"compress/flate"
+	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"path/filepath"
@@ -18,6 +19,7 @@ type EmbeddedFile struct {
 	VariableDef  string
 	Uncompressed []byte
 	Compressed   []byte
+	EmbedData    bytes.Buffer
 }
 
 func (e *EmbeddedFile) Compress() {
@@ -44,6 +46,20 @@ func (e *EmbeddedFile) Embed() {
 	e.ResolveVariableName()
 	e.ResolveData()
 	e.Compress()
+	e.GenerateEmbedData()
+}
+
+func (e *EmbeddedFile) Data() string {
+	return e.EmbedData.String()
+}
+
+func (e *EmbeddedFile) GenerateEmbedData() {
+	for idx, b := range e.Compressed {
+		if idx%12 == 0 {
+			e.EmbedData.WriteString("\n    ")
+		}
+		e.EmbedData.WriteString(fmt.Sprintf("0x%02x, ", b))
+	}
 }
 
 func BytesToCompressed(b []byte) []byte {
