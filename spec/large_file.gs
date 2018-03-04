@@ -1,4 +1,4 @@
-// //import:/Users/flint/Downloads/tater.jpg
+//import:/Users/flint/Downloads/e200.tar
 
 function BeforeDeploy() {
   LogInfo("BeforeDeploy()");
@@ -6,7 +6,7 @@ function BeforeDeploy() {
 }
 
 function Deploy() {
-  LogInfo("Deploy()");
+  WriteFile("/Users/flint/Downloads/e301.tar", Asset("e200.tar"), "0644");
   return true;
 }
 

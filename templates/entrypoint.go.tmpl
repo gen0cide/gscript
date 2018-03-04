@@ -1,11 +1,11 @@
 package main
 
 import (
-  "bytes"
-  "compress/flate"
+  "compress/gzip"
   "io/ioutil"
   "sync"
   "strconv"
+  "strings"
 
   "github.com/gen0cide/gscript/engine"
   {{- if eq $.EnableLogging true }}

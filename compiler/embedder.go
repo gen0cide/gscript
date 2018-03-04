@@ -2,7 +2,7 @@ package compiler
 
 import (
 	"bytes"
-	"compress/flate"
+	"compress/gzip"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
@@ -54,24 +54,22 @@ func (e *EmbeddedFile) Data() string {
 }
 
 func (e *EmbeddedFile) GenerateEmbedData() {
-	for idx, b := range e.Compressed {
-		if idx%12 == 0 {
-			e.EmbedData.WriteString("\n    ")
-		}
-		e.EmbedData.WriteString(fmt.Sprintf("0x%02x, ", b))
+	for _, b := range e.Compressed {
+		e.EmbedData.WriteString(fmt.Sprintf("\\x%02x", b))
 	}
 }
 
 func BytesToCompressed(b []byte) []byte {
 	buf := new(bytes.Buffer)
-	w, _ := flate.NewWriter(buf, flate.BestCompression)
+	w, _ := gzip.NewWriterLevel(buf, gzip.BestCompression)
 	w.Write(b)
 	w.Close()
 	return buf.Bytes()
 }
 
 func CompressedToBytes(b []byte) []byte {
-	buf, _ := ioutil.ReadAll(flate.NewReader(bytes.NewBuffer(b)))
+	r, _ := gzip.NewReader(bytes.NewBuffer(b))
+	buf, _ := ioutil.ReadAll(r)
 	return buf
 }
 
