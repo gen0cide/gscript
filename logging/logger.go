@@ -8,10 +8,11 @@ import (
 	"runtime"
 	"sort"
 	"strings"
-	"time"
 
 	"github.com/fatih/color"
+	"github.com/gen0cide/gscript"
 	"github.com/sirupsen/logrus"
+	"github.com/vigneshuvi/GoDateFormat"
 )
 
 var (
@@ -50,7 +51,31 @@ func (w LogWriter) Write(p []byte) (int, error) {
 	return len(output), nil
 }
 
+type GSEStrippedFormatter struct{}
+
 type GSEFormatter struct{}
+
+func (g *GSEStrippedFormatter) Format(entry *logrus.Entry) ([]byte, error) {
+	var buf bytes.Buffer
+
+	buf.WriteString(color.HiWhiteString("%s", entry.Message))
+
+	names := make([]string, 0, len(entry.Data))
+	for name := range entry.Data {
+		names = append(names, name)
+	}
+	sort.Sort(sort.Reverse(sort.StringSlice(names)))
+	for _, name := range names {
+		val := entry.Data[name]
+		buf.WriteString(" ")
+		buf.WriteString(fmt.Sprintf("%s=", name))
+		buf.WriteString(color.GreenString(val.(string)))
+	}
+
+	buf.WriteString("\n")
+
+	return buf.Bytes(), nil
+}
 
 func (g *GSEFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	var logLvl, logLine, tracer string
@@ -118,10 +143,47 @@ func (g *GSEFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	}
 	line := fmt.Sprintf(
 		"%s %s %s%s\n",
-		entry.Time.Format(time.RFC822Z),
+		entry.Time.Format(GoDateFormat.ConvertFormat("yyyy-MM-dd HH:MM:SS tt (Z)")),
 		logLvl,
 		logLine,
 		tracer,
 	)
 	return []byte(line), nil
+}
+
+func PrintLogo() {
+	fmt.Fprintf(color.Output, "%s\n", AsciiLogo())
+}
+
+func AsciiLogo() string {
+	lines := []string{
+		color.YellowString("***********************************************************"),
+		color.HiWhiteString("                             ____                         "),
+		color.HiWhiteString("                     __,-~~/~    `---.                    "),
+		color.HiWhiteString("                   _/_,---(      ,    )                   "),
+		color.HiWhiteString("               __ /        <    /   )  \\___               "),
+		color.HiWhiteString("- ------===;;;'====------------------===;;;===----- -  -  "),
+		color.HiWhiteString("                  \\/  ~\"~\"~\"~\"~\"~\\~\"~)~\"/                 "),
+		color.HiWhiteString("                  (_ (   \\  (     >    \\)                 "),
+		color.HiWhiteString("                   \\_( _ <         >_>'                   "),
+		color.HiWhiteString("                      ~ `-i' ::>|--\"                      "),
+		color.HiWhiteString("                          I;|.|.|                         "),
+		color.HiWhiteString("                         <|i::|i|`.                       "),
+		fmt.Sprintf("            %s          %s          %s  ", color.HiGreenString("uL"), color.HiWhiteString("(` ^'\"`-' \")"), color.HiYellowString(")")),
+		fmt.Sprintf("        %s          %s  ", color.HiGreenString(".ue888Nc.."), color.HiYellowString("(   (          ( /(")),
+		fmt.Sprintf("       %s  %s  ", color.HiGreenString("d88E`\"888E`"), color.HiYellowString("(    (  )(  )\\  `  )   )\\())")),
+		fmt.Sprintf("       %s   %s  ", color.HiGreenString("888E  888E"), color.YellowString(")\\   )\\(()\\((_) /(/(  (_))/")),
+		fmt.Sprintf("       %s  %s   ", color.HiGreenString("888E  888E"), color.HiRedString("((_) ((_)((_)(_)((_)_\\ | |_")),
+		fmt.Sprintf("       %s  %s  ", color.HiGreenString("888E  888E"), color.RedString("(_-</ _|| '_|| || '_ \\)|  _|")),
+		fmt.Sprintf("       %s  %s %s ", color.HiGreenString("888& .888E"), color.RedString("/__/\\__||_|  |_|| .__/  \\__|"), color.WhiteString(gscript.Version)),
+		fmt.Sprintf("       %s                  %s           ", color.HiGreenString("*888\" 888&"), color.RedString("|_|")),
+		fmt.Sprintf("        %s  %s        -- By --", color.HiGreenString("`\"   \"888E"), color.HiWhiteString("G E N I S I S")),
+		fmt.Sprintf("       %s   %s       %s", color.HiGreenString(".dWi   `88E"), color.HiWhiteString("S C R I P T I N G"), color.CyanString("gen0cide")),
+		fmt.Sprintf("       %s    %s            %s", color.HiGreenString("4888~  J8%%"), color.HiWhiteString("E N G I N E"), color.CyanString("ahhh")),
+		fmt.Sprintf("        %s             ", color.HiGreenString("^\"===*\"`")),
+		"                github.com/gen0cide/gscript",
+		color.YellowString("***********************************************************"),
+	}
+
+	return strings.Join(lines, "\n")
 }

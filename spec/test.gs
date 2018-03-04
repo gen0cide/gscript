@@ -1,3 +1,5 @@
+//import:/Users/flint/Downloads/tater.jpg
+
 function BeforeDeploy() {
   LogInfo("BeforeDeploy()");
   return true;

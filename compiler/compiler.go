@@ -3,17 +3,11 @@ package compiler
 import (
 	"bytes"
 	"fmt"
-	goast "go/ast"
-	goparser "go/parser"
-	goprinter "go/printer"
-	gotoken "go/token"
 	"io/ioutil"
-	"math/rand"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"sort"
-	"strings"
 	"sync"
 	"text/template"
 
@@ -71,9 +65,9 @@ type Compiler struct {
 // NewCompiler returns a basic Compiler object
 func NewCompiler(scripts []string, outfile, os, arch string, sourceOut, compression bool, enableLogging bool) *Compiler {
 	logger := logrus.New()
-	logger.Formatter = &logging.GSEFormatter{}
+	logger.Formatter = &logging.GSEStrippedFormatter{}
 	logger.Out = logging.LogWriter{Name: "compiler"}
-	logger.Level = logrus.DebugLevel
+	logging.PrintLogo()
 	if outfile == "-" && !sourceOut {
 		logger.Fatalf("You need either -outfile or -source specified to build.")
 	}
@@ -88,6 +82,7 @@ func NewCompiler(scripts []string, outfile, os, arch string, sourceOut, compress
 	}
 	vms := []*VMBundle{}
 	for _, s := range scripts {
+		logger.WithField("src", s).Info("** Compiler Option **")
 		vms = append(vms, &VMBundle{
 			ID:           RandUpperAlphaString(18),
 			ScriptFile:   s,
@@ -99,6 +94,17 @@ func NewCompiler(scripts []string, outfile, os, arch string, sourceOut, compress
 			Timeout:      30,
 		})
 	}
+
+	logger.WithField("os", os).Info("** Compiler Option **")
+	logger.WithField("arch", arch).Info("** Compiler Option **")
+	if sourceOut {
+		logger.WithField("source", fmt.Sprintf("%t", sourceOut)).Info("** Compiler Option **")
+	} else {
+		logger.WithField("outfile", outfile).Info("** Compiler Option **")
+	}
+	logger.WithField("upx", fmt.Sprintf("%t", compression)).Info("** Compiler Option **")
+	logger.WithField("logging", fmt.Sprintf("%t", enableLogging)).Info("** Compiler Option **")
+
 	return &Compiler{
 		VMs:            vms,
 		OutputFile:     outfile,
@@ -115,7 +121,7 @@ func NewCompiler(scripts []string, outfile, os, arch string, sourceOut, compress
 }
 
 // CreateBuildDir sets up the compiler's build directory
-func (c *Compiler) CreateBuildDir() {
+func (c *Compiler) createBuildDir() {
 	dirName := engine.RandStringRunes(16)
 	bd := filepath.Join(os.TempDir(), dirName)
 	err := os.MkdirAll(bd, 0744)
@@ -128,33 +134,6 @@ func (c *Compiler) CreateBuildDir() {
 	c.AssetDir = ad
 }
 
-// ParseMacros normalizes the import files into localized assets
-func (c *Compiler) ParseMacros(vm *VMBundle) []string {
-	imports := []string{}
-	script, err := ioutil.ReadFile(vm.ScriptFile)
-	if err != nil {
-		c.Logger.WithField("file", filepath.Base(vm.ScriptFile)).Fatalf("Error reading genesis script: %s", err.Error())
-	}
-
-	macroList := ParseMacros(string(script), c.Logger.WithField("file", filepath.Base(vm.ScriptFile)))
-	if macroList == nil {
-		c.Logger.WithField("file", filepath.Base(vm.ScriptFile)).Fatalf("Could not parse macros for script!")
-	}
-
-	vm.Timeout = macroList.Timeout
-	vm.Priority = macroList.Priority
-
-	for _, i := range macroList.LocalFiles {
-		imports = append(imports, i)
-	}
-
-	for _, i := range macroList.RemoteFiles {
-		imports = append(imports, i)
-	}
-
-	return imports
-}
-
 func (c *Compiler) compileMacros() {
 	for _, vm := range c.VMs {
 		assets := c.ParseMacros(vm)
@@ -164,7 +143,7 @@ func (c *Compiler) compileMacros() {
 			if err != nil {
 				c.Logger.Fatalf("Asset file copy error: file=%s, error=%s", asset, err.Error())
 			}
-			c.Logger.Debugf("Packing File: %s", filepath.Base(asset))
+			c.Logger.Infof("Found Asset: %s", filepath.Base(asset))
 			vm.Lock()
 			vm.AssetFiles = append(vm.AssetFiles, tempFile)
 			vm.Unlock()
@@ -253,33 +232,13 @@ func (c *Compiler) buildEntryPoint() {
 	c.SourceBuffer = buf
 }
 
-func (c *Compiler) GenerateTangledHairs() string {
-	totalBuf := ""
-	for _, str := range c.StringDefs {
-		tmpl := template.New("obf_str")
-		tmpl.Funcs(template.FuncMap{"mod": func(i, j int) bool { return i%j == 0 }})
-		newTmpl, err := tmpl.Parse(string(MustAsset("templates/obfstring.go.tmpl")))
-		if err != nil {
-			c.Logger.Fatalf("Error generating obfuscated string: %s", err.Error())
-		}
-		var buf bytes.Buffer
-		err = newTmpl.Execute(&buf, str)
-		if err != nil {
-			c.Logger.Fatalf("Error generating obfuscated string: %s", err.Error())
-		}
-		totalBuf += buf.String()
-		totalBuf += "\n\n"
-	}
-	return totalBuf
-}
-
 func (c *Compiler) tumbleAST() {
-	c.Logger.Debug("Obfuscating strings")
+	c.Logger.Info("Obfuscating strings")
 	newSource := c.LollerSkateDaStringz(c.SourceBuffer.Bytes())
-	c.Logger.Debug("Generating runtime decryption keys")
+	c.Logger.Info("Generating runtime decryption keys")
 	newSource.WriteString("\n\n")
 	newSource.WriteString(c.GenerateTangledHairs())
-	c.Logger.Debug("Injecting embedded imports into source")
+	c.Logger.Info("Injecting embedded assets into source")
 	tmpl := template.New("embeds")
 	newTmpl, err := tmpl.Parse(string(MustAsset("templates/embed.go.tmpl")))
 	if err != nil {
@@ -294,8 +253,7 @@ func (c *Compiler) tumbleAST() {
 	if err != nil {
 		c.Logger.Fatalf("Failed to append embeds: %s", err.Error())
 	}
-	c.Logger.Debug("Checking source for errors")
-	c.Logger.Debug("Commiting final source")
+	c.Logger.Info("Writing final source")
 	c.SourceBuffer.Reset()
 	c.SourceBuffer.Write(newSource.Bytes())
 }
@@ -319,7 +277,10 @@ func (c *Compiler) compileSource() {
 	cmd.Env = append(cmd.Env, fmt.Sprintf("GOARCH=%s", c.Arch))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	cmd.Run()
+	err := cmd.Run()
+	if err != nil {
+		c.Logger.Fatalf("Compilation error for %s", filepath.Join(c.BuildDir, "main.go"))
+	}
 }
 
 func (c *Compiler) obfuscateBinary() {
@@ -333,10 +294,10 @@ func (c *Compiler) obfuscateBinary() {
 
 func (c *Compiler) compressBinary() {
 	if c.CompressBinary == false {
-		c.Logger.Warnf("Binary compression NOT enabled")
+		c.Logger.Warnf("Binary compression NOT enabled (default). Enable with --upx.")
 		return
 	}
-	c.Logger.Infof("Compressing binary with UPX")
+	c.Logger.Info("Compressing binary with UPX")
 	cmd := exec.Command("upx", `-9`, `-f`, `-q`, c.OutputFile)
 	cmd.Env = os.Environ()
 	cmd.Env = append(cmd.Env, fmt.Sprintf("GOOS=%s", c.OS))
@@ -348,82 +309,30 @@ func (c *Compiler) compressBinary() {
 
 func (c *Compiler) Do() {
 	cwd, _ := os.Getwd()
-	c.Logger.Debug("Creating build directory")
-	c.CreateBuildDir()
-	c.Logger.Debug("Processing compiler macros")
+	c.Logger.Info("Creating build directory")
+	c.createBuildDir()
+	c.Logger.Info("Processing compiler macros")
 	c.compileMacros()
-	c.Logger.Debug("Configuring build directory")
+	c.Logger.Info("Configuring build directory")
 	c.writeScript()
 	os.Chdir(c.BuildDir)
-	c.Logger.Debug("Compiling assets")
+	c.Logger.Info("Normalizing assets")
 	c.compileAssets()
-	c.Logger.Debug("Building entry point")
+	c.Logger.Info("Building entry point")
 	c.buildEntryPoint()
 	os.RemoveAll(c.AssetDir)
-	c.Logger.Debug("Randomizing AST nodes")
+	c.Logger.Info("Randomizing AST nodes")
 	c.tumbleAST()
 	if c.OutputSource {
 		c.printSource()
 	} else {
 		c.Logger.Debug("Writing final source")
 		c.writeSource()
-		c.Logger.Debug("Compiling final binary")
+		c.Logger.Info("Compiling final binary")
 		c.compileSource()
 		c.obfuscateBinary()
 		c.compressBinary()
 	}
 	os.Chdir(cwd)
 	os.RemoveAll(c.BuildDir)
-}
-
-func (c *Compiler) LollerSkateDaStringz(source []byte) *bytes.Buffer {
-	c.Logger.Debug("Initializing token parser")
-	fset := gotoken.NewFileSet()
-	c.Logger.Debug("Ingesting source into token parser")
-	file, err := goparser.ParseFile(fset, "", source, 0)
-	if err != nil {
-		c.Logger.Fatalf("Could not parse Golang source: %s", err.Error())
-	}
-	c.Logger.Debug("Walking AST")
-	goast.Walk(c, file)
-	w := new(bytes.Buffer)
-	c.Logger.Debug("Writing to buffer")
-	goprinter.Fprint(w, fset, file)
-	return w
-}
-
-func (c *Compiler) HairTangler(key rune, source string) string {
-	varName := RandUpperAlphaString(14)
-	cipher := fmt.Sprintf("g(%d, %s)", key, varName)
-	reader := strings.NewReader(source)
-	varDef := []rune{}
-	for {
-		ch, _, err := reader.ReadRune()
-		if err != nil {
-			break
-		}
-		varDef = append(varDef, ch^key)
-		key ^= ch
-	}
-
-	c.StringDefs = append(c.StringDefs, &StringDef{
-		ID:    varName,
-		Value: source,
-		Key:   key,
-		Data:  varDef,
-	})
-	return cipher
-}
-
-func (c *Compiler) Visit(node goast.Node) goast.Visitor {
-	switch n := node.(type) {
-	case *goast.ImportSpec:
-		return nil
-	case *goast.BasicLit:
-		if n.Kind == gotoken.STRING {
-			k := rand.Intn(65536)
-			n.Value = c.HairTangler(rune(k), n.Value[1:len(n.Value)-1])
-		}
-	}
-	return c
 }

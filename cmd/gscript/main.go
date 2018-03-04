@@ -17,13 +17,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gen0cide/gscript"
 	"github.com/gen0cide/gscript/compiler"
 	"github.com/gen0cide/gscript/debugger"
 	"github.com/gen0cide/gscript/engine"
 	"github.com/gen0cide/gscript/logging"
 	"github.com/google/go-github/github"
 	update "github.com/inconshreveable/go-update"
-	"github.com/pkg/profile"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
@@ -40,28 +40,25 @@ var (
 )
 
 func main() {
-	defer profile.Start(profile.MemProfile).Stop()
+	cli.AppHelpTemplate = fmt.Sprintf("%s\n\n%s", logging.AsciiLogo(), cli.AppHelpTemplate)
+	cli.CommandHelpTemplate = fmt.Sprintf("%s\n\n%s", logging.AsciiLogo(), cli.CommandHelpTemplate)
 	app := cli.NewApp()
 	app.Name = "gscript"
-	app.Usage = "Interact with the Genesis Scripting Engine (GSE)"
-	app.Version = "0.0.14"
+	app.Usage = "Command Line SDK for the Genesis Scripting Engine (GSE)"
+	app.Version = gscript.Version
 	app.Authors = []cli.Author{
 		cli.Author{
 			Name:  "Alex Levinson",
 			Email: "gen0cide.threats@gmail.com",
 		},
 	}
-	app.Copyright = "(c) 2017 Alex Levinson"
+	app.Copyright = "(c) 2018 Alex Levinson"
 
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{
 			Name:        "debug, d",
 			Usage:       "Run gscript in debug mode.",
 			Destination: &enableDebug,
-		},
-		cli.BoolFlag{
-			Name:  "quiet, q",
-			Usage: "Suppress all logging output.",
 		},
 	}
 
@@ -150,6 +147,7 @@ func TestScript(c *cli.Context) error {
 	logger.Formatter = &logging.GSEFormatter{}
 	logger.Out = logging.LogWriter{Name: "test"}
 	logger.Level = logrus.DebugLevel
+	logging.PrintLogo()
 	filename := c.Args().Get(0)
 	if len(filename) == 0 {
 		logger.Fatalf("You did not supply a filename!")
@@ -178,6 +176,7 @@ func TestScript(c *cli.Context) error {
 }
 
 func InteractiveShell(c *cli.Context) error {
+	logging.PrintLogo()
 	dbg := debugger.New("shell")
 	dbg.SetupDebugEngine()
 	dbg.InteractiveSession()
@@ -215,6 +214,7 @@ func NewScript(c *cli.Context) error {
 		fmt.Printf("%s\n", string(compiler.RetrieveExample()))
 		return nil
 	}
+	logging.PrintLogo()
 	scriptFiles := c.Args()
 	for _, f := range scriptFiles {
 		if _, err := os.Stat(f); os.IsNotExist(err) {
@@ -228,6 +228,7 @@ func NewScript(c *cli.Context) error {
 }
 
 func RunScript(c *cli.Context) error {
+	logging.PrintLogo()
 	dbg := debugger.New("runner")
 	dbg.SetupDebugEngine()
 	filename := c.Args().Get(0)
@@ -258,6 +259,7 @@ func RunScript(c *cli.Context) error {
 }
 
 func UpdateCLI(c *cli.Context) error {
+	logging.PrintLogo()
 	gse := engine.New("updater")
 	logger := logrus.New()
 	logger.Formatter = &logging.GSEFormatter{}

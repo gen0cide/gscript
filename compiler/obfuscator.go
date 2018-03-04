@@ -8,12 +8,16 @@ import (
 	"debug/pe"
 	"encoding/hex"
 	"fmt"
+	goast "go/ast"
+	goparser "go/parser"
+	goprinter "go/printer"
+	gotoken "go/token"
+	"html/template"
 	"io/ioutil"
 	"math/rand"
 	"regexp"
 	"sort"
-
-	"github.com/davecgh/go-spew/spew"
+	"strings"
 )
 
 var ObfuscatedBlobs = []string{
@@ -83,6 +87,26 @@ func (c *Compiler) ObfuscateBinary() {
 	if err != nil {
 		c.Logger.Fatalf("Could not write obfuscated binary: %s", err.Error())
 	}
+}
+
+func (c *Compiler) GenerateTangledHairs() string {
+	totalBuf := ""
+	for _, str := range c.StringDefs {
+		tmpl := template.New("obf_str")
+		tmpl.Funcs(template.FuncMap{"mod": func(i, j int) bool { return i%j == 0 }})
+		newTmpl, err := tmpl.Parse(string(MustAsset("templates/obfstring.go.tmpl")))
+		if err != nil {
+			c.Logger.Fatalf("Error generating obfuscated string: %s", err.Error())
+		}
+		var buf bytes.Buffer
+		err = newTmpl.Execute(&buf, str)
+		if err != nil {
+			c.Logger.Fatalf("Error generating obfuscated string: %s", err.Error())
+		}
+		totalBuf += buf.String()
+		totalBuf += "\n\n"
+	}
+	return totalBuf
 }
 
 func (c *Compiler) MordorifyWindows() {
@@ -196,7 +220,6 @@ func (c *Compiler) MordorifyDarwin() {
 	funcList := []string{}
 	_ = funcList
 	fileMap := tab.Files
-	spew.Dump(funcList)
 	for x := range fileMap {
 		rawFile = bytes.Replace(rawFile, []byte(x), CreateReplacement(x), -1)
 	}
@@ -204,4 +227,56 @@ func (c *Compiler) MordorifyDarwin() {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func (c *Compiler) LollerSkateDaStringz(source []byte) *bytes.Buffer {
+	c.Logger.Debug("Initializing token parser")
+	fset := gotoken.NewFileSet()
+	c.Logger.Debug("Ingesting source into token parser")
+	file, err := goparser.ParseFile(fset, "", source, 0)
+	if err != nil {
+		c.Logger.Fatalf("Could not parse Golang source: %s", err.Error())
+	}
+	c.Logger.Debug("Walking AST")
+	goast.Walk(c, file)
+	w := new(bytes.Buffer)
+	c.Logger.Debug("Writing to buffer")
+	goprinter.Fprint(w, fset, file)
+	return w
+}
+
+func (c *Compiler) HairTangler(key rune, source string) string {
+	varName := RandUpperAlphaString(14)
+	cipher := fmt.Sprintf("g(%d, %s)", key, varName)
+	reader := strings.NewReader(source)
+	varDef := []rune{}
+	for {
+		ch, _, err := reader.ReadRune()
+		if err != nil {
+			break
+		}
+		varDef = append(varDef, ch^key)
+		key ^= ch
+	}
+
+	c.StringDefs = append(c.StringDefs, &StringDef{
+		ID:    varName,
+		Value: source,
+		Key:   key,
+		Data:  varDef,
+	})
+	return cipher
+}
+
+func (c *Compiler) Visit(node goast.Node) goast.Visitor {
+	switch n := node.(type) {
+	case *goast.ImportSpec:
+		return nil
+	case *goast.BasicLit:
+		if n.Kind == gotoken.STRING {
+			k := rand.Intn(65536)
+			n.Value = c.HairTangler(rune(k), n.Value[1:len(n.Value)-1])
+		}
+	}
+	return c
 }
