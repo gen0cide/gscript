@@ -217,14 +217,22 @@ func CompileScript(c *cli.Context) error {
 		}
 	}
 
+	finalFile := ""
+
 	if !outputSource && outputFile == "-" {
-		outputFile = filepath.Join(os.TempDir(), fmt.Sprintf("%d_genesis.bin", time.Now().Unix()))
+		finalFile = filepath.Join(os.TempDir(), fmt.Sprintf("%d_genesis.bin", time.Now().Unix()))
+	} else {
+		f, err := filepath.Abs(outputFile)
+		finalFile = f
+		if err != nil {
+			logger.Fatalf("Cannot determine path to outfile: %s", err.Error())
+		}
 	}
-	gcc := compiler.NewCompiler(scriptFiles, outputFile, compilerOS, compilerArch, outputSource, compressBinary, enableLogging)
+	gcc := compiler.NewCompiler(scriptFiles, finalFile, compilerOS, compilerArch, outputSource, compressBinary, enableLogging)
 	gcc.Logger = logger
 	gcc.Do()
 	if !outputSource {
-		gcc.Logger.Infof("Your binary is located at: %s", outputFile)
+		gcc.Logger.Infof("Your binary is located at: %s", finalFile)
 	}
 	return nil
 }
