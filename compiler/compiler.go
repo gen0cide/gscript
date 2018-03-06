@@ -45,6 +45,7 @@ type StringDef struct {
 
 // Compiler creates a skeleton structure to produce a compiled binary
 type Compiler struct {
+	sync.RWMutex
 	OS             string              `json:"os"`
 	Arch           string              `json:"arch"`
 	OutputFile     string              `json:"output"`

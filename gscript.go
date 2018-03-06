@@ -1,4 +1,4 @@
 package gscript
 
 // Version defines the version of gscript
-const Version = "v0.0.16"
+const Version = "v0.0.17"

@@ -1,17 +1,13 @@
 package engine
 
 import (
-	"math/rand"
+	"crypto/rand"
+	"math/big"
 	"strings"
-	"time"
 	"unicode"
 )
 
 var letterRunes = []rune("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
 
 func XorBytes(a []byte, b []byte) []byte {
 	n := len(a)
@@ -51,23 +47,31 @@ func ObfuscateString(Data string) string {
 }
 
 func RandString(strlen int) string {
-	var r = rand.New(rand.NewSource(time.Now().UnixNano()))
 	const chars = "abcdefghijklmnopqrstuvwxyz0123456789"
 	result := make([]byte, strlen)
 	for i := range result {
-		result[i] = chars[r.Intn(len(chars))]
+		val, err := rand.Int(rand.Reader, big.NewInt(int64(len(chars))))
+		if err != nil {
+			panic(err)
+		}
+		result[i] = chars[val.Int64()]
 	}
 	return string(result)
 }
 
 func RandomInt(min, max int) int {
-	return rand.Intn(max-min) + min
+	r, _ := rand.Int(rand.Reader, big.NewInt(int64(max-min)))
+	return int(r.Int64()) + min
 }
 
 func RandStringRunes(n int) string {
 	b := make([]rune, n)
 	for i := range b {
-		b[i] = letterRunes[rand.Intn(len(letterRunes))]
+		val, err := rand.Int(rand.Reader, big.NewInt(int64(len(letterRunes))))
+		if err != nil {
+			panic(err)
+		}
+		b[i] = letterRunes[val.Int64()]
 	}
 	return string(b)
 }

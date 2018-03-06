@@ -258,13 +258,14 @@ func (c *Compiler) HairTangler(key rune, source string) string {
 		varDef = append(varDef, ch^key)
 		key ^= ch
 	}
-
+	c.Lock()
 	c.StringDefs = append(c.StringDefs, &StringDef{
 		ID:    varName,
 		Value: source,
 		Key:   key,
 		Data:  varDef,
 	})
+	c.Unlock()
 	return cipher
 }
 

@@ -3,12 +3,12 @@ package compiler
 import (
 	"bytes"
 	"compress/gzip"
+	"crypto/rand"
 	"fmt"
 	"io/ioutil"
-	"math/rand"
+	"math/big"
 	"path/filepath"
 	"strings"
-	"time"
 )
 
 type EmbeddedFile struct {
@@ -74,11 +74,14 @@ func CompressedToBytes(b []byte) []byte {
 }
 
 func RandUpperAlphaString(strlen int) string {
-	var r = rand.New(rand.NewSource(time.Now().UnixNano()))
 	const chars = "abcdefghijklmnopqrstuvwxyz"
 	result := make([]byte, strlen)
 	for i := range result {
-		result[i] = chars[r.Intn(len(chars))]
+		val, err := rand.Int(rand.Reader, big.NewInt(int64(len(chars))))
+		if err != nil {
+			panic(err)
+		}
+		result[i] = chars[val.Int64()]
 	}
 	return strings.ToUpper(string(result))
 }

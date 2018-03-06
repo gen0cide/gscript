@@ -17,6 +17,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/gen0cide/gscript"
 	"github.com/gen0cide/gscript/compiler"
 	"github.com/gen0cide/gscript/debugger"
@@ -44,6 +45,8 @@ func main() {
 	cli.AppHelpTemplate = fmt.Sprintf("%s\n\n%s", logging.AsciiLogo(), cli.AppHelpTemplate)
 	cli.CommandHelpTemplate = fmt.Sprintf("%s\n\n%s", logging.AsciiLogo(), cli.CommandHelpTemplate)
 	app := cli.NewApp()
+	app.Writer = color.Output
+	app.ErrWriter = color.Output
 	app.Name = "gscript"
 	app.Usage = "Command Line SDK for the Genesis Scripting Engine (GSE)"
 	app.Version = gscript.Version
@@ -135,12 +138,6 @@ func main() {
 			Usage:   "Run a Genesis script (Careful, don't infect yourself!).",
 			Action:  RunScript,
 		},
-		{
-			Name:    "trace",
-			Aliases: []string{"a"},
-			Usage:   "Show command line options",
-			Action:  TraceScript,
-		},
 	}
 
 	sort.Sort(cli.FlagsByName(app.Flags))
@@ -209,7 +206,17 @@ func CompileScript(c *cli.Context) error {
 	if c.NArg() == 0 {
 		logger.Fatalf("You did not specify a genesis script!")
 	}
-	scriptFiles := c.Args()
+	scriptFiles := []string{}
+	for _, a := range c.Args() {
+		f, err := filepath.Glob(a)
+		if err != nil {
+			logger.Fatalf("Bad file glob: %s", err.Error())
+		}
+		for _, n := range f {
+			scriptFiles = append(scriptFiles, n)
+		}
+	}
+
 	if !outputSource && outputFile == "-" {
 		outputFile = filepath.Join(os.TempDir(), fmt.Sprintf("%d_genesis.bin", time.Now().Unix()))
 	}
