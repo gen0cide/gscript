@@ -37,6 +37,7 @@ var (
 	compressBinary = false
 	enableLogging  = false
 	enableDebug    = false
+	retainBuildDir = false
 )
 
 func main() {
@@ -134,12 +135,27 @@ func main() {
 			Usage:   "Run a Genesis script (Careful, don't infect yourself!).",
 			Action:  RunScript,
 		},
+		{
+			Name:    "trace",
+			Aliases: []string{"a"},
+			Usage:   "Show command line options",
+			Action:  TraceScript,
+		},
 	}
 
 	sort.Sort(cli.FlagsByName(app.Flags))
 	sort.Sort(cli.CommandsByName(app.Commands))
 
 	app.Run(os.Args)
+}
+
+func TraceScript(c *cli.Context) error {
+	files := c.Args()
+	for _, f := range files {
+		fmt.Printf("Argument: %s\n", f)
+		fmt.Printf("Base: %s\n", filepath.Base(f))
+	}
+	return nil
 }
 
 func TestScript(c *cli.Context) error {

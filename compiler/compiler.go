@@ -11,6 +11,7 @@ import (
 	"sync"
 	"text/template"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/gen0cide/gscript/engine"
 	"github.com/gen0cide/gscript/logging"
 	"github.com/sirupsen/logrus"
@@ -153,6 +154,7 @@ func (c *Compiler) compileMacros() {
 
 func (c *Compiler) writeScript() {
 	for _, vm := range c.VMs {
+		c.Logger.Infof("Script Information: %s", spew.Sdump(vm))
 		if _, err := os.Stat(vm.ScriptFile); os.IsNotExist(err) {
 			c.Logger.Fatalf("Genesis Script does not exist: %s", vm.ScriptFile)
 		}
