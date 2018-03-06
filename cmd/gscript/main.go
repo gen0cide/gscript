@@ -47,7 +47,7 @@ func main() {
 	app.Usage = "Command Line SDK for the Genesis Scripting Engine (GSE)"
 	app.Version = gscript.Version
 	app.Authors = []cli.Author{
-		cli.Author{
+		{
 			Name:  "Alex Levinson",
 			Email: "gen0cide.threats@gmail.com",
 		},
@@ -286,7 +286,7 @@ func UpdateCLI(c *cli.Context) error {
 
 	fileName := fmt.Sprintf("gscript_%s_%s_amd64.zip", tagName, runtime.GOOS)
 
-	assetID := 0
+	assetID := int64(0)
 	fileSize := 0
 
 	for _, asset := range repRel.Assets {
