@@ -59,4 +59,8 @@ function Sleep(seconds) {
     }
   }
 }
+
+function DebugConsole() {
+  return true;
+}
 `

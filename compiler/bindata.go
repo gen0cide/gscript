@@ -86,7 +86,7 @@ func templatesEmbedGoTmpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/embed.go.tmpl", size: 305, mode: os.FileMode(420), modTime: time.Unix(1520146058, 0)}
+	info := bindataFileInfo{name: "templates/embed.go.tmpl", size: 305, mode: os.FileMode(420), modTime: time.Unix(1520147337, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -106,7 +106,7 @@ func templatesEntrypointGoTmpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/entrypoint.go.tmpl", size: 1143, mode: os.FileMode(420), modTime: time.Unix(1520146076, 0)}
+	info := bindataFileInfo{name: "templates/entrypoint.go.tmpl", size: 1143, mode: os.FileMode(420), modTime: time.Unix(1520147848, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
