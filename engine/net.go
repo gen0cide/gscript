@@ -1,6 +1,8 @@
 package engine
 
 import (
+	"bytes"
+	"encoding/json"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -73,6 +75,26 @@ func DNSQuestion(target, request string) (string, error) {
 
 func HTTPGetFile(url string) (int, []byte, error) {
 	resp, err := http.Get(url)
+	if err != nil {
+		return 0, nil, err
+	}
+	respCode := resp.StatusCode
+	pageData, err := ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
+	return respCode, pageData, nil
+}
+
+func PostJSON(url string, jsonString []byte) (int, []byte, error) {
+	// encode json to sanity check, then decode to ensure the transmition syntax is clean
+	var jsonObj interface{}
+	if err := json.Unmarshal(jsonString, &jsonObj); err != nil {
+		return 0, nil, err
+	}
+	jsonStringCleaned, err := json.Marshal(jsonObj)
+	if err != nil {
+		return 0, nil, err
+	}
+	resp, err := http.Post(url, " application/json", bytes.NewReader(jsonStringCleaned))
 	if err != nil {
 		return 0, nil, err
 	}

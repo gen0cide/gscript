@@ -85,6 +85,7 @@ func (e *Engine) CreateVM() {
 	e.VM.Set("Matches", e.VMMatches)
 	e.VM.Set("CanSSHLogin", e.VMCanSSHLogin)
 	e.VM.Set("RetrieveFileFromURL", e.VMRetrieveFileFromURL)
+	e.VM.Set("PostJSON", e.VMPostJSON)
 	e.VM.Set("DNSQuery", e.VMDNSQuery)
 	e.VM.Set("HTTPRequest", e.VMHTTPRequest)
 	e.VM.Set("Exec", e.VMExec)
