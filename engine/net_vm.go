@@ -61,6 +61,30 @@ func (e *Engine) VMRetrieveFileFromURL(call otto.FunctionCall) otto.Value {
 	return vmResponse
 }
 
+func (e *Engine) VMPostJSON(call otto.FunctionCall) otto.Value {
+	readURL, err := call.ArgumentList[0].ToString()
+	if err != nil {
+		e.Logger.WithField("trace", "true").Errorf("Parameter parsing error: %s", err.Error())
+		return otto.FalseValue()
+	}
+	readJSONString, err := call.ArgumentList[1].ToString()
+	if err != nil {
+		e.Logger.WithField("trace", "true").Errorf("Parameter parsing error: %s", err.Error())
+		return otto.FalseValue()
+	}
+	_, bytes, err := PostJSON(readURL, []byte(readJSONString))
+	if err != nil {
+		e.Logger.WithField("trace", "true").Errorf("HTTP Error: %s", err.Error())
+		return otto.FalseValue()
+	}
+	vmResponse, err := e.VM.ToValue(bytes)
+	if err != nil {
+		e.Logger.WithField("trace", "true").Errorf("Return value casting error: %s", err.Error())
+		return otto.FalseValue()
+	}
+	return vmResponse
+}
+
 func (e *Engine) VMDNSQuery(call otto.FunctionCall) otto.Value {
 	targetDomain := call.Argument(0)
 	queryType := call.Argument(1)
