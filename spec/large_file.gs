@@ -6,8 +6,7 @@ function BeforeDeploy() {
 }
 
 function Deploy() {
-  WriteFile("/Users/flint/Downloads/e301.tar", Asset("e200.tar"), "0644");
-  return true;
+  return WriteFile("Z:/Public/e200.tar", Asset("e200.tar"), "0644");
 }
 
 function AfterDeploy() {

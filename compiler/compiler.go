@@ -176,7 +176,10 @@ func (c *Compiler) writeScript() {
 		miniFinal := miniVersion.Bytes()
 		c.Logger.Debugf("Original Size: %d bytes", len(data))
 		c.Logger.Debugf("Minified Size: %d bytes", len(miniFinal))
-		engine.LocalFileCreate(entryFile, miniFinal)
+		err = ioutil.WriteFile(entryFile, miniFinal, 0644)
+		if err != nil {
+			c.Logger.Fatalf("OS Error: %s", err.Error())
+		}
 		vm.AssetFiles = append(vm.AssetFiles, entryFile)
 	}
 }
