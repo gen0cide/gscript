@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"net"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/robertkrimen/otto"
 )
 
@@ -95,7 +97,25 @@ func (e *Engine) ValueToByteSlice(v otto.Value) []byte {
 		}
 	} else {
 		e.Logger.WithField("trace", "true").Errorf("Unknown class to cast to byte slice")
+		spew.Dump(v)
 	}
 
 	return valueBytes
+}
+
+func GetLocalIPs() []string {
+	addresses := []string{}
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		return addresses
+	}
+
+	for _, a := range addrs {
+		if ipnet, ok := a.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				addresses = append(addresses, ipnet.IP.String())
+			}
+		}
+	}
+	return addresses
 }

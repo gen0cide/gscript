@@ -54,7 +54,7 @@ func (d *Debugger) SessionExecutor(in string) {
 	if newIn == "exit" || newIn == "quit" {
 		os.Exit(0)
 	}
-	val, err := d.Engine.VM.Run(newIn)
+	val, err := d.Engine.VM.Eval(newIn)
 	if err != nil {
 		d.Engine.Logger.Errorf("Console Error: %s", err.Error())
 	}

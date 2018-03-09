@@ -30,27 +30,31 @@ func (e *Engine) CreateVM() {
 // Author: {{ $f.Author }}
 func (e *Engine) VM{{ $f.Name }}(call otto.FunctionCall) otto.Value {
   if len(call.ArgumentList) > {{ len $f.ExpectedArgTypes }} {
-    e.Logger.WithField("function", "{{ $f.Name }}").Error("Too many arguments in call.")
+    e.Logger.WithField("function", "{{ $f.Name }}").WithField("trace", "true").Error("Too many arguments in call.")
     return otto.FalseValue()
   }
   if len(call.ArgumentList) < {{ len $f.ExpectedArgTypes }} {
-    e.Logger.WithField("function", "{{ $f.Name }}").Error("Too few arguments in call.")
+    e.Logger.WithField("function", "{{ $f.Name }}").WithField("trace", "true").Error("Too few arguments in call.")
     return otto.FalseValue()
   }
   {{ range $aidx, $a := $f.ExpectedArgTypes -}}
+  {{- if eq $a.GoType "[]byte" }}  
+  {{ $a.Name }} := e.ValueToByteSlice(call.Argument({{ $aidx }}))
+  {{ else }}
   var {{ $a.Name }} {{ $a.GoType }}
   rawArg{{ $aidx }}, err := call.Argument({{ $aidx }}).Export()
   if err != nil {
-    e.Logger.WithField("function", "{{ $f.Name }}").Errorf("Could not export field: %s", "{{ $a.Name }}")
+    e.Logger.WithField("function", "{{ $f.Name }}").WithField("trace", "true").Errorf("Could not export field: %s", "{{ $a.Name }}")
     return otto.FalseValue()
   }
   switch v := rawArg{{ $aidx }}.(type) {
   case {{ $a.GoType }}:
     {{ $a.Name }} = rawArg{{ $aidx }}.({{ $a.GoType }})
   default:
-    e.Logger.WithField("function", "{{ $f.Name }}").Errorf("Argument type mismatch: expected %s, got %T", "{{ $a.GoType }}", v)
+    e.Logger.WithField("function", "{{ $f.Name }}").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "{{ $a.GoType }}", v)
     return otto.FalseValue()
   }
+  {{ end -}}
   {{ end -}}
   {{ $f.ReturnString }} := e.{{ $f.ReceiverString }}
   rawVMRet := VMResponse{}
@@ -59,7 +63,7 @@ func (e *Engine) VM{{ $f.Name }}(call otto.FunctionCall) otto.Value {
   {{ end -}}
   vmRet, vmRetError := e.VM.ToValue(rawVMRet)
   if vmRetError != nil {
-    e.Logger.WithField("function", "{{ $f.Name }}").Errorf("Return conversion failed: %s", vmRetError.Error())
+    e.Logger.WithField("function", "{{ $f.Name }}").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
     return otto.FalseValue()
   }
   return vmRet

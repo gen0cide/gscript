@@ -12,7 +12,6 @@ import (
 	"text/template"
 
 	"github.com/gen0cide/gscript/compiler/printer"
-	"github.com/gen0cide/gscript/engine"
 	"github.com/gen0cide/gscript/logging"
 	"github.com/sirupsen/logrus"
 	"github.com/tdewolff/minify"
@@ -141,7 +140,11 @@ func (c *Compiler) compileMacros() {
 		assets := c.ParseMacros(vm)
 		for _, asset := range assets {
 			tempFile := filepath.Join(c.AssetDir, filepath.Base(asset))
-			err := engine.LocalCopyFile(asset, tempFile)
+			fileData, err := ioutil.ReadFile(asset)
+			if err != nil {
+				c.Logger.Fatalf("Asset file copy error: file=%s, error=%s", asset, err.Error())
+			}
+			err = ioutil.WriteFile(tempFile, fileData, 0644)
 			if err != nil {
 				c.Logger.Fatalf("Asset file copy error: file=%s, error=%s", asset, err.Error())
 			}
@@ -164,7 +167,7 @@ func (c *Compiler) writeScript() {
 
 		miniVersion := new(bytes.Buffer)
 
-		data, err := engine.LocalFileRead(vm.ScriptFile)
+		data, err := ioutil.ReadFile(vm.ScriptFile)
 		if err != nil {
 			c.Logger.Fatalf("Asset file copy error: file=%s, error=%s", vm.ScriptFile, err.Error())
 		}

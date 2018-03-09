@@ -168,4 +168,23 @@ Executes system commands via a forked call.
 
 
 
+## `WriteFile(path, fileData, perms)`
+
+Writes data from a byte array to a file with the given permissions.
+
+### Argument List
+
+ * **path** *string*
+ * **fileData** *[]byte*
+ * **perms** *int64*
+
+### Returned Object Fields
+
+ * **bytesWritten** *int*
+ * **fileError** *error*
+
+---
+
+
+
 

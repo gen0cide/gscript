@@ -2,26 +2,19 @@
 
 //import:/Users/flint/Downloads/tater.jpg
 
-var hello_world;
-var hash;
-
 function BeforeDeploy() {
- hello_world = "helloworld";
  return true; 
 }
 
 function Deploy() {
-  hash = MD5(hello_world);
-  console.log(hash);
   var tater = Asset("tater.jpg");
-  console.log(tater.length);
-  var ts = Timestamp();
-  var fn = "/tmp/" + ts + "_tater.jpg";
-  WriteFile(fn, tater);
+  var ts = RandomString(12);
+  var fn = "/tmp/" + ts.value + "_tater.jpg";
+  var fileRet = WriteFile(fn, tater.fileData, 0777);
+  DebugConsole();
   return true;
 }
 
 function AfterDeploy() {
-  console.log(HOSTNAME);
   return true;
 }

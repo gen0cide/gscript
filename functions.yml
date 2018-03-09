@@ -138,6 +138,24 @@
 #
 #####################################################################
 # TODO (lib_file.go)
+- name: WriteFile
+  description: Writes data from a byte array to a file with the given permissions.
+  author: Alex
+  package: file
+  args:
+    - label: path
+      gotype: string
+    - label: fileData
+      gotype: '[]byte'
+    - label: perms
+      gotype: int64
+  returns:
+    - label: bytesWritten
+      gotype: int
+      return: true
+    - label: fileError
+      gotype: error
+      return: true
 
 #####################################################################
 #

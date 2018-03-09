@@ -18,6 +18,7 @@ func (e *Engine) CreateVM() {
 	e.VM.Set("DeobfuscateString", e.VMDeobfuscateString)
 	e.VM.Set("ExecuteCommand", e.VMExecuteCommand)
 	e.VM.Set("ForkExecuteCommand", e.VMForkExecuteCommand)
+	e.VM.Set("WriteFile", e.VMWriteFile)
 	_, err := e.VM.Run(VMPreload)
 	if err != nil {
 		e.Logger.WithField("trace", "true").Fatalf("Syntax error in preload: %s", err.Error())
@@ -32,24 +33,25 @@ func (e *Engine) CreateVM() {
 // Author: Alex
 func (e *Engine) VMAsset(call otto.FunctionCall) otto.Value {
 	if len(call.ArgumentList) > 1 {
-		e.Logger.WithField("function", "Asset").Error("Too many arguments in call.")
+		e.Logger.WithField("function", "Asset").WithField("trace", "true").Error("Too many arguments in call.")
 		return otto.FalseValue()
 	}
 	if len(call.ArgumentList) < 1 {
-		e.Logger.WithField("function", "Asset").Error("Too few arguments in call.")
+		e.Logger.WithField("function", "Asset").WithField("trace", "true").Error("Too few arguments in call.")
 		return otto.FalseValue()
 	}
+
 	var assetName string
 	rawArg0, err := call.Argument(0).Export()
 	if err != nil {
-		e.Logger.WithField("function", "Asset").Errorf("Could not export field: %s", "assetName")
+		e.Logger.WithField("function", "Asset").WithField("trace", "true").Errorf("Could not export field: %s", "assetName")
 		return otto.FalseValue()
 	}
 	switch v := rawArg0.(type) {
 	case string:
 		assetName = rawArg0.(string)
 	default:
-		e.Logger.WithField("function", "Asset").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
+		e.Logger.WithField("function", "Asset").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
 		return otto.FalseValue()
 	}
 	fileData, err := e.Asset(assetName)
@@ -58,7 +60,7 @@ func (e *Engine) VMAsset(call otto.FunctionCall) otto.Value {
 	rawVMRet["err"] = err
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
-		e.Logger.WithField("function", "Asset").Errorf("Return conversion failed: %s", vmRetError.Error())
+		e.Logger.WithField("function", "Asset").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
 		return otto.FalseValue()
 	}
 	return vmRet
@@ -71,24 +73,25 @@ func (e *Engine) VMAsset(call otto.FunctionCall) otto.Value {
 // Author: Alex
 func (e *Engine) VMRandomString(call otto.FunctionCall) otto.Value {
 	if len(call.ArgumentList) > 1 {
-		e.Logger.WithField("function", "RandomString").Error("Too many arguments in call.")
+		e.Logger.WithField("function", "RandomString").WithField("trace", "true").Error("Too many arguments in call.")
 		return otto.FalseValue()
 	}
 	if len(call.ArgumentList) < 1 {
-		e.Logger.WithField("function", "RandomString").Error("Too few arguments in call.")
+		e.Logger.WithField("function", "RandomString").WithField("trace", "true").Error("Too few arguments in call.")
 		return otto.FalseValue()
 	}
+
 	var strlen int64
 	rawArg0, err := call.Argument(0).Export()
 	if err != nil {
-		e.Logger.WithField("function", "RandomString").Errorf("Could not export field: %s", "strlen")
+		e.Logger.WithField("function", "RandomString").WithField("trace", "true").Errorf("Could not export field: %s", "strlen")
 		return otto.FalseValue()
 	}
 	switch v := rawArg0.(type) {
 	case int64:
 		strlen = rawArg0.(int64)
 	default:
-		e.Logger.WithField("function", "RandomString").Errorf("Argument type mismatch: expected %s, got %T", "int64", v)
+		e.Logger.WithField("function", "RandomString").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "int64", v)
 		return otto.FalseValue()
 	}
 	value := e.RandomString(strlen)
@@ -96,7 +99,7 @@ func (e *Engine) VMRandomString(call otto.FunctionCall) otto.Value {
 	rawVMRet["value"] = value
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
-		e.Logger.WithField("function", "RandomString").Errorf("Return conversion failed: %s", vmRetError.Error())
+		e.Logger.WithField("function", "RandomString").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
 		return otto.FalseValue()
 	}
 	return vmRet
@@ -109,24 +112,25 @@ func (e *Engine) VMRandomString(call otto.FunctionCall) otto.Value {
 // Author: Alex
 func (e *Engine) VMRandomMixedCaseString(call otto.FunctionCall) otto.Value {
 	if len(call.ArgumentList) > 1 {
-		e.Logger.WithField("function", "RandomMixedCaseString").Error("Too many arguments in call.")
+		e.Logger.WithField("function", "RandomMixedCaseString").WithField("trace", "true").Error("Too many arguments in call.")
 		return otto.FalseValue()
 	}
 	if len(call.ArgumentList) < 1 {
-		e.Logger.WithField("function", "RandomMixedCaseString").Error("Too few arguments in call.")
+		e.Logger.WithField("function", "RandomMixedCaseString").WithField("trace", "true").Error("Too few arguments in call.")
 		return otto.FalseValue()
 	}
+
 	var strlen int64
 	rawArg0, err := call.Argument(0).Export()
 	if err != nil {
-		e.Logger.WithField("function", "RandomMixedCaseString").Errorf("Could not export field: %s", "strlen")
+		e.Logger.WithField("function", "RandomMixedCaseString").WithField("trace", "true").Errorf("Could not export field: %s", "strlen")
 		return otto.FalseValue()
 	}
 	switch v := rawArg0.(type) {
 	case int64:
 		strlen = rawArg0.(int64)
 	default:
-		e.Logger.WithField("function", "RandomMixedCaseString").Errorf("Argument type mismatch: expected %s, got %T", "int64", v)
+		e.Logger.WithField("function", "RandomMixedCaseString").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "int64", v)
 		return otto.FalseValue()
 	}
 	value := e.RandomMixedCaseString(strlen)
@@ -134,7 +138,7 @@ func (e *Engine) VMRandomMixedCaseString(call otto.FunctionCall) otto.Value {
 	rawVMRet["value"] = value
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
-		e.Logger.WithField("function", "RandomMixedCaseString").Errorf("Return conversion failed: %s", vmRetError.Error())
+		e.Logger.WithField("function", "RandomMixedCaseString").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
 		return otto.FalseValue()
 	}
 	return vmRet
@@ -147,37 +151,39 @@ func (e *Engine) VMRandomMixedCaseString(call otto.FunctionCall) otto.Value {
 // Author: Alex
 func (e *Engine) VMRandomInt(call otto.FunctionCall) otto.Value {
 	if len(call.ArgumentList) > 2 {
-		e.Logger.WithField("function", "RandomInt").Error("Too many arguments in call.")
+		e.Logger.WithField("function", "RandomInt").WithField("trace", "true").Error("Too many arguments in call.")
 		return otto.FalseValue()
 	}
 	if len(call.ArgumentList) < 2 {
-		e.Logger.WithField("function", "RandomInt").Error("Too few arguments in call.")
+		e.Logger.WithField("function", "RandomInt").WithField("trace", "true").Error("Too few arguments in call.")
 		return otto.FalseValue()
 	}
+
 	var min int64
 	rawArg0, err := call.Argument(0).Export()
 	if err != nil {
-		e.Logger.WithField("function", "RandomInt").Errorf("Could not export field: %s", "min")
+		e.Logger.WithField("function", "RandomInt").WithField("trace", "true").Errorf("Could not export field: %s", "min")
 		return otto.FalseValue()
 	}
 	switch v := rawArg0.(type) {
 	case int64:
 		min = rawArg0.(int64)
 	default:
-		e.Logger.WithField("function", "RandomInt").Errorf("Argument type mismatch: expected %s, got %T", "int64", v)
+		e.Logger.WithField("function", "RandomInt").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "int64", v)
 		return otto.FalseValue()
 	}
+
 	var max int64
 	rawArg1, err := call.Argument(1).Export()
 	if err != nil {
-		e.Logger.WithField("function", "RandomInt").Errorf("Could not export field: %s", "max")
+		e.Logger.WithField("function", "RandomInt").WithField("trace", "true").Errorf("Could not export field: %s", "max")
 		return otto.FalseValue()
 	}
 	switch v := rawArg1.(type) {
 	case int64:
 		max = rawArg1.(int64)
 	default:
-		e.Logger.WithField("function", "RandomInt").Errorf("Argument type mismatch: expected %s, got %T", "int64", v)
+		e.Logger.WithField("function", "RandomInt").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "int64", v)
 		return otto.FalseValue()
 	}
 	value := e.RandomInt(min, max)
@@ -185,7 +191,7 @@ func (e *Engine) VMRandomInt(call otto.FunctionCall) otto.Value {
 	rawVMRet["value"] = value
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
-		e.Logger.WithField("function", "RandomInt").Errorf("Return conversion failed: %s", vmRetError.Error())
+		e.Logger.WithField("function", "RandomInt").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
 		return otto.FalseValue()
 	}
 	return vmRet
@@ -198,45 +204,23 @@ func (e *Engine) VMRandomInt(call otto.FunctionCall) otto.Value {
 // Author: Alex
 func (e *Engine) VMXorBytes(call otto.FunctionCall) otto.Value {
 	if len(call.ArgumentList) > 2 {
-		e.Logger.WithField("function", "XorBytes").Error("Too many arguments in call.")
+		e.Logger.WithField("function", "XorBytes").WithField("trace", "true").Error("Too many arguments in call.")
 		return otto.FalseValue()
 	}
 	if len(call.ArgumentList) < 2 {
-		e.Logger.WithField("function", "XorBytes").Error("Too few arguments in call.")
+		e.Logger.WithField("function", "XorBytes").WithField("trace", "true").Error("Too few arguments in call.")
 		return otto.FalseValue()
 	}
-	var aByteArray []byte
-	rawArg0, err := call.Argument(0).Export()
-	if err != nil {
-		e.Logger.WithField("function", "XorBytes").Errorf("Could not export field: %s", "aByteArray")
-		return otto.FalseValue()
-	}
-	switch v := rawArg0.(type) {
-	case []byte:
-		aByteArray = rawArg0.([]byte)
-	default:
-		e.Logger.WithField("function", "XorBytes").Errorf("Argument type mismatch: expected %s, got %T", "[]byte", v)
-		return otto.FalseValue()
-	}
-	var bByteArray []byte
-	rawArg1, err := call.Argument(1).Export()
-	if err != nil {
-		e.Logger.WithField("function", "XorBytes").Errorf("Could not export field: %s", "bByteArray")
-		return otto.FalseValue()
-	}
-	switch v := rawArg1.(type) {
-	case []byte:
-		bByteArray = rawArg1.([]byte)
-	default:
-		e.Logger.WithField("function", "XorBytes").Errorf("Argument type mismatch: expected %s, got %T", "[]byte", v)
-		return otto.FalseValue()
-	}
+
+	aByteArray := e.ValueToByteSlice(call.Argument(0))
+
+	bByteArray := e.ValueToByteSlice(call.Argument(1))
 	value := e.XorBytes(aByteArray, bByteArray)
 	rawVMRet := VMResponse{}
 	rawVMRet["value"] = value
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
-		e.Logger.WithField("function", "XorBytes").Errorf("Return conversion failed: %s", vmRetError.Error())
+		e.Logger.WithField("function", "XorBytes").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
 		return otto.FalseValue()
 	}
 	return vmRet
@@ -249,24 +233,25 @@ func (e *Engine) VMXorBytes(call otto.FunctionCall) otto.Value {
 // Author: Alex
 func (e *Engine) VMStripSpaces(call otto.FunctionCall) otto.Value {
 	if len(call.ArgumentList) > 1 {
-		e.Logger.WithField("function", "StripSpaces").Error("Too many arguments in call.")
+		e.Logger.WithField("function", "StripSpaces").WithField("trace", "true").Error("Too many arguments in call.")
 		return otto.FalseValue()
 	}
 	if len(call.ArgumentList) < 1 {
-		e.Logger.WithField("function", "StripSpaces").Error("Too few arguments in call.")
+		e.Logger.WithField("function", "StripSpaces").WithField("trace", "true").Error("Too few arguments in call.")
 		return otto.FalseValue()
 	}
+
 	var str string
 	rawArg0, err := call.Argument(0).Export()
 	if err != nil {
-		e.Logger.WithField("function", "StripSpaces").Errorf("Could not export field: %s", "str")
+		e.Logger.WithField("function", "StripSpaces").WithField("trace", "true").Errorf("Could not export field: %s", "str")
 		return otto.FalseValue()
 	}
 	switch v := rawArg0.(type) {
 	case string:
 		str = rawArg0.(string)
 	default:
-		e.Logger.WithField("function", "StripSpaces").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
+		e.Logger.WithField("function", "StripSpaces").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
 		return otto.FalseValue()
 	}
 	value := e.StripSpaces(str)
@@ -274,7 +259,7 @@ func (e *Engine) VMStripSpaces(call otto.FunctionCall) otto.Value {
 	rawVMRet["value"] = value
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
-		e.Logger.WithField("function", "StripSpaces").Errorf("Return conversion failed: %s", vmRetError.Error())
+		e.Logger.WithField("function", "StripSpaces").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
 		return otto.FalseValue()
 	}
 	return vmRet
@@ -287,24 +272,25 @@ func (e *Engine) VMStripSpaces(call otto.FunctionCall) otto.Value {
 // Author: Alex
 func (e *Engine) VMObfuscateString(call otto.FunctionCall) otto.Value {
 	if len(call.ArgumentList) > 1 {
-		e.Logger.WithField("function", "ObfuscateString").Error("Too many arguments in call.")
+		e.Logger.WithField("function", "ObfuscateString").WithField("trace", "true").Error("Too many arguments in call.")
 		return otto.FalseValue()
 	}
 	if len(call.ArgumentList) < 1 {
-		e.Logger.WithField("function", "ObfuscateString").Error("Too few arguments in call.")
+		e.Logger.WithField("function", "ObfuscateString").WithField("trace", "true").Error("Too few arguments in call.")
 		return otto.FalseValue()
 	}
+
 	var str string
 	rawArg0, err := call.Argument(0).Export()
 	if err != nil {
-		e.Logger.WithField("function", "ObfuscateString").Errorf("Could not export field: %s", "str")
+		e.Logger.WithField("function", "ObfuscateString").WithField("trace", "true").Errorf("Could not export field: %s", "str")
 		return otto.FalseValue()
 	}
 	switch v := rawArg0.(type) {
 	case string:
 		str = rawArg0.(string)
 	default:
-		e.Logger.WithField("function", "ObfuscateString").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
+		e.Logger.WithField("function", "ObfuscateString").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
 		return otto.FalseValue()
 	}
 	value := e.ObfuscateString(str)
@@ -312,7 +298,7 @@ func (e *Engine) VMObfuscateString(call otto.FunctionCall) otto.Value {
 	rawVMRet["value"] = value
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
-		e.Logger.WithField("function", "ObfuscateString").Errorf("Return conversion failed: %s", vmRetError.Error())
+		e.Logger.WithField("function", "ObfuscateString").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
 		return otto.FalseValue()
 	}
 	return vmRet
@@ -325,24 +311,25 @@ func (e *Engine) VMObfuscateString(call otto.FunctionCall) otto.Value {
 // Author: Alex
 func (e *Engine) VMDeobfuscateString(call otto.FunctionCall) otto.Value {
 	if len(call.ArgumentList) > 1 {
-		e.Logger.WithField("function", "DeobfuscateString").Error("Too many arguments in call.")
+		e.Logger.WithField("function", "DeobfuscateString").WithField("trace", "true").Error("Too many arguments in call.")
 		return otto.FalseValue()
 	}
 	if len(call.ArgumentList) < 1 {
-		e.Logger.WithField("function", "DeobfuscateString").Error("Too few arguments in call.")
+		e.Logger.WithField("function", "DeobfuscateString").WithField("trace", "true").Error("Too few arguments in call.")
 		return otto.FalseValue()
 	}
+
 	var str string
 	rawArg0, err := call.Argument(0).Export()
 	if err != nil {
-		e.Logger.WithField("function", "DeobfuscateString").Errorf("Could not export field: %s", "str")
+		e.Logger.WithField("function", "DeobfuscateString").WithField("trace", "true").Errorf("Could not export field: %s", "str")
 		return otto.FalseValue()
 	}
 	switch v := rawArg0.(type) {
 	case string:
 		str = rawArg0.(string)
 	default:
-		e.Logger.WithField("function", "DeobfuscateString").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
+		e.Logger.WithField("function", "DeobfuscateString").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
 		return otto.FalseValue()
 	}
 	value := e.DeobfuscateString(str)
@@ -350,7 +337,7 @@ func (e *Engine) VMDeobfuscateString(call otto.FunctionCall) otto.Value {
 	rawVMRet["value"] = value
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
-		e.Logger.WithField("function", "DeobfuscateString").Errorf("Return conversion failed: %s", vmRetError.Error())
+		e.Logger.WithField("function", "DeobfuscateString").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
 		return otto.FalseValue()
 	}
 	return vmRet
@@ -363,37 +350,39 @@ func (e *Engine) VMDeobfuscateString(call otto.FunctionCall) otto.Value {
 // Author: Alex
 func (e *Engine) VMExecuteCommand(call otto.FunctionCall) otto.Value {
 	if len(call.ArgumentList) > 2 {
-		e.Logger.WithField("function", "ExecuteCommand").Error("Too many arguments in call.")
+		e.Logger.WithField("function", "ExecuteCommand").WithField("trace", "true").Error("Too many arguments in call.")
 		return otto.FalseValue()
 	}
 	if len(call.ArgumentList) < 2 {
-		e.Logger.WithField("function", "ExecuteCommand").Error("Too few arguments in call.")
+		e.Logger.WithField("function", "ExecuteCommand").WithField("trace", "true").Error("Too few arguments in call.")
 		return otto.FalseValue()
 	}
+
 	var baseCmd string
 	rawArg0, err := call.Argument(0).Export()
 	if err != nil {
-		e.Logger.WithField("function", "ExecuteCommand").Errorf("Could not export field: %s", "baseCmd")
+		e.Logger.WithField("function", "ExecuteCommand").WithField("trace", "true").Errorf("Could not export field: %s", "baseCmd")
 		return otto.FalseValue()
 	}
 	switch v := rawArg0.(type) {
 	case string:
 		baseCmd = rawArg0.(string)
 	default:
-		e.Logger.WithField("function", "ExecuteCommand").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
+		e.Logger.WithField("function", "ExecuteCommand").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
 		return otto.FalseValue()
 	}
+
 	var cmdArgs []string
 	rawArg1, err := call.Argument(1).Export()
 	if err != nil {
-		e.Logger.WithField("function", "ExecuteCommand").Errorf("Could not export field: %s", "cmdArgs")
+		e.Logger.WithField("function", "ExecuteCommand").WithField("trace", "true").Errorf("Could not export field: %s", "cmdArgs")
 		return otto.FalseValue()
 	}
 	switch v := rawArg1.(type) {
 	case []string:
 		cmdArgs = rawArg1.([]string)
 	default:
-		e.Logger.WithField("function", "ExecuteCommand").Errorf("Argument type mismatch: expected %s, got %T", "[]string", v)
+		e.Logger.WithField("function", "ExecuteCommand").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "[]string", v)
 		return otto.FalseValue()
 	}
 	retObject := e.ExecuteCommand(baseCmd, cmdArgs)
@@ -401,7 +390,7 @@ func (e *Engine) VMExecuteCommand(call otto.FunctionCall) otto.Value {
 	rawVMRet["retObject"] = retObject
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
-		e.Logger.WithField("function", "ExecuteCommand").Errorf("Return conversion failed: %s", vmRetError.Error())
+		e.Logger.WithField("function", "ExecuteCommand").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
 		return otto.FalseValue()
 	}
 	return vmRet
@@ -414,37 +403,39 @@ func (e *Engine) VMExecuteCommand(call otto.FunctionCall) otto.Value {
 // Author: Alex
 func (e *Engine) VMForkExecuteCommand(call otto.FunctionCall) otto.Value {
 	if len(call.ArgumentList) > 2 {
-		e.Logger.WithField("function", "ForkExecuteCommand").Error("Too many arguments in call.")
+		e.Logger.WithField("function", "ForkExecuteCommand").WithField("trace", "true").Error("Too many arguments in call.")
 		return otto.FalseValue()
 	}
 	if len(call.ArgumentList) < 2 {
-		e.Logger.WithField("function", "ForkExecuteCommand").Error("Too few arguments in call.")
+		e.Logger.WithField("function", "ForkExecuteCommand").WithField("trace", "true").Error("Too few arguments in call.")
 		return otto.FalseValue()
 	}
+
 	var baseCmd string
 	rawArg0, err := call.Argument(0).Export()
 	if err != nil {
-		e.Logger.WithField("function", "ForkExecuteCommand").Errorf("Could not export field: %s", "baseCmd")
+		e.Logger.WithField("function", "ForkExecuteCommand").WithField("trace", "true").Errorf("Could not export field: %s", "baseCmd")
 		return otto.FalseValue()
 	}
 	switch v := rawArg0.(type) {
 	case string:
 		baseCmd = rawArg0.(string)
 	default:
-		e.Logger.WithField("function", "ForkExecuteCommand").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
+		e.Logger.WithField("function", "ForkExecuteCommand").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
 		return otto.FalseValue()
 	}
+
 	var cmdArgs []string
 	rawArg1, err := call.Argument(1).Export()
 	if err != nil {
-		e.Logger.WithField("function", "ForkExecuteCommand").Errorf("Could not export field: %s", "cmdArgs")
+		e.Logger.WithField("function", "ForkExecuteCommand").WithField("trace", "true").Errorf("Could not export field: %s", "cmdArgs")
 		return otto.FalseValue()
 	}
 	switch v := rawArg1.(type) {
 	case []string:
 		cmdArgs = rawArg1.([]string)
 	default:
-		e.Logger.WithField("function", "ForkExecuteCommand").Errorf("Argument type mismatch: expected %s, got %T", "[]string", v)
+		e.Logger.WithField("function", "ForkExecuteCommand").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "[]string", v)
 		return otto.FalseValue()
 	}
 	pid, execError := e.ForkExecuteCommand(baseCmd, cmdArgs)
@@ -453,7 +444,63 @@ func (e *Engine) VMForkExecuteCommand(call otto.FunctionCall) otto.Value {
 	rawVMRet["execError"] = execError
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
-		e.Logger.WithField("function", "ForkExecuteCommand").Errorf("Return conversion failed: %s", vmRetError.Error())
+		e.Logger.WithField("function", "ForkExecuteCommand").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
+		return otto.FalseValue()
+	}
+	return vmRet
+}
+
+// VMWriteFile is an autogenerated function.
+// Function: WriteFile
+// Package: file
+// Description: Writes data from a byte array to a file with the given permissions.
+// Author: Alex
+func (e *Engine) VMWriteFile(call otto.FunctionCall) otto.Value {
+	if len(call.ArgumentList) > 3 {
+		e.Logger.WithField("function", "WriteFile").WithField("trace", "true").Error("Too many arguments in call.")
+		return otto.FalseValue()
+	}
+	if len(call.ArgumentList) < 3 {
+		e.Logger.WithField("function", "WriteFile").WithField("trace", "true").Error("Too few arguments in call.")
+		return otto.FalseValue()
+	}
+
+	var path string
+	rawArg0, err := call.Argument(0).Export()
+	if err != nil {
+		e.Logger.WithField("function", "WriteFile").WithField("trace", "true").Errorf("Could not export field: %s", "path")
+		return otto.FalseValue()
+	}
+	switch v := rawArg0.(type) {
+	case string:
+		path = rawArg0.(string)
+	default:
+		e.Logger.WithField("function", "WriteFile").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
+		return otto.FalseValue()
+	}
+
+	fileData := e.ValueToByteSlice(call.Argument(1))
+
+	var perms int64
+	rawArg2, err := call.Argument(2).Export()
+	if err != nil {
+		e.Logger.WithField("function", "WriteFile").WithField("trace", "true").Errorf("Could not export field: %s", "perms")
+		return otto.FalseValue()
+	}
+	switch v := rawArg2.(type) {
+	case int64:
+		perms = rawArg2.(int64)
+	default:
+		e.Logger.WithField("function", "WriteFile").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "int64", v)
+		return otto.FalseValue()
+	}
+	bytesWritten, fileError := e.WriteFile(path, fileData, perms)
+	rawVMRet := VMResponse{}
+	rawVMRet["bytesWritten"] = bytesWritten
+	rawVMRet["fileError"] = fileError
+	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
+	if vmRetError != nil {
+		e.Logger.WithField("function", "WriteFile").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
 		return otto.FalseValue()
 	}
 	return vmRet
