@@ -98,6 +98,35 @@
     - label: value
       gotype: string
       return: true
+- name: MD5
+  description: Perform an MD5() hash on data.
+  author: Alex
+  package: core
+  args:
+    - label: data
+      gotype: '[]byte'
+  returns:
+    - label: value
+      gotype: string
+      return: true
+- name: Timestamp
+  description: Get the system's current timestamp in epoch format.
+  author: Alex
+  package: core
+  args: []
+  returns:
+    - label: value
+      gotype: int64
+      return: true
+- name: Halt
+  description: Stop the current VM from continuing execution.
+  author: Alex
+  package: core
+  args: []
+  returns:
+    - label: value
+      gotype: bool
+      return: true
 #####################################################################
 #
 # exec package

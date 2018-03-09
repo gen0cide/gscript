@@ -1,10 +1,13 @@
 package engine
 
 import (
+	"crypto/md5"
 	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"math/big"
 	"strings"
+	"time"
 	"unicode"
 )
 
@@ -85,4 +88,22 @@ func (e *Engine) Asset(filename string) ([]byte, error) {
 	e.Logger.WithField("trace", "true").Errorf("Asset File Not Found: %s", filename)
 	err := errors.New("Asset not found: " + filename)
 	return []byte{}, err
+}
+
+func (e *Engine) Timestamp() int64 {
+	return time.Now().Unix()
+}
+
+func (e *Engine) Halt() bool {
+	e.Halted = true
+	e.VM.Interrupt <- func() {
+		panic(errTimeout)
+	}
+	return true
+}
+
+func (e *Engine) MD5(data []byte) string {
+	hasher := md5.New()
+	hasher.Write(data)
+	return hex.EncodeToString(hasher.Sum(nil))
 }

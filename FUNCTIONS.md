@@ -133,6 +133,52 @@ Basic string deobfuscator function.
 
 
 
+## `MD5(data)`
+
+Perform an MD5() hash on data.
+
+### Argument List
+
+ * **data** *[]byte*
+
+### Returned Object Fields
+
+ * **value** *string*
+
+---
+
+
+
+## `Timestamp()`
+
+Get the system's current timestamp in epoch format.
+
+### Argument List
+
+
+### Returned Object Fields
+
+ * **value** *int64*
+
+---
+
+
+
+## `Halt()`
+
+Stop the current VM from continuing execution.
+
+### Argument List
+
+
+### Returned Object Fields
+
+ * **value** *bool*
+
+---
+
+
+
 ## `ExecuteCommand(baseCmd, cmdArgs)`
 
 Executes system commands.

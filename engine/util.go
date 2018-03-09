@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/robertkrimen/otto"
 )
 
@@ -97,7 +96,6 @@ func (e *Engine) ValueToByteSlice(v otto.Value) []byte {
 		}
 	} else {
 		e.Logger.WithField("trace", "true").Errorf("Unknown class to cast to byte slice")
-		spew.Dump(v)
 	}
 
 	return valueBytes
