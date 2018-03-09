@@ -1,0 +1,168 @@
+#####################################################################
+#
+# core package
+#
+#####################################################################
+- name: Asset
+  description: Retrieves a packed asset from the VM embedded file store.
+  author: Alex
+  package: core
+  args:
+    - label: assetName
+      gotype: string
+  returns:
+    - label: fileData
+      gotype: '[]byte'
+      return: true
+    - label: err
+      gotype: error
+      return: true
+- name: RandomString
+  description: Generates a random alpha numeric string of a specified length.
+  author: Alex
+  package: core
+  args:
+    - label: strlen
+      gotype: int64
+  returns:
+    - label: value
+      gotype: string
+      return: true
+- name: RandomMixedCaseString
+  description: Generates a random mixed case alpha numeric string of a specified length.
+  author: Alex
+  package: core
+  args:
+    - label: strlen
+      gotype: int64
+  returns:
+    - label: value
+      gotype: string
+      return: true
+- name: RandomInt
+  description: Generates a random number between min and max.
+  author: Alex
+  package: core
+  args:
+    - label: min
+      gotype: int64
+    - label: max
+      gotype: int64
+  returns:
+    - label: value
+      gotype: int
+      return: true
+- name: XorBytes
+  description: XOR two byte arrays together.
+  author: Alex
+  package: core
+  args:
+    - label: aByteArray
+      gotype: '[]byte'
+    - label: bByteArray
+      gotype: '[]byte'
+  returns:
+    - label: value
+      gotype: '[]byte'
+      return: true
+- name: StripSpaces
+  description: Strip any unicode characters out of a string.
+  author: Alex
+  package: core
+  args:
+    - label: str
+      gotype: string
+  returns:
+    - label: value
+      gotype: string
+      return: true
+- name: ObfuscateString
+  description: Basic string obfuscator function.
+  author: Alex
+  package: core
+  args:
+    - label: str
+      gotype: string
+  returns:
+    - label: value
+      gotype: string
+      return: true
+- name: DeobfuscateString
+  description: Basic string deobfuscator function.
+  author: Alex
+  package: core
+  args:
+    - label: str
+      gotype: string
+  returns:
+    - label: value
+      gotype: string
+      return: true
+#####################################################################
+#
+# exec package
+#
+#####################################################################
+- name: ExecuteCommand
+  description: Executes system commands.
+  author: Alex
+  package: exec
+  args:
+    - label: baseCmd
+      gotype: string
+    - label: cmdArgs
+      gotype: '[]string'
+  returns:
+    - label: retObject
+      gotype: VMExecResponse
+      return: true
+- name: ForkExecuteCommand
+  description: Executes system commands via a forked call.
+  author: Alex
+  package: exec
+  args:
+    - label: baseCmd
+      gotype: string
+    - label: cmdArgs
+      gotype: '[]string'
+  returns:
+    - label: pid
+      gotype: int
+      return: true
+    - label: execError
+      gotype: error
+      return: true
+#####################################################################
+#
+# file package
+#
+#####################################################################
+# TODO (lib_file.go)
+
+#####################################################################
+#
+# injection package
+#
+#####################################################################
+# TODO (lib_injection.go)
+
+#####################################################################
+#
+# net package
+#
+#####################################################################
+# TODO (lib_net.go)
+
+#####################################################################
+#
+# os package
+#
+#####################################################################
+# TODO (lib_os.go)
+
+#####################################################################
+#
+# registry package
+#
+#####################################################################
+# TODO (lib_registry.go)

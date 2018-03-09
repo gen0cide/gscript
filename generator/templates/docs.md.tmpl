@@ -1,0 +1,25 @@
+# Native Functions
+
+{{ range $_, $f := $.Funcs }}
+
+## `{{ $f.ReceiverString }}`
+
+{{ $f.Description }}
+
+### Argument List
+{{ range $_, $a := $f.ExpectedArgTypes }}
+ * **{{ $a.Name }}** *{{ $a.GoType }}*
+{{- end}}
+
+### Returned Object Fields
+{{ range $_, $a := $f.ExpectedReturnTypes }}
+  {{- if eq $a.ReturnToVM true }}
+ * **{{ $a.Name }}** *{{ $a.GoType }}*
+  {{- end -}}
+{{- end }}
+
+---
+
+{{ end }}
+
+

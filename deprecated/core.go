@@ -2,6 +2,7 @@ package engine
 
 import (
 	"crypto/rand"
+	"errors"
 	"math/big"
 	"strings"
 	"unicode"
@@ -74,4 +75,14 @@ func RandStringRunes(n int) string {
 		b[i] = letterRunes[val.Int64()]
 	}
 	return string(b)
+}
+
+func (e *Engine) Asset(filename string) ([]byte, error) {
+	if dataFunc, ok := e.Imports[filename]; ok {
+		byteData := dataFunc()
+		return byteData, nil
+	}
+	e.Logger.WithField("trace", "true").Errorf("Asset File Not Found: %s", filename)
+	err := errors.New("Asset not found: " + filename)
+	return []byte{}, err
 }

@@ -11,6 +11,7 @@ import (
 	"sync"
 	"text/template"
 
+	"github.com/gen0cide/gscript/compiler/printer"
 	"github.com/gen0cide/gscript/engine"
 	"github.com/gen0cide/gscript/logging"
 	"github.com/sirupsen/logrus"
@@ -123,7 +124,7 @@ func NewCompiler(scripts []string, outfile, os, arch string, sourceOut, compress
 
 // CreateBuildDir sets up the compiler's build directory
 func (c *Compiler) createBuildDir() {
-	dirName := engine.RandStringRunes(16)
+	dirName := RandStringRunes(16)
 	bd := filepath.Join(os.TempDir(), dirName)
 	err := os.MkdirAll(bd, 0744)
 	if err != nil {
@@ -270,7 +271,7 @@ func (c *Compiler) writeSource() {
 }
 
 func (c *Compiler) printSource() {
-	PrettyPrintSource(c.SourceBuffer.String())
+	printer.PrettyPrintSource(c.SourceBuffer.String())
 }
 
 func (c *Compiler) compileSource() {

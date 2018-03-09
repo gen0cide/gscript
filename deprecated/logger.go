@@ -6,14 +6,6 @@ import (
 	"github.com/robertkrimen/otto"
 )
 
-func (e *Engine) InitializeLogger() {
-	e.VM.Set("LogDebug", e.VMLogDebug)
-	e.VM.Set("LogInfo", e.VMLogInfo)
-	e.VM.Set("LogWarn", e.VMLogWarn)
-	e.VM.Set("LogError", e.VMLogError)
-	e.VM.Set("LogFatal", e.VMLogFatal)
-}
-
 func (e *Engine) VMLogWarn(call otto.FunctionCall) otto.Value {
 	if e.Logger != nil {
 		for _, arg := range call.ArgumentList {
@@ -110,7 +102,7 @@ func (e *Engine) VMLogDebug(call otto.FunctionCall) otto.Value {
 	return otto.Value{}
 }
 
-func (e *Engine) VMLogFatal(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMLogCrit(call otto.FunctionCall) otto.Value {
 	if e.Logger != nil {
 		for _, arg := range call.ArgumentList {
 			newArg, err := arg.ToString()
