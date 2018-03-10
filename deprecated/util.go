@@ -4,10 +4,25 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"net"
 
 	"github.com/robertkrimen/otto"
 )
+
+type FunctionDef struct {
+	Name                string    `yaml:"func"`
+	Description         string    `yaml:"description"`
+	Package             string    `yaml:"package"`
+	ExpectedArgTypes    []TypeDef `yaml:"args"`
+	ExpectedReturnTypes []TypeDef `yaml:"returns"`
+	ReturnValueName     string    `yaml:"return_var_name"`
+}
+
+type TypeDef struct {
+	Name string
+	Type string
+}
+
+// func (e *Engine) ParseArgs(c otto.FunctionCall, ...types string) []
 
 func (e *Engine) ValueToByteSlice(v otto.Value) []byte {
 	valueBytes := []byte{}
@@ -99,21 +114,4 @@ func (e *Engine) ValueToByteSlice(v otto.Value) []byte {
 	}
 
 	return valueBytes
-}
-
-func getLocalIPs() []string {
-	addresses := []string{}
-	addrs, err := net.InterfaceAddrs()
-	if err != nil {
-		return addresses
-	}
-
-	for _, a := range addrs {
-		if ipnet, ok := a.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
-			if ipnet.IP.To4() != nil {
-				addresses = append(addresses, ipnet.IP.String())
-			}
-		}
-	}
-	return addresses
 }

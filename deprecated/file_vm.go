@@ -2,7 +2,6 @@ package engine
 
 import (
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/djherbis/times"
@@ -148,13 +147,13 @@ func (e *Engine) VMWriteFile(call otto.FunctionCall) otto.Value {
 		return otto.FalseValue()
 	}
 	fileData := call.Argument(1)
-	fileMode, err := call.Argument(2).ToString()
+	fileMode, err := call.Argument(2).ToInteger()
 	if err != nil {
 		e.Logger.WithField("trace", "true").Errorf("Parameter parsing error: %s", err.Error())
 		return otto.FalseValue()
 	}
 	fileBytes := e.ValueToByteSlice(fileData)
-	err = LocalFileCreate(filePath, fileBytes, fileMode)
+	err = LocalFileCreate(filePath, fileBytes, int(fileMode))
 	if err != nil {
 		e.Logger.WithField("trace", "true").Errorf("Error writing the file: %s", err.Error())
 		return otto.FalseValue()
@@ -201,7 +200,7 @@ func (e *Engine) VMCopyFile(call otto.FunctionCall) otto.Value {
 		e.Logger.WithField("trace", "true").Errorf("OS Error: %s", err.Error())
 		return otto.FalseValue()
 	}
-	err = LocalFileCreate(writePath, bytes, strconv.Itoa(int(filePerms.Mode())))
+	err = LocalFileCreate(writePath, bytes, int(filePerms.Mode()))
 	if err != nil {
 		e.Logger.WithField("trace", "true").Errorf("Error writing the file: %s", err.Error())
 		return otto.FalseValue()

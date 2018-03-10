@@ -6,15 +6,7 @@ import (
 	"github.com/robertkrimen/otto"
 )
 
-func (e *Engine) initializeLogger() {
-	e.VM.Set("LogDebug", e.vmLogDebug)
-	e.VM.Set("LogInfo", e.vmLogInfo)
-	e.VM.Set("LogWarn", e.vmLogWarn)
-	e.VM.Set("LogError", e.vmLogError)
-	e.VM.Set("LogFatal", e.vmLogFatal)
-}
-
-func (e *Engine) vmLogWarn(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMLogWarn(call otto.FunctionCall) otto.Value {
 	if e.Logger != nil {
 		for _, arg := range call.ArgumentList {
 			newArg, err := arg.ToString()
@@ -46,7 +38,7 @@ func (e *Engine) vmLogWarn(call otto.FunctionCall) otto.Value {
 	return otto.Value{}
 }
 
-func (e *Engine) vmLogError(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMLogError(call otto.FunctionCall) otto.Value {
 	if e.Logger != nil {
 		for _, arg := range call.ArgumentList {
 			newArg, err := arg.ToString()
@@ -78,7 +70,7 @@ func (e *Engine) vmLogError(call otto.FunctionCall) otto.Value {
 	return otto.Value{}
 }
 
-func (e *Engine) vmLogDebug(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMLogDebug(call otto.FunctionCall) otto.Value {
 	if e.Logger != nil {
 		for _, arg := range call.ArgumentList {
 			newArg, err := arg.ToString()
@@ -110,7 +102,7 @@ func (e *Engine) vmLogDebug(call otto.FunctionCall) otto.Value {
 	return otto.Value{}
 }
 
-func (e *Engine) vmLogFatal(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMLogCrit(call otto.FunctionCall) otto.Value {
 	if e.Logger != nil {
 		for _, arg := range call.ArgumentList {
 			newArg, err := arg.ToString()
@@ -142,7 +134,7 @@ func (e *Engine) vmLogFatal(call otto.FunctionCall) otto.Value {
 	return otto.Value{}
 }
 
-func (e *Engine) vmLogInfo(call otto.FunctionCall) otto.Value {
+func (e *Engine) VMLogInfo(call otto.FunctionCall) otto.Value {
 	if e.Logger != nil {
 		for _, arg := range call.ArgumentList {
 			newArg, err := arg.ToString()

@@ -1,19 +1,14 @@
 function BeforeDeploy() {
-  LogInfo("Getting started");
-  Halt();
+  LogInfo("BeforeDeploy()");
   return true;
 }
 
 function Deploy() {
-  LogInfo("Deploy()");
+  PathTester("C:/Windows/system32/calc.exe");
   return true;
 }
 
 function AfterDeploy() {
   LogInfo("AfterDeploy()");
   return true;
-}
-
-function OnError() {
-  LogError("Shouldn't read this");
 }

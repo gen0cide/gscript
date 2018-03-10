@@ -1,19 +1,16 @@
 function BeforeDeploy() {
-  LogInfo("Getting started");
-  Halt();
+  LogInfo("BeforeDeploy()");
   return true;
 }
 
 function Deploy() {
+  ts = Timestamp();
   LogInfo("Deploy()");
+  LogDebug("Timestamp: " + ts.value);
   return true;
 }
 
 function AfterDeploy() {
   LogInfo("AfterDeploy()");
   return true;
-}
-
-function OnError() {
-  LogError("Shouldn't read this");
 }

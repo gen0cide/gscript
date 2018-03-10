@@ -1,6 +1,6 @@
 // +build !windows
 
-package compiler
+package printer
 
 import (
 	"os"

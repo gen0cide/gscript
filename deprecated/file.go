@@ -6,8 +6,9 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
+
+	"github.com/davecgh/go-spew/spew"
 )
 
 func LocalFileExists(path string) bool {
@@ -71,17 +72,19 @@ func LocalFileDelete(path string) error {
 	return errors.New("The file dosn't exist to delete")
 }
 
-func LocalFileCreate(path string, bytes []byte, perms string) error {
+func LocalFileCreate(path string, bytes []byte, perms int) error {
 	if LocalFileExists(path) {
 		return errors.New("The file to create already exists so we won't overwite it")
 	}
 	var p os.FileMode
-	pInt, err := strconv.Atoi(perms)
-	if err != nil {
-		return err
-	}
-	p = os.FileMode(uint32(pInt))
-	err = ioutil.WriteFile(path, bytes, p)
+	// pInt, err := strconv.Atoi(perms)
+	// if err != nil {
+	// 	return err
+	// }
+	p = os.FileMode(perms)
+	spew.Dump(perms)
+	spew.Dump(p)
+	err := ioutil.WriteFile(path, bytes, p)
 	if err != nil {
 		return err
 	}
@@ -104,7 +107,7 @@ func LocalFileAppendBytes(filename string, bytes []byte) error {
 		file.Close()
 		return nil
 	}
-	err := LocalFileCreate(filename, bytes, "0644")
+	err := LocalFileCreate(filename, bytes, 0644)
 	if err != nil {
 		return err
 	}
@@ -197,7 +200,7 @@ func XorFiles(file1 string, file2 string, outPut string) error {
 		return err
 	}
 	dat3 := XorBytes(dat1[:], dat2[:])
-	err = LocalFileCreate(outPut, dat3[:], "0644")
+	err = LocalFileCreate(outPut, dat3[:], 0644)
 	if err != nil {
 		return err
 	}
