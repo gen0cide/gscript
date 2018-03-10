@@ -3,6 +3,7 @@ package engine
 import (
 	"errors"
 	"os"
+	"path/filepath"
 	"strings"
 	"syscall"
 
@@ -102,7 +103,7 @@ func (e *Engine) FindProcByName(procName string) (int, error) {
 //
 func (e *Engine) InstallSystemService(path, name, displayName, description string) error {
 	c := &services.Config{
-		Path:        path,
+		Path:        filepath.Clean(path),
 		Name:        name,
 		DisplayName: displayName,
 		Description: description,
