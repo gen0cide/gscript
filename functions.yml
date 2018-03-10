@@ -206,10 +206,272 @@
 #
 #####################################################################
 # TODO (lib_os.go)
-
-#####################################################################
+- name: FindProcByName
+  description: Returns the Pid of a given proccess, if the proccess can not be found, an error is returned
+  author: Vyrus
+  package: os
+  args:
+    - label: procName
+      gotype: string
+  returns:
+    - label: pid
+      gotype: int
+      return: true
+    - label: procError
+      gotype: error
+      return: true
+- name: InstallSystemService
+  description: Installs a target binary as a system service
+  author: Alex
+  package: os
+  args:
+    - label: path
+      gotype: string
+    - label: name
+      gotype: string
+    - label: displayName
+      gotype: string
+    - label: description
+      gotype: string
+  returns:
+    - label: installError
+      gotype: error
+      return: true
+- name: StartServiceByName
+  description: Starts a system service
+  author: Alex
+  package: os
+  args:
+    - label: name
+      gotype: string
+  returns:
+    - label: installError
+      gotype: error
+      return: true
+- name: StopServiceByName
+  description: Stops a system service
+  author: Alex
+  package: os
+  args:
+    - label: name
+      gotype: string
+  returns:
+    - label: installError
+      gotype: error
+      return: true
+- name: RemoveServiceByName
+  description: Uninstalls a system service
+  author: Alex
+  package: os
+  args:
+    - label: name
+      gotype: string
+  returns:
+    - label: removealError
+      gotype: error
+      return: true
+- name: Signal
+  description: Sends a signal to a target proccess
+  author: Vyrus
+  package: os
+  args:
+    - label: signal
+      gotype: int
+    - label: pid
+      gotype: int
+  returns:
+    - label: runtimeError
+      gotype: error
+      return: true
+- name: RunningProcs
+  description: Returns an array of int's representing active PIDs currently running
+  author: Vyrus
+  package: os
+  args: []
+  returns:
+    - label: pids
+      gotype: '[]int'
+      return: true
+- name: GetProcName
+  description: Returns the name of a target proccess
+  author: Vyrus
+  package: os
+  args:
+    - label: pid
+      gotype: int
+  returns:
+    - label: procName
+      gotype: string
+      return: true
+    - label: runtimeError
+      gotype: error
+      return: true
+- name: EnvVars
+  description: Returns a map of enviornment variable names to their corrisponding values.
+  author: Vyrus
+  package: os
+  args: []
+  returns:
+    - label: vars
+      gotype: 'map[string]string'
+      return: true
+- name: GetEnvVar
+  description: Returns the value of a given enviornment variable
+  author: Vyrus
+  package: os
+  args:
+    - label: var
+      gotype: string
+  returns:
+    - label: value
+      gotype: string
+      return: true
 #
-# registry package
+# windows only
 #
-#####################################################################
-# TODO (lib_registry.go)
+- name: AddRegKeyString
+  description: Add a string registry key
+  author: Vyrus
+  package: os
+  args:
+    - label: registryString
+    gotype: string
+    - label: path
+    gotype: string
+    - label: name
+    gotype: string
+    - label: value
+    gotype: string
+  returns:
+    - label: runtimeError
+      gotype: error
+      return: true
+- name: AddRegKeyExpandedString
+  description: Add an expanded string registry key
+  author: Vyrus
+  package: os
+  args:
+    - label: registryString
+    gotype: string
+    - label: path
+    gotype: string
+    - label: name
+    gotype: string
+    - label: value
+    gotype: string
+  returns:
+    - label: runtimeError
+      gotype: error
+      return: true
+- name: AddRegKeyBinary
+  description: Add a binary registry key
+  author: Vyrus
+  package: os
+  args:
+    - label: registryString
+    gotype: string
+    - label: path
+    gotype: string
+    - label: name
+    gotype: string
+    - label: value
+    gotype: '[]byte'
+  returns:
+    - label: runtimeError
+      gotype: error
+      return: true
+- name: AddRegKeyDWORD
+  description: Add a DWORD registry key
+  author: Vyrus
+  package: os
+  args:
+    - label: registryString
+    gotype: string
+    - label: path
+    gotype: string
+    - label: name
+    gotype: string
+    - label: value
+    gotype: 'uint32'
+  returns:
+    - label: runtimeError
+      gotype: error
+      return: true
+- name: AddRegKeyQWORD
+  description: Add a QWORD registry key
+  author: Vyrus
+  package: os
+  args:
+    - label: registryString
+    gotype: string
+    - label: path
+    gotype: string
+    - label: name
+    gotype: string
+    - label: value
+    gotype: 'uint64'
+  returns:
+    - label: runtimeError
+      gotype: error
+      return: true
+- name: AddRegKeyStrings
+  description: Add a registry key of type string(s)
+  author: Vyrus
+  package: os
+  args:
+    - label: registryString
+    gotype: string
+    - label: path
+    gotype: string
+    - label: name
+    gotype: string
+    - label: value
+    gotype: '[]string'
+  returns:
+    - label: runtimeError
+      gotype: error
+      return: true
+- name: DelRegKey
+  description: Delete a registry key
+  author: Vyrus
+  package: os
+  args:
+    - label: registryString
+    gotype: string
+    - label: path
+    gotype: string
+  returns:
+    - label: runtimeError
+      gotype: error
+      return: true
+- name: DelRegKeyValue
+  description: Delete a registry key value
+  author: Vyrus
+  package: os
+  args:
+    - label: registryString
+    gotype: string
+    - label: path
+    gotype: string
+    - label: value
+    gotype: string
+  returns:
+    - label: runtimeError
+      gotype: error
+      return: true
+- name: QueryRegKey
+  description: Retrive a registry key
+  author: Vyrus
+  package: os
+  args:
+    - label: registryString
+    gotype: string
+    - label: path
+    gotype: string
+  returns:
+    - label: keyObj
+      gotype: RegistryRetValue
+      return: true
+    - label: runtimeError
+      gotype: error
+      return: true
