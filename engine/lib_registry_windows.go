@@ -4,6 +4,8 @@ package engine
 
 import (
 	"errors"
+
+	"golang.org/x/sys/windows/registry"
 )
 
 var (
