@@ -338,13 +338,13 @@
   package: os
   args:
     - label: registryString
-    gotype: string
+      gotype: string
     - label: path
-    gotype: string
+      gotype: string
     - label: name
-    gotype: string
+      gotype: string
     - label: value
-    gotype: string
+      gotype: string
   returns:
     - label: runtimeError
       gotype: error
@@ -355,13 +355,13 @@
   package: os
   args:
     - label: registryString
-    gotype: string
+      gotype: string
     - label: path
-    gotype: string
+      gotype: string
     - label: name
-    gotype: string
+      gotype: string
     - label: value
-    gotype: string
+      gotype: string
   returns:
     - label: runtimeError
       gotype: error
@@ -372,13 +372,13 @@
   package: os
   args:
     - label: registryString
-    gotype: string
+      gotype: string
     - label: path
-    gotype: string
+      gotype: string
     - label: name
-    gotype: string
+      gotype: string
     - label: value
-    gotype: '[]byte'
+      gotype: '[]byte'
   returns:
     - label: runtimeError
       gotype: error
@@ -389,13 +389,13 @@
   package: os
   args:
     - label: registryString
-    gotype: string
+      gotype: string
     - label: path
-    gotype: string
+      gotype: string
     - label: name
-    gotype: string
+      gotype: string
     - label: value
-    gotype: 'uint32'
+      gotype: 'uint32'
   returns:
     - label: runtimeError
       gotype: error
@@ -406,13 +406,13 @@
   package: os
   args:
     - label: registryString
-    gotype: string
+      gotype: string
     - label: path
-    gotype: string
+      gotype: string
     - label: name
-    gotype: string
+      gotype: string
     - label: value
-    gotype: 'uint64'
+      gotype: 'uint64'
   returns:
     - label: runtimeError
       gotype: error
@@ -423,13 +423,13 @@
   package: os
   args:
     - label: registryString
-    gotype: string
+      gotype: string
     - label: path
-    gotype: string
+      gotype: string
     - label: name
-    gotype: string
+      gotype: string
     - label: value
-    gotype: '[]string'
+      gotype: '[]string'
   returns:
     - label: runtimeError
       gotype: error
@@ -440,9 +440,9 @@
   package: os
   args:
     - label: registryString
-    gotype: string
+      gotype: string
     - label: path
-    gotype: string
+      gotype: string
   returns:
     - label: runtimeError
       gotype: error
@@ -453,11 +453,11 @@
   package: os
   args:
     - label: registryString
-    gotype: string
+      gotype: string
     - label: path
-    gotype: string
+      gotype: string
     - label: value
-    gotype: string
+      gotype: string
   returns:
     - label: runtimeError
       gotype: error
@@ -468,9 +468,9 @@
   package: os
   args:
     - label: registryString
-    gotype: string
+      gotype: string
     - label: path
-    gotype: string
+      gotype: string
   returns:
     - label: keyObj
       gotype: RegistryRetValue
