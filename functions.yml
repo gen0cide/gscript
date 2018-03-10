@@ -5,7 +5,7 @@
 #####################################################################
 - name: Asset
   description: Retrieves a packed asset from the VM embedded file store.
-  author: Alex
+  author: gen0cide (https://github.com/gen0cide)
   package: core
   args:
     - label: assetName
@@ -19,7 +19,7 @@
       return: true
 - name: RandomString
   description: Generates a random alpha numeric string of a specified length.
-  author: Alex
+  author: gen0cide (https://github.com/gen0cide)
   package: core
   args:
     - label: strlen
@@ -30,7 +30,7 @@
       return: true
 - name: RandomMixedCaseString
   description: Generates a random mixed case alpha numeric string of a specified length.
-  author: Alex
+  author: gen0cide (https://github.com/gen0cide)
   package: core
   args:
     - label: strlen
@@ -41,7 +41,7 @@
       return: true
 - name: RandomInt
   description: Generates a random number between min and max.
-  author: Alex
+  author: gen0cide (https://github.com/gen0cide)
   package: core
   args:
     - label: min
@@ -54,7 +54,7 @@
       return: true
 - name: XorBytes
   description: XOR two byte arrays together.
-  author: Alex
+  author: gen0cide (https://github.com/gen0cide)
   package: core
   args:
     - label: aByteArray
@@ -67,7 +67,7 @@
       return: true
 - name: StripSpaces
   description: Strip any unicode characters out of a string.
-  author: Alex
+  author: gen0cide (https://github.com/gen0cide)
   package: core
   args:
     - label: str
@@ -78,7 +78,7 @@
       return: true
 - name: ObfuscateString
   description: Basic string obfuscator function.
-  author: Alex
+  author: gen0cide (https://github.com/gen0cide)
   package: core
   args:
     - label: str
@@ -89,7 +89,7 @@
       return: true
 - name: DeobfuscateString
   description: Basic string deobfuscator function.
-  author: Alex
+  author: gen0cide (https://github.com/gen0cide)
   package: core
   args:
     - label: str
@@ -100,7 +100,7 @@
       return: true
 - name: MD5
   description: Perform an MD5() hash on data.
-  author: Alex
+  author: gen0cide (https://github.com/gen0cide)
   package: core
   args:
     - label: data
@@ -111,7 +111,7 @@
       return: true
 - name: Timestamp
   description: Get the system's current timestamp in epoch format.
-  author: Alex
+  author: gen0cide (https://github.com/gen0cide)
   package: core
   args: []
   returns:
@@ -120,7 +120,7 @@
       return: true
 - name: Halt
   description: Stop the current VM from continuing execution.
-  author: Alex
+  author: gen0cide (https://github.com/gen0cide)
   package: core
   args: []
   returns:
@@ -134,7 +134,7 @@
 #####################################################################
 - name: ExecuteCommand
   description: Executes system commands.
-  author: Alex
+  author: gen0cide (https://github.com/gen0cide)
   package: exec
   args:
     - label: baseCmd
@@ -147,7 +147,7 @@
       return: true
 - name: ForkExecuteCommand
   description: Executes system commands via a forked call.
-  author: Alex
+  author: gen0cide (https://github.com/gen0cide)
   package: exec
   args:
     - label: baseCmd
@@ -169,7 +169,7 @@
 # # TODO (lib_file.go)
 - name: WriteFile
   description: Writes data from a byte array to a file with the given permissions.
-  author: Alex
+  author: gen0cide (https://github.com/gen0cide)
   package: file
   args:
     - label: path
@@ -208,7 +208,7 @@
 # TODO (lib_os.go)
 - name: FindProcByName
   description: Returns the Pid of a given proccess, if the proccess can not be found, an error is returned
-  author: Vyrus
+  author: Vyrus (https://github.com/vyrus001)
   package: os
   args:
     - label: procName
@@ -222,7 +222,7 @@
       return: true
 - name: InstallSystemService
   description: Installs a target binary as a system service
-  author: Alex
+  author: gen0cide (https://github.com/gen0cide)
   package: os
   args:
     - label: path
@@ -239,7 +239,7 @@
       return: true
 - name: StartServiceByName
   description: Starts a system service
-  author: Alex
+  author: gen0cide (https://github.com/gen0cide)
   package: os
   args:
     - label: name
@@ -250,7 +250,7 @@
       return: true
 - name: StopServiceByName
   description: Stops a system service
-  author: Alex
+  author: gen0cide (https://github.com/gen0cide)
   package: os
   args:
     - label: name
@@ -261,7 +261,7 @@
       return: true
 - name: RemoveServiceByName
   description: Uninstalls a system service
-  author: Alex
+  author: gen0cide (https://github.com/gen0cide)
   package: os
   args:
     - label: name
@@ -272,7 +272,7 @@
       return: true
 - name: Signal
   description: Sends a signal to a target proccess
-  author: Vyrus
+  author: Vyrus (https://github.com/vyrus001)
   package: os
   args:
     - label: signal
@@ -285,7 +285,7 @@
       return: true
 - name: RunningProcs
   description: Returns an array of int's representing active PIDs currently running
-  author: Vyrus
+  author: Vyrus (https://github.com/vyrus001)
   package: os
   args: []
   returns:
@@ -297,7 +297,7 @@
       return: true
 - name: GetProcName
   description: Returns the name of a target proccess
-  author: Vyrus
+  author: Vyrus (https://github.com/vyrus001)
   package: os
   args:
     - label: pid
@@ -311,7 +311,7 @@
       return: true
 - name: EnvVars
   description: Returns a map of enviornment variable names to their corrisponding values.
-  author: Vyrus
+  author: Vyrus (https://github.com/vyrus001)
   package: os
   args: []
   returns:
@@ -320,10 +320,10 @@
       return: true
 - name: GetEnvVar
   description: Returns the value of a given enviornment variable
-  author: Vyrus
+  author: Vyrus (https://github.com/vyrus001)
   package: os
   args:
-    - label: var
+    - label: vars
       gotype: string
   returns:
     - label: value
@@ -334,7 +334,7 @@
 #
 - name: AddRegKeyString
   description: Add a string registry key
-  author: Vyrus
+  author: Vyrus (https://github.com/vyrus001)
   package: os
   args:
     - label: registryString
@@ -351,7 +351,7 @@
       return: true
 - name: AddRegKeyExpandedString
   description: Add an expanded string registry key
-  author: Vyrus
+  author: Vyrus (https://github.com/vyrus001)
   package: os
   args:
     - label: registryString
@@ -368,7 +368,7 @@
       return: true
 - name: AddRegKeyBinary
   description: Add a binary registry key
-  author: Vyrus
+  author: Vyrus (https://github.com/vyrus001)
   package: os
   args:
     - label: registryString
@@ -385,7 +385,7 @@
       return: true
 - name: AddRegKeyDWORD
   description: Add a DWORD registry key
-  author: Vyrus
+  author: Vyrus (https://github.com/vyrus001)
   package: os
   args:
     - label: registryString
@@ -402,7 +402,7 @@
       return: true
 - name: AddRegKeyQWORD
   description: Add a QWORD registry key
-  author: Vyrus
+  author: Vyrus (https://github.com/vyrus001)
   package: os
   args:
     - label: registryString
@@ -419,7 +419,7 @@
       return: true
 - name: AddRegKeyStrings
   description: Add a registry key of type string(s)
-  author: Vyrus
+  author: Vyrus (https://github.com/vyrus001)
   package: os
   args:
     - label: registryString
@@ -436,7 +436,7 @@
       return: true
 - name: DelRegKey
   description: Delete a registry key
-  author: Vyrus
+  author: Vyrus (https://github.com/vyrus001)
   package: os
   args:
     - label: registryString
@@ -449,7 +449,7 @@
       return: true
 - name: DelRegKeyValue
   description: Delete a registry key value
-  author: Vyrus
+  author: Vyrus (https://github.com/vyrus001)
   package: os
   args:
     - label: registryString
@@ -464,7 +464,7 @@
       return: true
 - name: QueryRegKey
   description: Retrive a registry key
-  author: Vyrus
+  author: Vyrus (https://github.com/vyrus001)
   package: os
   args:
     - label: registryString
