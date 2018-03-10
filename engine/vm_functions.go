@@ -31,6 +31,20 @@
 // Library os
 //
 // Functions in os:
+//  EnvVars() - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.EnvVars
+//  FindProcByName(procName) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.FindProcByName
+//  GetEnvVar(vars) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.GetEnvVar
+//  GetProcName(pid) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.GetProcName
+//  InstallSystemService(path, name, displayName, description) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.InstallSystemService
+//  RemoveServiceByName(name) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.RemoveServiceByName
+//  RunningProcs() - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.RunningProcs
+//  Signal(signal, pid) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.Signal
+//  StartServiceByName(name) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.StartServiceByName
+//  StopServiceByName(name) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.StopServiceByName
+//
+// Library registry
+//
+// Functions in registry:
 //  AddRegKeyBinary(registryString, path, name, value) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.AddRegKeyBinary
 //  AddRegKeyDWORD(registryString, path, name, value) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.AddRegKeyDWORD
 //  AddRegKeyExpandedString(registryString, path, name, value) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.AddRegKeyExpandedString
@@ -39,17 +53,7 @@
 //  AddRegKeyStrings(registryString, path, name, value) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.AddRegKeyStrings
 //  DelRegKey(registryString, path) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.DelRegKey
 //  DelRegKeyValue(registryString, path, value) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.DelRegKeyValue
-//  EnvVars() - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.EnvVars
-//  FindProcByName(procName) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.FindProcByName
-//  GetEnvVar(vars) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.GetEnvVar
-//  GetProcName(pid) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.GetProcName
-//  InstallSystemService(path, name, displayName, description) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.InstallSystemService
 //  QueryRegKey(registryString, path) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.QueryRegKey
-//  RemoveServiceByName(name) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.RemoveServiceByName
-//  RunningProcs() - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.RunningProcs
-//  Signal(signal, pid) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.Signal
-//  StartServiceByName(name) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.StartServiceByName
-//  StopServiceByName(name) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.StopServiceByName
 //
 package engine
 

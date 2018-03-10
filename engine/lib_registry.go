@@ -8,11 +8,11 @@ import "errors"
 //
 // Package
 //
-// os
+// registry
 //
 // Author
 //
-// - Vyrus
+// - Vyrus (https://github.com/vyrus001)
 //
 // Javascript
 //
@@ -46,11 +46,11 @@ func (e *Engine) AddRegKeyString(registryString string, path string, name string
 //
 // Package
 //
-// os
+// registry
 //
 // Author
 //
-// - Vyrus
+// - Vyrus (https://github.com/vyrus001)
 //
 // Javascript
 //
@@ -84,11 +84,11 @@ func (e *Engine) AddRegKeyExpandedString(registryString string, path string, nam
 //
 // Package
 //
-// os
+// registry
 //
 // Author
 //
-// - Vyrus
+// - Vyrus (https://github.com/vyrus001)
 //
 // Javascript
 //
@@ -122,11 +122,11 @@ func (e *Engine) AddRegKeyBinary(registryString string, path string, name string
 //
 // Package
 //
-// os
+// registry
 //
 // Author
 //
-// - Vyrus
+// - Vyrus (https://github.com/vyrus001)
 //
 // Javascript
 //
@@ -160,11 +160,11 @@ func (e *Engine) AddRegKeyDWORD(registryString string, path string, name string,
 //
 // Package
 //
-// os
+// registry
 //
 // Author
 //
-// - Vyrus
+// - Vyrus (https://github.com/vyrus001)
 //
 // Javascript
 //
@@ -198,11 +198,11 @@ func (e *Engine) AddRegKeyQWORD(registryString string, path string, name string,
 //
 // Package
 //
-// os
+// registry
 //
 // Author
 //
-// - Vyrus
+// - Vyrus (https://github.com/vyrus001)
 //
 // Javascript
 //
@@ -236,11 +236,11 @@ func (e *Engine) AddRegKeyStrings(registryString string, path string, name strin
 //
 // Package
 //
-// os
+// registry
 //
 // Author
 //
-// - Vyrus
+// - Vyrus (https://github.com/vyrus001)
 //
 // Javascript
 //
@@ -272,11 +272,11 @@ func (e *Engine) DelRegKey(registryString string, path string) error {
 //
 // Package
 //
-// os
+// registry
 //
 // Author
 //
-// - Vyrus
+// - Vyrus (https://github.com/vyrus001)
 //
 // Javascript
 //
@@ -309,11 +309,11 @@ func (e *Engine) DelRegKeyValue(registryString string, path string, valueName st
 //
 // Package
 //
-// os
+// registry
 //
 // Author
 //
-// - Vyrus
+// - Vyrus (https://github.com/vyrus001)
 //
 // Javascript
 //
