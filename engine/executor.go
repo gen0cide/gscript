@@ -51,7 +51,7 @@ func (e *Engine) RunWithTimeout(command string) (otto.Value, error) {
 	return e.VM.Run(command)
 }
 
-func (e *Engine) RunBeforeDeploy() error {
+func (e *Engine) runBeforeDeploy() error {
 	if e.Halted {
 		return errors.New("VM Halted")
 	}
@@ -72,7 +72,7 @@ func (e *Engine) RunBeforeDeploy() error {
 	return nil
 }
 
-func (e *Engine) RunDeploy() error {
+func (e *Engine) runDeploy() error {
 	if e.Halted {
 		return errors.New("VM Halted")
 	}
@@ -93,7 +93,7 @@ func (e *Engine) RunDeploy() error {
 	return nil
 }
 
-func (e *Engine) RunAfterDeploy() error {
+func (e *Engine) runAfterDeploy() error {
 	if e.Halted {
 		return errors.New("VM Halted")
 	}
@@ -114,7 +114,7 @@ func (e *Engine) RunAfterDeploy() error {
 	return nil
 }
 
-func (e *Engine) RunOnError() error {
+func (e *Engine) runOnError() error {
 	if e.Halted {
 		return errors.New("VM Halted")
 	}
@@ -131,19 +131,19 @@ func (e *Engine) RunOnError() error {
 }
 
 func (e *Engine) ExecutePlan() error {
-	err := e.RunBeforeDeploy()
+	err := e.runBeforeDeploy()
 	if err != nil {
-		e.RunOnError()
+		e.runOnError()
 		return err
 	}
-	err = e.RunDeploy()
+	err = e.runDeploy()
 	if err != nil {
-		e.RunOnError()
+		e.runOnError()
 		return err
 	}
-	err = e.RunAfterDeploy()
+	err = e.runAfterDeploy()
 	if err != nil {
-		e.RunOnError()
+		e.runOnError()
 		return err
 	}
 	return nil

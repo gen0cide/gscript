@@ -56,7 +56,7 @@ func (e *Engine) LoadScript(source []byte) error {
 	return err
 }
 
-func (e *Engine) CurrentUser() map[string]string {
+func (e *Engine) currentUser() map[string]string {
 	userInfo := map[string]string{}
 	u, err := user.Current()
 	if err != nil {
@@ -77,8 +77,8 @@ func (e *Engine) CurrentUser() map[string]string {
 	return userInfo
 }
 
-func (e *Engine) InjectVars() {
-	userInfo, err := e.VM.ToValue(e.CurrentUser())
+func (e *Engine) injectVars() {
+	userInfo, err := e.VM.ToValue(e.currentUser())
 	if err != nil {
 		e.Logger.WithField("trace", "true").Errorf("Could not inject user info into VM: %s", err.Error())
 	} else {
@@ -107,7 +107,7 @@ func (e *Engine) InjectVars() {
 	} else {
 		e.VM.Set("ARCH", archVal)
 	}
-	ipVals, err := e.VM.ToValue(GetLocalIPs())
+	ipVals, err := e.VM.ToValue(getLocalIPs())
 	if err != nil {
 		e.Logger.WithField("trace", "true").Errorf("Could not inject ip info into VM: %s", err.Error())
 	} else {

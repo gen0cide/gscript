@@ -1,6 +1,6 @@
 package engine
 
-var VMPreload = `
+var vmPreload = `
 function StringToByteArray(s) {
   var data = [];
   for (var i = 0; i < s.length; i++ ) {

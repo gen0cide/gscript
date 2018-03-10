@@ -101,7 +101,7 @@ func (e *Engine) ValueToByteSlice(v otto.Value) []byte {
 	return valueBytes
 }
 
-func GetLocalIPs() []string {
+func getLocalIPs() []string {
 	addresses := []string{}
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {

@@ -13,6 +13,38 @@ import (
 
 var letterRunes = []rune("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
+// XorBytes - XOR two byte arrays together.
+//
+// Package
+//
+// core
+//
+// Author
+//
+// - Alex
+//
+// Javascript
+//
+// Here is the Javascript method signature:
+//  XorBytes(aByteArray, bByteArray)
+//
+// Arguments
+//
+// Here is a list of the arguments for the Javascript function:
+//  * aByteArray ([]byte)
+//  * bByteArray ([]byte)
+//
+// Returns
+//
+// Here is a list of fields in the return object:
+//  * obj.value ([]byte)
+//
+// Example
+//
+// Here is an example of how to use this function in gscript:
+//  var obj = XorBytes(aByteArray, bByteArray);
+//  // obj.value
+//
 func (e *Engine) XorBytes(a []byte, b []byte) []byte {
 	n := len(a)
 	if len(b) < n {
@@ -25,6 +57,37 @@ func (e *Engine) XorBytes(a []byte, b []byte) []byte {
 	return byteDst[:]
 }
 
+// StripSpaces - Strip any unicode characters out of a string.
+//
+// Package
+//
+// core
+//
+// Author
+//
+// - Alex
+//
+// Javascript
+//
+// Here is the Javascript method signature:
+//  StripSpaces(str)
+//
+// Arguments
+//
+// Here is a list of the arguments for the Javascript function:
+//  * str (string)
+//
+// Returns
+//
+// Here is a list of fields in the return object:
+//  * obj.value (string)
+//
+// Example
+//
+// Here is an example of how to use this function in gscript:
+//  var obj = StripSpaces(str);
+//  // obj.value
+//
 func (e *Engine) StripSpaces(str string) string {
 	return strings.Map(func(r rune) rune {
 		if unicode.IsSpace(r) {
@@ -34,6 +97,37 @@ func (e *Engine) StripSpaces(str string) string {
 	}, str)
 }
 
+// DeobfuscateString - Basic string deobfuscator function.
+//
+// Package
+//
+// core
+//
+// Author
+//
+// - Alex
+//
+// Javascript
+//
+// Here is the Javascript method signature:
+//  DeobfuscateString(str)
+//
+// Arguments
+//
+// Here is a list of the arguments for the Javascript function:
+//  * str (string)
+//
+// Returns
+//
+// Here is a list of fields in the return object:
+//  * obj.value (string)
+//
+// Example
+//
+// Here is an example of how to use this function in gscript:
+//  var obj = DeobfuscateString(str);
+//  // obj.value
+//
 func (e *Engine) DeobfuscateString(Data string) string {
 	var ClearText string
 	for i := 0; i < len(Data); i++ {
@@ -42,6 +136,37 @@ func (e *Engine) DeobfuscateString(Data string) string {
 	return ClearText
 }
 
+// ObfuscateString - Basic string obfuscator function.
+//
+// Package
+//
+// core
+//
+// Author
+//
+// - Alex
+//
+// Javascript
+//
+// Here is the Javascript method signature:
+//  ObfuscateString(str)
+//
+// Arguments
+//
+// Here is a list of the arguments for the Javascript function:
+//  * str (string)
+//
+// Returns
+//
+// Here is a list of fields in the return object:
+//  * obj.value (string)
+//
+// Example
+//
+// Here is an example of how to use this function in gscript:
+//  var obj = ObfuscateString(str);
+//  // obj.value
+//
 func (e *Engine) ObfuscateString(Data string) string {
 	var ObfuscateText string
 	for i := 0; i < len(Data); i++ {
@@ -50,6 +175,37 @@ func (e *Engine) ObfuscateString(Data string) string {
 	return ObfuscateText
 }
 
+// RandomString - Generates a random alpha numeric string of a specified length.
+//
+// Package
+//
+// core
+//
+// Author
+//
+// - Alex
+//
+// Javascript
+//
+// Here is the Javascript method signature:
+//  RandomString(strlen)
+//
+// Arguments
+//
+// Here is a list of the arguments for the Javascript function:
+//  * strlen (int64)
+//
+// Returns
+//
+// Here is a list of fields in the return object:
+//  * obj.value (string)
+//
+// Example
+//
+// Here is an example of how to use this function in gscript:
+//  var obj = RandomString(strlen);
+//  // obj.value
+//
 func (e *Engine) RandomString(strlen int64) string {
 	const chars = "abcdefghijklmnopqrstuvwxyz0123456789"
 	result := make([]byte, strlen)
@@ -63,11 +219,74 @@ func (e *Engine) RandomString(strlen int64) string {
 	return string(result)
 }
 
+// RandomInt - Generates a random number between min and max.
+//
+// Package
+//
+// core
+//
+// Author
+//
+// - Alex
+//
+// Javascript
+//
+// Here is the Javascript method signature:
+//  RandomInt(min, max)
+//
+// Arguments
+//
+// Here is a list of the arguments for the Javascript function:
+//  * min (int64)
+//  * max (int64)
+//
+// Returns
+//
+// Here is a list of fields in the return object:
+//  * obj.value (int)
+//
+// Example
+//
+// Here is an example of how to use this function in gscript:
+//  var obj = RandomInt(min, max);
+//  // obj.value
+//
 func (e *Engine) RandomInt(min, max int64) int {
 	r, _ := rand.Int(rand.Reader, big.NewInt(int64(max-min)))
 	return int(r.Int64() + min)
 }
 
+// RandomMixedCaseString - Generates a random mixed case alpha numeric string of a specified length.
+//
+// Package
+//
+// core
+//
+// Author
+//
+// - Alex
+//
+// Javascript
+//
+// Here is the Javascript method signature:
+//  RandomMixedCaseString(strlen)
+//
+// Arguments
+//
+// Here is a list of the arguments for the Javascript function:
+//  * strlen (int64)
+//
+// Returns
+//
+// Here is a list of fields in the return object:
+//  * obj.value (string)
+//
+// Example
+//
+// Here is an example of how to use this function in gscript:
+//  var obj = RandomMixedCaseString(strlen);
+//  // obj.value
+//
 func (e *Engine) RandomMixedCaseString(n int64) string {
 	b := make([]rune, n)
 	for i := range b {
@@ -80,6 +299,39 @@ func (e *Engine) RandomMixedCaseString(n int64) string {
 	return string(b)
 }
 
+// Asset - Retrieves a packed asset from the VM embedded file store.
+//
+// Package
+//
+// core
+//
+// Author
+//
+// - Alex
+//
+// Javascript
+//
+// Here is the Javascript method signature:
+//  Asset(assetName)
+//
+// Arguments
+//
+// Here is a list of the arguments for the Javascript function:
+//  * assetName (string)
+//
+// Returns
+//
+// Here is a list of fields in the return object:
+//  * obj.fileData ([]byte)
+//  * obj.err (error)
+//
+// Example
+//
+// Here is an example of how to use this function in gscript:
+//  var obj = Asset(assetName);
+//  // obj.fileData
+//  // obj.err
+//
 func (e *Engine) Asset(filename string) ([]byte, error) {
 	if dataFunc, ok := e.Imports[filename]; ok {
 		byteData := dataFunc()
@@ -90,10 +342,70 @@ func (e *Engine) Asset(filename string) ([]byte, error) {
 	return []byte{}, err
 }
 
+// Timestamp - Get the system's current timestamp in epoch format.
+//
+// Package
+//
+// core
+//
+// Author
+//
+// - Alex
+//
+// Javascript
+//
+// Here is the Javascript method signature:
+//  Timestamp()
+//
+// Arguments
+//
+// Here is a list of the arguments for the Javascript function:
+//
+// Returns
+//
+// Here is a list of fields in the return object:
+//  * obj.value (int64)
+//
+// Example
+//
+// Here is an example of how to use this function in gscript:
+//  var obj = Timestamp();
+//  // obj.value
+//
 func (e *Engine) Timestamp() int64 {
 	return time.Now().Unix()
 }
 
+// Halt - Stop the current VM from continuing execution.
+//
+// Package
+//
+// core
+//
+// Author
+//
+// - Alex
+//
+// Javascript
+//
+// Here is the Javascript method signature:
+//  Halt()
+//
+// Arguments
+//
+// Here is a list of the arguments for the Javascript function:
+//
+// Returns
+//
+// Here is a list of fields in the return object:
+//  * obj.value (bool)
+//
+// Example
+//
+// Here is an example of how to use this function in gscript:
+//  var obj = Halt();
+//  // obj.value
+//
 func (e *Engine) Halt() bool {
 	e.Halted = true
 	e.VM.Interrupt <- func() {
@@ -102,6 +414,37 @@ func (e *Engine) Halt() bool {
 	return true
 }
 
+// MD5 - Perform an MD5() hash on data.
+//
+// Package
+//
+// core
+//
+// Author
+//
+// - Alex
+//
+// Javascript
+//
+// Here is the Javascript method signature:
+//  MD5(data)
+//
+// Arguments
+//
+// Here is a list of the arguments for the Javascript function:
+//  * data ([]byte)
+//
+// Returns
+//
+// Here is a list of fields in the return object:
+//  * obj.value (string)
+//
+// Example
+//
+// Here is an example of how to use this function in gscript:
+//  var obj = MD5(data);
+//  // obj.value
+//
 func (e *Engine) MD5(data []byte) string {
 	hasher := md5.New()
 	hasher.Write(data)
