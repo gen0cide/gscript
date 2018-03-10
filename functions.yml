@@ -205,7 +205,6 @@
 # os package
 #
 #####################################################################
-# TODO (lib_os.go)
 - name: FindProcByName
   description: Returns the Pid of a given proccess, if the proccess can not be found, an error is returned
   author: Vyrus (https://github.com/vyrus001)
@@ -329,9 +328,11 @@
     - label: value
       gotype: string
       return: true
+#####################################################################
 #
-# windows only
+# registry package
 #
+#####################################################################
 - name: AddRegKeyString
   description: Add a string registry key
   author: Vyrus (https://github.com/vyrus001)

@@ -13,7 +13,7 @@ import (
 //
 // Author
 //
-// - Alex
+// - gen0cide (https://github.com/gen0cide)
 //
 // Javascript
 //

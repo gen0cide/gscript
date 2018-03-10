@@ -14,7 +14,7 @@ import (
 //
 // Author
 //
-// - Alex
+// - gen0cide (https://github.com/gen0cide)
 //
 // Javascript
 //
@@ -67,7 +67,7 @@ func (e *Engine) ExecuteCommand(c string, args []string) VMExecResponse {
 //
 // Author
 //
-// - Alex
+// - gen0cide (https://github.com/gen0cide)
 //
 // Javascript
 //
