@@ -323,7 +323,7 @@
   author: Vyrus
   package: os
   args:
-    - label: var
+    - label: vars
       gotype: string
   returns:
     - label: value
