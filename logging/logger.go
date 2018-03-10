@@ -93,7 +93,7 @@ func (g *GSEFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 		deleteTrace = true
 		if val == "true" {
 			buffer.WriteString(" ")
-			if pc, file, line, ok := runtime.Caller(4); ok {
+			if pc, file, line, ok := runtime.Caller(5); ok {
 				fName := runtime.FuncForPC(pc).Name()
 				baseFile := path.Base(file)
 				buffer.WriteString(fmt.Sprintf("func=%s source=%s:%s", color.GreenString(fName), color.GreenString(baseFile), color.GreenString("%d", line)))
