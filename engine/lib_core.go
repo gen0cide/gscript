@@ -21,7 +21,7 @@ var letterRunes = []rune("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQR
 //
 // Author
 //
-// - Alex
+// - gen0cide (https://github.com/gen0cide)
 //
 // Javascript
 //
@@ -65,7 +65,7 @@ func (e *Engine) XorBytes(a []byte, b []byte) []byte {
 //
 // Author
 //
-// - Alex
+// - gen0cide (https://github.com/gen0cide)
 //
 // Javascript
 //
@@ -105,7 +105,7 @@ func (e *Engine) StripSpaces(str string) string {
 //
 // Author
 //
-// - Alex
+// - gen0cide (https://github.com/gen0cide)
 //
 // Javascript
 //
@@ -144,7 +144,7 @@ func (e *Engine) DeobfuscateString(Data string) string {
 //
 // Author
 //
-// - Alex
+// - gen0cide (https://github.com/gen0cide)
 //
 // Javascript
 //
@@ -183,7 +183,7 @@ func (e *Engine) ObfuscateString(Data string) string {
 //
 // Author
 //
-// - Alex
+// - gen0cide (https://github.com/gen0cide)
 //
 // Javascript
 //
@@ -227,7 +227,7 @@ func (e *Engine) RandomString(strlen int64) string {
 //
 // Author
 //
-// - Alex
+// - gen0cide (https://github.com/gen0cide)
 //
 // Javascript
 //
@@ -264,7 +264,7 @@ func (e *Engine) RandomInt(min, max int64) int {
 //
 // Author
 //
-// - Alex
+// - gen0cide (https://github.com/gen0cide)
 //
 // Javascript
 //
@@ -307,7 +307,7 @@ func (e *Engine) RandomMixedCaseString(n int64) string {
 //
 // Author
 //
-// - Alex
+// - gen0cide (https://github.com/gen0cide)
 //
 // Javascript
 //
@@ -350,7 +350,7 @@ func (e *Engine) Asset(filename string) ([]byte, error) {
 //
 // Author
 //
-// - Alex
+// - gen0cide (https://github.com/gen0cide)
 //
 // Javascript
 //
@@ -384,7 +384,7 @@ func (e *Engine) Timestamp() int64 {
 //
 // Author
 //
-// - Alex
+// - gen0cide (https://github.com/gen0cide)
 //
 // Javascript
 //
@@ -422,7 +422,7 @@ func (e *Engine) Halt() bool {
 //
 // Author
 //
-// - Alex
+// - gen0cide (https://github.com/gen0cide)
 //
 // Javascript
 //
