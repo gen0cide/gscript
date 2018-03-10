@@ -10,21 +10,22 @@ import (
 
 var (
 	regKeys = map[string]registry.Key{
-		"CLASSES_ROOT", registry.CLASSES_ROOT,
-		"CURRENT_USER", registry.CURRENT_USER,
-		"LOCAL_MACHINE", registry.LOCAL_MACHINE,
-		"USERS", registry.USERS,
-		"CURRENT_CONFIG", registry.CURRENT_CONFIG,
-		"PERFORMANCE_DATA", registry.PERFORMANCE_DATA,
+		"CLASSES_ROOT":     registry.CLASSES_ROOT,
+		"CURRENT_USER":     registry.CURRENT_USER,
+		"LOCAL_MACHINE":    registry.LOCAL_MACHINE,
+		"USERS":            registry.USERS,
+		"CURRENT_CONFIG":   registry.CURRENT_CONFIG,
+		"PERFORMANCE_DATA": registry.PERFORMANCE_DATA,
 	}
 )
 
 func lookUpKey(keyString string) (registry.Key, error) {
 	key, ok := regKeys[keyString]
 	if !ok {
-		return nil, errors.New("Registry key " + keyString + " not found")
+		// lol, picking a key at random because fuck golang return types
+		return registry.CLASSES_ROOT, errors.New("Registry key " + keyString + " not found")
 	}
-	return key
+	return key, nil
 }
 
 func (e *Engine) AddRegKeyString(registryString string, path string, name string, value string) error {
@@ -32,7 +33,7 @@ func (e *Engine) AddRegKeyString(registryString string, path string, name string
 	if err != nil {
 		return err
 	}
-	openRegKey, err := registry.CreateKey(regKey, path, registry.SET_VALUE)
+	openRegKey, _, err := registry.CreateKey(regKey, path, registry.SET_VALUE)
 	if err != nil {
 		return err
 	}
@@ -45,7 +46,7 @@ func (e *Engine) AddRegKeyExpandedString(registryString string, path string, nam
 	if err != nil {
 		return err
 	}
-	openRegKey, err := registry.CreateKey(regKey, path, registry.SET_VALUE)
+	openRegKey, _, err := registry.CreateKey(regKey, path, registry.SET_VALUE)
 	if err != nil {
 		return err
 	}
@@ -58,12 +59,12 @@ func (e *Engine) AddRegKeyBinary(registryString string, path string, name string
 	if err != nil {
 		return err
 	}
-	openRegKey, err := registry.CreateKey(regKey, path, registry.SET_VALUE)
+	openRegKey, _, err := registry.CreateKey(regKey, path, registry.SET_VALUE)
 	if err != nil {
 		return err
 	}
 	defer openRegKey.Close()
-	return openRegKey.SetBinaryValu(name, value)
+	return openRegKey.SetBinaryValue(name, value)
 }
 
 func (e *Engine) AddRegKeyDWORD(registryString string, path string, name string, value uint32) error {
@@ -71,7 +72,7 @@ func (e *Engine) AddRegKeyDWORD(registryString string, path string, name string,
 	if err != nil {
 		return err
 	}
-	openRegKey, err := registry.CreateKey(regKey, path, registry.SET_VALUE)
+	openRegKey, _, err := registry.CreateKey(regKey, path, registry.SET_VALUE)
 	if err != nil {
 		return err
 	}
@@ -84,7 +85,7 @@ func (e *Engine) AddRegKeyQWORD(registryString string, path string, name string,
 	if err != nil {
 		return err
 	}
-	openRegKey, err := registry.CreateKey(regKey, path, registry.SET_VALUE)
+	openRegKey, _, err := registry.CreateKey(regKey, path, registry.SET_VALUE)
 	if err != nil {
 		return err
 	}
@@ -97,7 +98,7 @@ func (e *Engine) AddRegKeyStrings(registryString string, path string, name strin
 	if err != nil {
 		return err
 	}
-	openRegKey, err := registry.CreateKey(regKey, path, registry.SET_VALUE)
+	openRegKey, _, err := registry.CreateKey(regKey, path, registry.SET_VALUE)
 	if err != nil {
 		return err
 	}
@@ -118,12 +119,12 @@ func (e *Engine) DelRegKeyValue(registryString string, path string, valueName st
 	if err != nil {
 		return err
 	}
-	regKey.DeleteValue(name)
-	return registry.DeleteKey(reg, path)
+	regKey.DeleteValue(path)
+	return registry.DeleteKey(regKey, path)
 }
 
 func (e *Engine) QueryRegKey(registryString string, path string) (RegistryRetValue, error) {
-	retVal := new(RegistryRetValue)
+	retVal := RegistryRetValue{}
 	regKey, err := lookUpKey(path)
 	if err != nil {
 		return retVal, err
@@ -139,38 +140,39 @@ func (e *Engine) QueryRegKey(registryString string, path string) (RegistryRetVal
 	switch valType {
 	case registry.EXPAND_SZ:
 		value, _, err := openRegKey.GetStringsValue(path)
-		if err != nl {
+		if err != nil {
 			return retVal, err
 		}
 		retVal.ValType = "StringArray"
 		retVal.StringArrayVal = value
 	case registry.SZ:
 		value, _, err := openRegKey.GetStringValue(path)
-		if err != nl {
+		if err != nil {
 			return retVal, err
 		}
 		retVal.ValType = "String"
 		retVal.StringVal = value
 	case registry.BINARY:
 		value, _, err := openRegKey.GetBinaryValue(path)
-		if err != nl {
+		if err != nil {
 			return retVal, err
 		}
 		retVal.ValType = "ByteArray"
 		retVal.ByteArrayVal = value
 	case registry.DWORD:
 		value, _, err := openRegKey.GetIntegerValue(path)
-		if err != nl {
+		if err != nil {
 			return retVal, err
 		}
 		retVal.ValType = "Uint"
 		retVal.IntVal = uint32(value)
 	case registry.QWORD:
 		value, _, err := openRegKey.GetIntegerValue(path)
-		if err != nl {
+		if err != nil {
 			return retVal, err
 		}
 		retVal.ValType = "Uint64"
 		retVal.LongVal = value
 	}
+	return retVal, nil
 }
