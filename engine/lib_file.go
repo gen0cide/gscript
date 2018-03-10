@@ -41,6 +41,10 @@ import (
 //  // obj.fileError
 //
 func (e *Engine) WriteFile(path string, fileData []byte, perms int64) (int, error) {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		e.Logger.WithField("trace", "true").Errorf("File error: %s", err.Error())
+		return 0, err
+	}
 	err := ioutil.WriteFile(path, fileData, os.FileMode(uint32(perms)))
 	if err != nil {
 		e.Logger.WithField("trace", "true").Errorf("Error writing the file: %s", err.Error())
@@ -83,6 +87,10 @@ func (e *Engine) WriteFile(path string, fileData []byte, perms int64) (int, erro
 //  // obj.fileError
 //
 func (e *Engine) ReadFile(path string) ([]byte, error) {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		e.Logger.WithField("trace", "true").Errorf("File error: %s", err.Error())
+		return []byte{}, err
+	}
 	dat, err := ioutil.ReadFile(path)
 	if err != nil {
 		e.Logger.WithField("trace", "true").Errorf("Error writing the file: %s", err.Error())
@@ -125,9 +133,8 @@ func (e *Engine) ReadFile(path string) ([]byte, error) {
 //  // obj.fileError
 //
 func (e *Engine) FileExists(path string) (bool, error) {
-	_, err := os.Stat(path)
-	if err != nil {
-		e.Logger.WithField("trace", "true").Errorf("Error writing the file: %s", err.Error())
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		e.Logger.WithField("trace", "true").Errorf("File error: %s", err.Error())
 		return false, err
 	}
 	return true, nil
