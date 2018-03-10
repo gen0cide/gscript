@@ -1398,9 +1398,9 @@ func (e *Engine) vmRemoveServiceByName(call otto.FunctionCall) otto.Value {
 		e.Logger.WithField("function", "RemoveServiceByName").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
 		return otto.FalseValue()
 	}
-	removealError := e.RemoveServiceByName(name)
+	removalError := e.RemoveServiceByName(name)
 	rawVMRet := VMResponse{}
-	rawVMRet["removealError"] = removealError
+	rawVMRet["removalError"] = removalError
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "RemoveServiceByName").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
@@ -1501,9 +1501,9 @@ func (e *Engine) vmStartServiceByName(call otto.FunctionCall) otto.Value {
 		e.Logger.WithField("function", "StartServiceByName").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
 		return otto.FalseValue()
 	}
-	runtimeError := e.StartServiceByName(name)
+	startError := e.StartServiceByName(name)
 	rawVMRet := VMResponse{}
-	rawVMRet["runtimeError"] = runtimeError
+	rawVMRet["startError"] = startError
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "StartServiceByName").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())

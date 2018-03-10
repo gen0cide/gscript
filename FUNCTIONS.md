@@ -477,7 +477,7 @@ Uninstalls a system service
 
 ### Returned Object Fields
 
- * **removealError** *error*
+ * **removalError** *error*
 
 ---
 
@@ -526,7 +526,7 @@ Starts a system service
 
 ### Returned Object Fields
 
- * **runtimeError** *error*
+ * **startError** *error*
 
 ---
 

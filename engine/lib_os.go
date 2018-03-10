@@ -145,13 +145,13 @@ func (e *Engine) InstallSystemService(path, name, displayName, description strin
 // Returns
 //
 // Here is a list of fields in the return object:
-//  * obj.runtimeError (error)
+//  * obj.startError (error)
 //
 // Example
 //
 // Here is an example of how to use this function in gscript:
 //  var obj = StartServiceByName(name);
-//  // obj.runtimeError
+//  // obj.startError
 //
 func (e *Engine) StartServiceByName(name string) error {
 	c := &services.Config{
@@ -243,13 +243,13 @@ func (e *Engine) StopServiceByName(name string) error {
 // Returns
 //
 // Here is a list of fields in the return object:
-//  * obj.removealError (error)
+//  * obj.removalError (error)
 //
 // Example
 //
 // Here is an example of how to use this function in gscript:
 //  var obj = RemoveServiceByName(name);
-//  // obj.removealError
+//  // obj.removalError
 //
 func (e *Engine) RemoveServiceByName(name string) error {
 	c := &services.Config{

@@ -283,7 +283,7 @@
     - label: name
       gotype: string
   returns:
-    - label: runtimeError
+    - label: startError
       gotype: error
       return: true
 - name: StopServiceByName
@@ -305,7 +305,7 @@
     - label: name
       gotype: string
   returns:
-    - label: removealError
+    - label: removalError
       gotype: error
       return: true
 - name: Signal
