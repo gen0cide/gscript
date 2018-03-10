@@ -185,6 +185,45 @@
     - label: fileError
       gotype: error
       return: true
+- name: ReadFile
+  description: Reads a file path and returns a byte array
+  author: ahhh (https://github.com/ahhh)
+  package: file
+  args:
+    - label: path
+      gotype: string
+  returns:
+    - label: fileBytes
+      gotype: '[]byte'
+      return: true
+    - label: fileError
+      gotype: error
+      return: true
+- name: FileExists
+  description: Checks if a file exists and returns a bool
+  author: ahhh (https://github.com/ahhh)
+  package: file
+  args:
+    - label: path
+      gotype: string
+  returns:
+    - label: fileExists
+      gotype: 'bool'
+      return: true
+    - label: fileError
+      gotype: error
+      return: true
+- name: CreateDir
+  description: Creates a directory at a given path or return an error
+  author: ahhh (https://github.com/ahhh)
+  package: file
+  args:
+    - label: path
+      gotype: string
+  returns:
+    - label: fileError
+      gotype: error
+      return: true
 
 #####################################################################
 #

@@ -133,6 +133,22 @@ Retrieves a packed asset from the VM embedded file store.
 
 
 
+## `CreateDir(path)`
+
+Creates a directory at a given path or return an error
+
+### Argument List
+
+ * **path** *string*
+
+### Returned Object Fields
+
+ * **fileError** *error*
+
+---
+
+
+
 ## `DelRegKey(registryString, path)`
 
 Delete a registry key
@@ -211,6 +227,23 @@ Executes system commands.
 ### Returned Object Fields
 
  * **retObject** *VMExecResponse*
+
+---
+
+
+
+## `FileExists(path)`
+
+Checks if a file exists and returns a bool
+
+### Argument List
+
+ * **path** *string*
+
+### Returned Object Fields
+
+ * **fileExists** *bool*
+ * **fileError** *error*
 
 ---
 
@@ -417,6 +450,23 @@ Generates a random alpha numeric string of a specified length.
 
 
 
+## `ReadFile(path)`
+
+Reads a file path and returns a byte array
+
+### Argument List
+
+ * **path** *string*
+
+### Returned Object Fields
+
+ * **fileBytes** *[]byte*
+ * **fileError** *error*
+
+---
+
+
+
 ## `RemoveServiceByName(name)`
 
 Uninstalls a system service
@@ -476,7 +526,7 @@ Starts a system service
 
 ### Returned Object Fields
 
- * **installError** *error*
+ * **runtimeError** *error*
 
 ---
 

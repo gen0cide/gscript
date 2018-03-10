@@ -26,6 +26,9 @@
 // Library file
 //
 // Functions in file:
+//  CreateDir(path) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.CreateDir
+//  FileExists(path) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.FileExists
+//  ReadFile(path) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.ReadFile
 //  WriteFile(path, fileData, perms) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.WriteFile
 //
 // Library os
@@ -71,11 +74,13 @@ func (e *Engine) CreateVM() {
 	e.VM.Set("AddRegKeyString", e.vmAddRegKeyString)
 	e.VM.Set("AddRegKeyStrings", e.vmAddRegKeyStrings)
 	e.VM.Set("Asset", e.vmAsset)
+	e.VM.Set("CreateDir", e.vmCreateDir)
 	e.VM.Set("DelRegKey", e.vmDelRegKey)
 	e.VM.Set("DelRegKeyValue", e.vmDelRegKeyValue)
 	e.VM.Set("DeobfuscateString", e.vmDeobfuscateString)
 	e.VM.Set("EnvVars", e.vmEnvVars)
 	e.VM.Set("ExecuteCommand", e.vmExecuteCommand)
+	e.VM.Set("FileExists", e.vmFileExists)
 	e.VM.Set("FindProcByName", e.vmFindProcByName)
 	e.VM.Set("ForkExecuteCommand", e.vmForkExecuteCommand)
 	e.VM.Set("GetEnvVar", e.vmGetEnvVar)
@@ -88,6 +93,7 @@ func (e *Engine) CreateVM() {
 	e.VM.Set("RandomInt", e.vmRandomInt)
 	e.VM.Set("RandomMixedCaseString", e.vmRandomMixedCaseString)
 	e.VM.Set("RandomString", e.vmRandomString)
+	e.VM.Set("ReadFile", e.vmReadFile)
 	e.VM.Set("RemoveServiceByName", e.vmRemoveServiceByName)
 	e.VM.Set("RunningProcs", e.vmRunningProcs)
 	e.VM.Set("Signal", e.vmSignal)
@@ -583,6 +589,40 @@ func (e *Engine) vmAsset(call otto.FunctionCall) otto.Value {
 	return vmRet
 }
 
+func (e *Engine) vmCreateDir(call otto.FunctionCall) otto.Value {
+	if len(call.ArgumentList) > 1 {
+		e.Logger.WithField("function", "CreateDir").WithField("trace", "true").Error("Too many arguments in call.")
+		return otto.FalseValue()
+	}
+	if len(call.ArgumentList) < 1 {
+		e.Logger.WithField("function", "CreateDir").WithField("trace", "true").Error("Too few arguments in call.")
+		return otto.FalseValue()
+	}
+
+	var path string
+	rawArg0, err := call.Argument(0).Export()
+	if err != nil {
+		e.Logger.WithField("function", "CreateDir").WithField("trace", "true").Errorf("Could not export field: %s", "path")
+		return otto.FalseValue()
+	}
+	switch v := rawArg0.(type) {
+	case string:
+		path = rawArg0.(string)
+	default:
+		e.Logger.WithField("function", "CreateDir").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
+		return otto.FalseValue()
+	}
+	fileError := e.CreateDir(path)
+	rawVMRet := VMResponse{}
+	rawVMRet["fileError"] = fileError
+	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
+	if vmRetError != nil {
+		e.Logger.WithField("function", "CreateDir").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
+		return otto.FalseValue()
+	}
+	return vmRet
+}
+
 func (e *Engine) vmDelRegKey(call otto.FunctionCall) otto.Value {
 	if len(call.ArgumentList) > 2 {
 		e.Logger.WithField("function", "DelRegKey").WithField("trace", "true").Error("Too many arguments in call.")
@@ -790,6 +830,41 @@ func (e *Engine) vmExecuteCommand(call otto.FunctionCall) otto.Value {
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "ExecuteCommand").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
+		return otto.FalseValue()
+	}
+	return vmRet
+}
+
+func (e *Engine) vmFileExists(call otto.FunctionCall) otto.Value {
+	if len(call.ArgumentList) > 1 {
+		e.Logger.WithField("function", "FileExists").WithField("trace", "true").Error("Too many arguments in call.")
+		return otto.FalseValue()
+	}
+	if len(call.ArgumentList) < 1 {
+		e.Logger.WithField("function", "FileExists").WithField("trace", "true").Error("Too few arguments in call.")
+		return otto.FalseValue()
+	}
+
+	var path string
+	rawArg0, err := call.Argument(0).Export()
+	if err != nil {
+		e.Logger.WithField("function", "FileExists").WithField("trace", "true").Errorf("Could not export field: %s", "path")
+		return otto.FalseValue()
+	}
+	switch v := rawArg0.(type) {
+	case string:
+		path = rawArg0.(string)
+	default:
+		e.Logger.WithField("function", "FileExists").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
+		return otto.FalseValue()
+	}
+	fileExists, fileError := e.FileExists(path)
+	rawVMRet := VMResponse{}
+	rawVMRet["fileExists"] = fileExists
+	rawVMRet["fileError"] = fileError
+	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
+	if vmRetError != nil {
+		e.Logger.WithField("function", "FileExists").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
 		return otto.FalseValue()
 	}
 	return vmRet
@@ -1265,6 +1340,41 @@ func (e *Engine) vmRandomString(call otto.FunctionCall) otto.Value {
 	return vmRet
 }
 
+func (e *Engine) vmReadFile(call otto.FunctionCall) otto.Value {
+	if len(call.ArgumentList) > 1 {
+		e.Logger.WithField("function", "ReadFile").WithField("trace", "true").Error("Too many arguments in call.")
+		return otto.FalseValue()
+	}
+	if len(call.ArgumentList) < 1 {
+		e.Logger.WithField("function", "ReadFile").WithField("trace", "true").Error("Too few arguments in call.")
+		return otto.FalseValue()
+	}
+
+	var path string
+	rawArg0, err := call.Argument(0).Export()
+	if err != nil {
+		e.Logger.WithField("function", "ReadFile").WithField("trace", "true").Errorf("Could not export field: %s", "path")
+		return otto.FalseValue()
+	}
+	switch v := rawArg0.(type) {
+	case string:
+		path = rawArg0.(string)
+	default:
+		e.Logger.WithField("function", "ReadFile").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
+		return otto.FalseValue()
+	}
+	fileBytes, fileError := e.ReadFile(path)
+	rawVMRet := VMResponse{}
+	rawVMRet["fileBytes"] = fileBytes
+	rawVMRet["fileError"] = fileError
+	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
+	if vmRetError != nil {
+		e.Logger.WithField("function", "ReadFile").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
+		return otto.FalseValue()
+	}
+	return vmRet
+}
+
 func (e *Engine) vmRemoveServiceByName(call otto.FunctionCall) otto.Value {
 	if len(call.ArgumentList) > 1 {
 		e.Logger.WithField("function", "RemoveServiceByName").WithField("trace", "true").Error("Too many arguments in call.")
@@ -1391,9 +1501,9 @@ func (e *Engine) vmStartServiceByName(call otto.FunctionCall) otto.Value {
 		e.Logger.WithField("function", "StartServiceByName").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
 		return otto.FalseValue()
 	}
-	installError := e.StartServiceByName(name)
+	runtimeError := e.StartServiceByName(name)
 	rawVMRet := VMResponse{}
-	rawVMRet["installError"] = installError
+	rawVMRet["runtimeError"] = runtimeError
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "StartServiceByName").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
