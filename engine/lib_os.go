@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"strings"
+	"syscall"
 
 	services "github.com/gen0cide/service-go"
 	"github.com/mitchellh/go-ps"
@@ -112,26 +113,30 @@ func (e *Engine) Signal(proc int, sig int) error {
 	if err != nil {
 		return err
 	}
-	return foundProc.Signal(sig)
+	return foundProc.Signal(syscall.Signal(sig))
 }
 
 //func (e *Engine) LoggedInUsers() ([]string, error) {}
 
-func (e *Engine) RunningProcs() []int {
-	var procs []int
-	for _, proc := range ps.Processes() {
-		procs = append(procs, proc.Pid())
+func (e *Engine) RunningProcs() ([]int, error) {
+	var pids []int
+	procs, err := ps.Processes()
+	if err != nil {
+		return pids, err
 	}
-	return procs
+	for _, proc := range procs {
+		pids = append(pids, proc.Pid())
+	}
+	return pids
 }
 
 func (e *Engine) GetProcName(pid int) (string, error) {
 	// * FIXME: this function currently returns the name of the executible which is NOT technically the proccess name
 	proc, err := ps.FindProcess(pid)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	return proc.Executable().nil
+	return proc.Executable(), nil
 }
 
 //func (e *Engine) UsersRunningProcs() ([]string, error) {}
@@ -178,6 +183,6 @@ func (e *Engine) DelRegKey(registryString string, path string) error {
 func (e *Engine) DelRegKeyValue(registryString string, path string, valueName string) error {
 	return errors.New("this function is unimplemented on non windows platforms")
 }
-func (e *Engine) QueryRegKey(key string) (RegistryRetValue, error) {
-	return errors.New("this function is unimplemented on non windows platforms")
+func (e *Engine) QueryRegKey(registryString string, path string) (RegistryRetValue, error) {
+	return new(RegistryRetValue), errors.New("this function is unimplemented on non windows platforms")
 }

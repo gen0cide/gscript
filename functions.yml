@@ -292,6 +292,9 @@
     - label: pids
       gotype: '[]int'
       return: true
+    - label: runtimeError
+      gotype: error
+      return: true
 - name: GetProcName
   description: Returns the name of a target proccess
   author: Vyrus
