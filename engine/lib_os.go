@@ -127,7 +127,7 @@ func (e *Engine) RunningProcs() ([]int, error) {
 	for _, proc := range procs {
 		pids = append(pids, proc.Pid())
 	}
-	return pids
+	return pids, nil
 }
 
 func (e *Engine) GetProcName(pid int) (string, error) {
@@ -184,5 +184,5 @@ func (e *Engine) DelRegKeyValue(registryString string, path string, valueName st
 	return errors.New("this function is unimplemented on non windows platforms")
 }
 func (e *Engine) QueryRegKey(registryString string, path string) (RegistryRetValue, error) {
-	return new(RegistryRetValue), errors.New("this function is unimplemented on non windows platforms")
+	return RegistryRetValue{}, errors.New("this function is unimplemented on non windows platforms")
 }
