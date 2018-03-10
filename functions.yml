@@ -335,7 +335,7 @@
 - name: AddRegKeyString
   description: Add a string registry key
   author: Vyrus (https://github.com/vyrus001)
-  package: os
+  package: registry
   args:
     - label: registryString
       gotype: string
@@ -352,7 +352,7 @@
 - name: AddRegKeyExpandedString
   description: Add an expanded string registry key
   author: Vyrus (https://github.com/vyrus001)
-  package: os
+  package: registry
   args:
     - label: registryString
       gotype: string
@@ -369,7 +369,7 @@
 - name: AddRegKeyBinary
   description: Add a binary registry key
   author: Vyrus (https://github.com/vyrus001)
-  package: os
+  package: registry
   args:
     - label: registryString
       gotype: string
@@ -386,7 +386,7 @@
 - name: AddRegKeyDWORD
   description: Add a DWORD registry key
   author: Vyrus (https://github.com/vyrus001)
-  package: os
+  package: registry
   args:
     - label: registryString
       gotype: string
@@ -403,7 +403,7 @@
 - name: AddRegKeyQWORD
   description: Add a QWORD registry key
   author: Vyrus (https://github.com/vyrus001)
-  package: os
+  package: registry
   args:
     - label: registryString
       gotype: string
@@ -420,7 +420,7 @@
 - name: AddRegKeyStrings
   description: Add a registry key of type string(s)
   author: Vyrus (https://github.com/vyrus001)
-  package: os
+  package: registry
   args:
     - label: registryString
       gotype: string
@@ -437,7 +437,7 @@
 - name: DelRegKey
   description: Delete a registry key
   author: Vyrus (https://github.com/vyrus001)
-  package: os
+  package: registry
   args:
     - label: registryString
       gotype: string
@@ -450,7 +450,7 @@
 - name: DelRegKeyValue
   description: Delete a registry key value
   author: Vyrus (https://github.com/vyrus001)
-  package: os
+  package: registry
   args:
     - label: registryString
       gotype: string
@@ -465,7 +465,7 @@
 - name: QueryRegKey
   description: Retrive a registry key
   author: Vyrus (https://github.com/vyrus001)
-  package: os
+  package: registry
   args:
     - label: registryString
       gotype: string
