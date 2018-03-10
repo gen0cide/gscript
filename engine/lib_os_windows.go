@@ -17,15 +17,6 @@ var (
 	}
 )
 
-type RegistryRetValue struct {
-	ValType        string   `json:"return_type"`
-	StringVal      string   `json:"string_val"`
-	StringArrayVal []string `json:"string_array_val"`
-	ByteArrayVal   []byte   `json:"byte_array_val"`
-	IntVal         uint32   `json:"int_val"`
-	LongVal        uint64   `json:"long_val"`
-}
-
 func lookUpKey(keyString string) (registry.Key, error) {
 	key, ok := regKeys[keyString]
 	if !ok {

@@ -2,20 +2,29 @@ package engine
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"strings"
-	"syscall"
 
-	"github.com/gen0cide/service-go"
-	"github.com/matishsiao/goInfo"
+	services "github.com/gen0cide/service-go"
 	"github.com/mitchellh/go-ps"
-	"golang.org/x/sys/windows/registry"
 )
 
-func (e *Engine) FindProcByName(procName string) (int error) {
+type RegistryRetValue struct {
+	ValType        string   `json:"return_type"`
+	StringVal      string   `json:"string_val"`
+	StringArrayVal []string `json:"string_array_val"`
+	ByteArrayVal   []byte   `json:"byte_array_val"`
+	IntVal         uint32   `json:"int_val"`
+	LongVal        uint64   `json:"long_val"`
+}
+
+func (e *Engine) FindProcByName(procName string) (int, error) {
 	// * FIXME: this function currently matches against the name of the executible which is NOT technically the proccess name
-	for _, proc := range ps.Processes() {
+	procs, err := ps.Processes()
+	if err != nil {
+		return -1, err
+	}
+	for _, proc := range procs {
 		if procName == proc.Executable() {
 			return proc.Pid(), nil
 		}
