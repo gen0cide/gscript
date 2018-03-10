@@ -3,9 +3,9 @@ package engine
 import (
 	"errors"
 	"os"
-	"path/filepath"
 	"strings"
 	"syscall"
+	"time"
 
 	services "github.com/gen0cide/service-go"
 	"github.com/mitchellh/go-ps"
@@ -103,7 +103,7 @@ func (e *Engine) FindProcByName(procName string) (int, error) {
 //
 func (e *Engine) InstallSystemService(path, name, displayName, description string) error {
 	c := &services.Config{
-		Path:        filepath.Clean(path),
+		Path:        path,
 		Name:        name,
 		DisplayName: displayName,
 		Description: description,
@@ -469,4 +469,162 @@ func (e *Engine) EnvVars() map[string]string {
 //
 func (e *Engine) GetEnvVar(eVar string) string {
 	return os.Getenv(eVar)
+}
+
+// SelfPath - Retrieves the path to the currently running executable.
+//
+// Package
+//
+// os
+//
+// Author
+//
+// - gen0cide (https://github.com/gen0cide)
+//
+// Javascript
+//
+// Here is the Javascript method signature:
+//  SelfPath()
+//
+// Arguments
+//
+// Here is a list of the arguments for the Javascript function:
+//
+// Returns
+//
+// Here is a list of fields in the return object:
+//  * obj.path (string)
+//  * obj.osError (error)
+//
+// Example
+//
+// Here is an example of how to use this function in gscript:
+//  var obj = SelfPath();
+//  // obj.path
+//  // obj.osError
+//
+func (e *Engine) SelfPath() (string, error) {
+	return os.Executable()
+}
+
+// Chmod - Change the permissions on a path.
+//
+// Package
+//
+// os
+//
+// Author
+//
+// - gen0cide (https://github.com/gen0cide)
+//
+// Javascript
+//
+// Here is the Javascript method signature:
+//  Chmod(path, perms)
+//
+// Arguments
+//
+// Here is a list of the arguments for the Javascript function:
+//  * path (string)
+//  * perms (int64)
+//
+// Returns
+//
+// Here is a list of fields in the return object:
+//  * obj.osError (error)
+//
+// Example
+//
+// Here is an example of how to use this function in gscript:
+//  var obj = Chmod(path, perms);
+//  // obj.osError
+//
+func (e *Engine) Chmod(path string, perms int64) error {
+	if err := os.Chmod(path, os.FileMode(uint32(perms))); err != nil {
+		return err
+	}
+	return nil
+}
+
+// ModTime - Retrieves the last modified time of a path.
+//
+// Package
+//
+// os
+//
+// Author
+//
+// - gen0cide (https://github.com/gen0cide)
+//
+// Javascript
+//
+// Here is the Javascript method signature:
+//  ModTime(path)
+//
+// Arguments
+//
+// Here is a list of the arguments for the Javascript function:
+//  * path (string)
+//
+// Returns
+//
+// Here is a list of fields in the return object:
+//  * obj.modTime (int64)
+//  * obj.fileError (error)
+//
+// Example
+//
+// Here is an example of how to use this function in gscript:
+//  var obj = ModTime(path);
+//  // obj.modTime
+//  // obj.fileError
+//
+func (e *Engine) ModTime(path string) (int64, error) {
+	f, err := os.Stat(path)
+	if err != nil {
+		return 0, err
+	}
+	return f.ModTime().Unix(), nil
+}
+
+// ModifyTimestamp - Change the access and modified time of a file.
+//
+// Package
+//
+// os
+//
+// Author
+//
+// - gen0cide (https://github.com/gen0cide)
+//
+// Javascript
+//
+// Here is the Javascript method signature:
+//  ModifyTimestamp(path, accessTime, modifyTime)
+//
+// Arguments
+//
+// Here is a list of the arguments for the Javascript function:
+//  * path (string)
+//  * accessTime (int64)
+//  * modifyTime (int64)
+//
+// Returns
+//
+// Here is a list of fields in the return object:
+//  * obj.fileError (error)
+//
+// Example
+//
+// Here is an example of how to use this function in gscript:
+//  var obj = ModifyTimestamp(path, accessTime, modifyTime);
+//  // obj.fileError
+//
+func (e *Engine) ModifyTimestamp(path string, accessTime, modifyTime int64) error {
+	aTime := time.Unix(accessTime, 0)
+	mTime := time.Unix(modifyTime, 0)
+	if err := os.Chtimes(path, aTime, mTime); err != nil {
+		return err
+	}
+	return nil
 }

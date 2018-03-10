@@ -306,7 +306,10 @@ func (g *Generator) BuildSource() bytes.Buffer {
 
 	formattedCode, err := format.Source(buf.Bytes())
 	if err != nil {
-		g.Logger.Fatalf("Could not parse final Go source: %s", err.Error())
+		tmpfile, _ := ioutil.TempFile("", "")
+		tmpfile.Write(buf.Bytes())
+		tmpfile.Close()
+		g.Logger.Fatalf("Error generating source. Dumped render to %s. Error message: %s", tmpfile.Name(), err.Error())
 	}
 
 	var finalBuf bytes.Buffer

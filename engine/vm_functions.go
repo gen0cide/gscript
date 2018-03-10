@@ -34,13 +34,17 @@
 // Library os
 //
 // Functions in os:
+//  Chmod(path, perms) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.Chmod
 //  EnvVars() - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.EnvVars
 //  FindProcByName(procName) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.FindProcByName
 //  GetEnvVar(vars) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.GetEnvVar
 //  GetProcName(pid) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.GetProcName
 //  InstallSystemService(path, name, displayName, description) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.InstallSystemService
+//  ModTime(path) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.ModTime
+//  ModifyTimestamp(path, accessTime, modifyTime) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.ModifyTimestamp
 //  RemoveServiceByName(name) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.RemoveServiceByName
 //  RunningProcs() - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.RunningProcs
+//  SelfPath() - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.SelfPath
 //  Signal(signal, pid) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.Signal
 //  StartServiceByName(name) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.StartServiceByName
 //  StopServiceByName(name) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.StopServiceByName
@@ -61,6 +65,8 @@
 package engine
 
 import (
+	"path/filepath"
+
 	"github.com/robertkrimen/otto"
 )
 
@@ -74,6 +80,7 @@ func (e *Engine) CreateVM() {
 	e.VM.Set("AddRegKeyString", e.vmAddRegKeyString)
 	e.VM.Set("AddRegKeyStrings", e.vmAddRegKeyStrings)
 	e.VM.Set("Asset", e.vmAsset)
+	e.VM.Set("Chmod", e.vmChmod)
 	e.VM.Set("CreateDir", e.vmCreateDir)
 	e.VM.Set("DelRegKey", e.vmDelRegKey)
 	e.VM.Set("DelRegKeyValue", e.vmDelRegKeyValue)
@@ -88,6 +95,8 @@ func (e *Engine) CreateVM() {
 	e.VM.Set("Halt", e.vmHalt)
 	e.VM.Set("InstallSystemService", e.vmInstallSystemService)
 	e.VM.Set("MD5", e.vmMD5)
+	e.VM.Set("ModTime", e.vmModTime)
+	e.VM.Set("ModifyTimestamp", e.vmModifyTimestamp)
 	e.VM.Set("ObfuscateString", e.vmObfuscateString)
 	e.VM.Set("QueryRegKey", e.vmQueryRegKey)
 	e.VM.Set("RandomInt", e.vmRandomInt)
@@ -96,6 +105,7 @@ func (e *Engine) CreateVM() {
 	e.VM.Set("ReadFile", e.vmReadFile)
 	e.VM.Set("RemoveServiceByName", e.vmRemoveServiceByName)
 	e.VM.Set("RunningProcs", e.vmRunningProcs)
+	e.VM.Set("SelfPath", e.vmSelfPath)
 	e.VM.Set("Signal", e.vmSignal)
 	e.VM.Set("StartServiceByName", e.vmStartServiceByName)
 	e.VM.Set("StopServiceByName", e.vmStopServiceByName)
@@ -142,7 +152,7 @@ func (e *Engine) vmAddRegKeyBinary(call otto.FunctionCall) otto.Value {
 	}
 	switch v := rawArg1.(type) {
 	case string:
-		path = rawArg1.(string)
+		path = filepath.Clean(rawArg1.(string))
 	default:
 		e.Logger.WithField("function", "AddRegKeyBinary").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
 		return otto.FalseValue()
@@ -165,7 +175,13 @@ func (e *Engine) vmAddRegKeyBinary(call otto.FunctionCall) otto.Value {
 	value := e.ValueToByteSlice(call.Argument(3))
 	runtimeError := e.AddRegKeyBinary(registryString, path, name, value)
 	rawVMRet := VMResponse{}
-	rawVMRet["runtimeError"] = runtimeError
+
+	if runtimeError != nil {
+		e.Logger.WithField("function", "AddRegKeyBinary").WithField("trace", "true").Errorf("<function error> %s", runtimeError.Error())
+		rawVMRet["runtimeError"] = runtimeError.Error()
+	} else {
+		rawVMRet["runtimeError"] = nil
+	}
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "AddRegKeyBinary").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
@@ -206,7 +222,7 @@ func (e *Engine) vmAddRegKeyDWORD(call otto.FunctionCall) otto.Value {
 	}
 	switch v := rawArg1.(type) {
 	case string:
-		path = rawArg1.(string)
+		path = filepath.Clean(rawArg1.(string))
 	default:
 		e.Logger.WithField("function", "AddRegKeyDWORD").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
 		return otto.FalseValue()
@@ -241,7 +257,13 @@ func (e *Engine) vmAddRegKeyDWORD(call otto.FunctionCall) otto.Value {
 	}
 	runtimeError := e.AddRegKeyDWORD(registryString, path, name, value)
 	rawVMRet := VMResponse{}
-	rawVMRet["runtimeError"] = runtimeError
+
+	if runtimeError != nil {
+		e.Logger.WithField("function", "AddRegKeyDWORD").WithField("trace", "true").Errorf("<function error> %s", runtimeError.Error())
+		rawVMRet["runtimeError"] = runtimeError.Error()
+	} else {
+		rawVMRet["runtimeError"] = nil
+	}
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "AddRegKeyDWORD").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
@@ -282,7 +304,7 @@ func (e *Engine) vmAddRegKeyExpandedString(call otto.FunctionCall) otto.Value {
 	}
 	switch v := rawArg1.(type) {
 	case string:
-		path = rawArg1.(string)
+		path = filepath.Clean(rawArg1.(string))
 	default:
 		e.Logger.WithField("function", "AddRegKeyExpandedString").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
 		return otto.FalseValue()
@@ -317,7 +339,13 @@ func (e *Engine) vmAddRegKeyExpandedString(call otto.FunctionCall) otto.Value {
 	}
 	runtimeError := e.AddRegKeyExpandedString(registryString, path, name, value)
 	rawVMRet := VMResponse{}
-	rawVMRet["runtimeError"] = runtimeError
+
+	if runtimeError != nil {
+		e.Logger.WithField("function", "AddRegKeyExpandedString").WithField("trace", "true").Errorf("<function error> %s", runtimeError.Error())
+		rawVMRet["runtimeError"] = runtimeError.Error()
+	} else {
+		rawVMRet["runtimeError"] = nil
+	}
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "AddRegKeyExpandedString").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
@@ -358,7 +386,7 @@ func (e *Engine) vmAddRegKeyQWORD(call otto.FunctionCall) otto.Value {
 	}
 	switch v := rawArg1.(type) {
 	case string:
-		path = rawArg1.(string)
+		path = filepath.Clean(rawArg1.(string))
 	default:
 		e.Logger.WithField("function", "AddRegKeyQWORD").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
 		return otto.FalseValue()
@@ -393,7 +421,13 @@ func (e *Engine) vmAddRegKeyQWORD(call otto.FunctionCall) otto.Value {
 	}
 	runtimeError := e.AddRegKeyQWORD(registryString, path, name, value)
 	rawVMRet := VMResponse{}
-	rawVMRet["runtimeError"] = runtimeError
+
+	if runtimeError != nil {
+		e.Logger.WithField("function", "AddRegKeyQWORD").WithField("trace", "true").Errorf("<function error> %s", runtimeError.Error())
+		rawVMRet["runtimeError"] = runtimeError.Error()
+	} else {
+		rawVMRet["runtimeError"] = nil
+	}
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "AddRegKeyQWORD").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
@@ -434,7 +468,7 @@ func (e *Engine) vmAddRegKeyString(call otto.FunctionCall) otto.Value {
 	}
 	switch v := rawArg1.(type) {
 	case string:
-		path = rawArg1.(string)
+		path = filepath.Clean(rawArg1.(string))
 	default:
 		e.Logger.WithField("function", "AddRegKeyString").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
 		return otto.FalseValue()
@@ -469,7 +503,13 @@ func (e *Engine) vmAddRegKeyString(call otto.FunctionCall) otto.Value {
 	}
 	runtimeError := e.AddRegKeyString(registryString, path, name, value)
 	rawVMRet := VMResponse{}
-	rawVMRet["runtimeError"] = runtimeError
+
+	if runtimeError != nil {
+		e.Logger.WithField("function", "AddRegKeyString").WithField("trace", "true").Errorf("<function error> %s", runtimeError.Error())
+		rawVMRet["runtimeError"] = runtimeError.Error()
+	} else {
+		rawVMRet["runtimeError"] = nil
+	}
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "AddRegKeyString").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
@@ -510,7 +550,7 @@ func (e *Engine) vmAddRegKeyStrings(call otto.FunctionCall) otto.Value {
 	}
 	switch v := rawArg1.(type) {
 	case string:
-		path = rawArg1.(string)
+		path = filepath.Clean(rawArg1.(string))
 	default:
 		e.Logger.WithField("function", "AddRegKeyStrings").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
 		return otto.FalseValue()
@@ -545,7 +585,13 @@ func (e *Engine) vmAddRegKeyStrings(call otto.FunctionCall) otto.Value {
 	}
 	runtimeError := e.AddRegKeyStrings(registryString, path, name, value)
 	rawVMRet := VMResponse{}
-	rawVMRet["runtimeError"] = runtimeError
+
+	if runtimeError != nil {
+		e.Logger.WithField("function", "AddRegKeyStrings").WithField("trace", "true").Errorf("<function error> %s", runtimeError.Error())
+		rawVMRet["runtimeError"] = runtimeError.Error()
+	} else {
+		rawVMRet["runtimeError"] = nil
+	}
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "AddRegKeyStrings").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
@@ -579,11 +625,72 @@ func (e *Engine) vmAsset(call otto.FunctionCall) otto.Value {
 	}
 	fileData, err := e.Asset(assetName)
 	rawVMRet := VMResponse{}
+
 	rawVMRet["fileData"] = fileData
-	rawVMRet["err"] = err
+
+	if err != nil {
+		e.Logger.WithField("function", "Asset").WithField("trace", "true").Errorf("<function error> %s", err.Error())
+		rawVMRet["err"] = err.Error()
+	} else {
+		rawVMRet["err"] = nil
+	}
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "Asset").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
+		return otto.FalseValue()
+	}
+	return vmRet
+}
+
+func (e *Engine) vmChmod(call otto.FunctionCall) otto.Value {
+	if len(call.ArgumentList) > 2 {
+		e.Logger.WithField("function", "Chmod").WithField("trace", "true").Error("Too many arguments in call.")
+		return otto.FalseValue()
+	}
+	if len(call.ArgumentList) < 2 {
+		e.Logger.WithField("function", "Chmod").WithField("trace", "true").Error("Too few arguments in call.")
+		return otto.FalseValue()
+	}
+
+	var path string
+	rawArg0, err := call.Argument(0).Export()
+	if err != nil {
+		e.Logger.WithField("function", "Chmod").WithField("trace", "true").Errorf("Could not export field: %s", "path")
+		return otto.FalseValue()
+	}
+	switch v := rawArg0.(type) {
+	case string:
+		path = filepath.Clean(rawArg0.(string))
+	default:
+		e.Logger.WithField("function", "Chmod").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
+		return otto.FalseValue()
+	}
+
+	var perms int64
+	rawArg1, err := call.Argument(1).Export()
+	if err != nil {
+		e.Logger.WithField("function", "Chmod").WithField("trace", "true").Errorf("Could not export field: %s", "perms")
+		return otto.FalseValue()
+	}
+	switch v := rawArg1.(type) {
+	case int64:
+		perms = rawArg1.(int64)
+	default:
+		e.Logger.WithField("function", "Chmod").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "int64", v)
+		return otto.FalseValue()
+	}
+	osError := e.Chmod(path, perms)
+	rawVMRet := VMResponse{}
+
+	if osError != nil {
+		e.Logger.WithField("function", "Chmod").WithField("trace", "true").Errorf("<function error> %s", osError.Error())
+		rawVMRet["osError"] = osError.Error()
+	} else {
+		rawVMRet["osError"] = nil
+	}
+	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
+	if vmRetError != nil {
+		e.Logger.WithField("function", "Chmod").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
 		return otto.FalseValue()
 	}
 	return vmRet
@@ -607,14 +714,20 @@ func (e *Engine) vmCreateDir(call otto.FunctionCall) otto.Value {
 	}
 	switch v := rawArg0.(type) {
 	case string:
-		path = rawArg0.(string)
+		path = filepath.Clean(rawArg0.(string))
 	default:
 		e.Logger.WithField("function", "CreateDir").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
 		return otto.FalseValue()
 	}
 	fileError := e.CreateDir(path)
 	rawVMRet := VMResponse{}
-	rawVMRet["fileError"] = fileError
+
+	if fileError != nil {
+		e.Logger.WithField("function", "CreateDir").WithField("trace", "true").Errorf("<function error> %s", fileError.Error())
+		rawVMRet["fileError"] = fileError.Error()
+	} else {
+		rawVMRet["fileError"] = nil
+	}
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "CreateDir").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
@@ -655,14 +768,20 @@ func (e *Engine) vmDelRegKey(call otto.FunctionCall) otto.Value {
 	}
 	switch v := rawArg1.(type) {
 	case string:
-		path = rawArg1.(string)
+		path = filepath.Clean(rawArg1.(string))
 	default:
 		e.Logger.WithField("function", "DelRegKey").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
 		return otto.FalseValue()
 	}
 	runtimeError := e.DelRegKey(registryString, path)
 	rawVMRet := VMResponse{}
-	rawVMRet["runtimeError"] = runtimeError
+
+	if runtimeError != nil {
+		e.Logger.WithField("function", "DelRegKey").WithField("trace", "true").Errorf("<function error> %s", runtimeError.Error())
+		rawVMRet["runtimeError"] = runtimeError.Error()
+	} else {
+		rawVMRet["runtimeError"] = nil
+	}
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "DelRegKey").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
@@ -703,7 +822,7 @@ func (e *Engine) vmDelRegKeyValue(call otto.FunctionCall) otto.Value {
 	}
 	switch v := rawArg1.(type) {
 	case string:
-		path = rawArg1.(string)
+		path = filepath.Clean(rawArg1.(string))
 	default:
 		e.Logger.WithField("function", "DelRegKeyValue").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
 		return otto.FalseValue()
@@ -724,7 +843,13 @@ func (e *Engine) vmDelRegKeyValue(call otto.FunctionCall) otto.Value {
 	}
 	runtimeError := e.DelRegKeyValue(registryString, path, value)
 	rawVMRet := VMResponse{}
-	rawVMRet["runtimeError"] = runtimeError
+
+	if runtimeError != nil {
+		e.Logger.WithField("function", "DelRegKeyValue").WithField("trace", "true").Errorf("<function error> %s", runtimeError.Error())
+		rawVMRet["runtimeError"] = runtimeError.Error()
+	} else {
+		rawVMRet["runtimeError"] = nil
+	}
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "DelRegKeyValue").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
@@ -758,6 +883,7 @@ func (e *Engine) vmDeobfuscateString(call otto.FunctionCall) otto.Value {
 	}
 	value := e.DeobfuscateString(str)
 	rawVMRet := VMResponse{}
+
 	rawVMRet["value"] = value
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
@@ -778,6 +904,7 @@ func (e *Engine) vmEnvVars(call otto.FunctionCall) otto.Value {
 	}
 	vars := e.EnvVars()
 	rawVMRet := VMResponse{}
+
 	rawVMRet["vars"] = vars
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
@@ -826,6 +953,7 @@ func (e *Engine) vmExecuteCommand(call otto.FunctionCall) otto.Value {
 	}
 	retObject := e.ExecuteCommand(baseCmd, cmdArgs)
 	rawVMRet := VMResponse{}
+
 	rawVMRet["retObject"] = retObject
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
@@ -853,15 +981,22 @@ func (e *Engine) vmFileExists(call otto.FunctionCall) otto.Value {
 	}
 	switch v := rawArg0.(type) {
 	case string:
-		path = rawArg0.(string)
+		path = filepath.Clean(rawArg0.(string))
 	default:
 		e.Logger.WithField("function", "FileExists").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
 		return otto.FalseValue()
 	}
 	fileExists, fileError := e.FileExists(path)
 	rawVMRet := VMResponse{}
+
 	rawVMRet["fileExists"] = fileExists
-	rawVMRet["fileError"] = fileError
+
+	if fileError != nil {
+		e.Logger.WithField("function", "FileExists").WithField("trace", "true").Errorf("<function error> %s", fileError.Error())
+		rawVMRet["fileError"] = fileError.Error()
+	} else {
+		rawVMRet["fileError"] = nil
+	}
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "FileExists").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
@@ -895,8 +1030,15 @@ func (e *Engine) vmFindProcByName(call otto.FunctionCall) otto.Value {
 	}
 	pid, procError := e.FindProcByName(procName)
 	rawVMRet := VMResponse{}
+
 	rawVMRet["pid"] = pid
-	rawVMRet["procError"] = procError
+
+	if procError != nil {
+		e.Logger.WithField("function", "FindProcByName").WithField("trace", "true").Errorf("<function error> %s", procError.Error())
+		rawVMRet["procError"] = procError.Error()
+	} else {
+		rawVMRet["procError"] = nil
+	}
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "FindProcByName").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
@@ -944,8 +1086,15 @@ func (e *Engine) vmForkExecuteCommand(call otto.FunctionCall) otto.Value {
 	}
 	pid, execError := e.ForkExecuteCommand(baseCmd, cmdArgs)
 	rawVMRet := VMResponse{}
+
 	rawVMRet["pid"] = pid
-	rawVMRet["execError"] = execError
+
+	if execError != nil {
+		e.Logger.WithField("function", "ForkExecuteCommand").WithField("trace", "true").Errorf("<function error> %s", execError.Error())
+		rawVMRet["execError"] = execError.Error()
+	} else {
+		rawVMRet["execError"] = nil
+	}
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "ForkExecuteCommand").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
@@ -979,6 +1128,7 @@ func (e *Engine) vmGetEnvVar(call otto.FunctionCall) otto.Value {
 	}
 	value := e.GetEnvVar(vars)
 	rawVMRet := VMResponse{}
+
 	rawVMRet["value"] = value
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
@@ -1013,8 +1163,15 @@ func (e *Engine) vmGetProcName(call otto.FunctionCall) otto.Value {
 	}
 	procName, runtimeError := e.GetProcName(pid)
 	rawVMRet := VMResponse{}
+
 	rawVMRet["procName"] = procName
-	rawVMRet["runtimeError"] = runtimeError
+
+	if runtimeError != nil {
+		e.Logger.WithField("function", "GetProcName").WithField("trace", "true").Errorf("<function error> %s", runtimeError.Error())
+		rawVMRet["runtimeError"] = runtimeError.Error()
+	} else {
+		rawVMRet["runtimeError"] = nil
+	}
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "GetProcName").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
@@ -1034,6 +1191,7 @@ func (e *Engine) vmHalt(call otto.FunctionCall) otto.Value {
 	}
 	value := e.Halt()
 	rawVMRet := VMResponse{}
+
 	rawVMRet["value"] = value
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
@@ -1061,7 +1219,7 @@ func (e *Engine) vmInstallSystemService(call otto.FunctionCall) otto.Value {
 	}
 	switch v := rawArg0.(type) {
 	case string:
-		path = rawArg0.(string)
+		path = filepath.Clean(rawArg0.(string))
 	default:
 		e.Logger.WithField("function", "InstallSystemService").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
 		return otto.FalseValue()
@@ -1110,7 +1268,13 @@ func (e *Engine) vmInstallSystemService(call otto.FunctionCall) otto.Value {
 	}
 	installError := e.InstallSystemService(path, name, displayName, description)
 	rawVMRet := VMResponse{}
-	rawVMRet["installError"] = installError
+
+	if installError != nil {
+		e.Logger.WithField("function", "InstallSystemService").WithField("trace", "true").Errorf("<function error> %s", installError.Error())
+		rawVMRet["installError"] = installError.Error()
+	} else {
+		rawVMRet["installError"] = nil
+	}
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "InstallSystemService").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
@@ -1132,10 +1296,121 @@ func (e *Engine) vmMD5(call otto.FunctionCall) otto.Value {
 	data := e.ValueToByteSlice(call.Argument(0))
 	value := e.MD5(data)
 	rawVMRet := VMResponse{}
+
 	rawVMRet["value"] = value
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "MD5").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
+		return otto.FalseValue()
+	}
+	return vmRet
+}
+
+func (e *Engine) vmModTime(call otto.FunctionCall) otto.Value {
+	if len(call.ArgumentList) > 1 {
+		e.Logger.WithField("function", "ModTime").WithField("trace", "true").Error("Too many arguments in call.")
+		return otto.FalseValue()
+	}
+	if len(call.ArgumentList) < 1 {
+		e.Logger.WithField("function", "ModTime").WithField("trace", "true").Error("Too few arguments in call.")
+		return otto.FalseValue()
+	}
+
+	var path string
+	rawArg0, err := call.Argument(0).Export()
+	if err != nil {
+		e.Logger.WithField("function", "ModTime").WithField("trace", "true").Errorf("Could not export field: %s", "path")
+		return otto.FalseValue()
+	}
+	switch v := rawArg0.(type) {
+	case string:
+		path = filepath.Clean(rawArg0.(string))
+	default:
+		e.Logger.WithField("function", "ModTime").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
+		return otto.FalseValue()
+	}
+	modTime, fileError := e.ModTime(path)
+	rawVMRet := VMResponse{}
+
+	rawVMRet["modTime"] = modTime
+
+	if fileError != nil {
+		e.Logger.WithField("function", "ModTime").WithField("trace", "true").Errorf("<function error> %s", fileError.Error())
+		rawVMRet["fileError"] = fileError.Error()
+	} else {
+		rawVMRet["fileError"] = nil
+	}
+	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
+	if vmRetError != nil {
+		e.Logger.WithField("function", "ModTime").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
+		return otto.FalseValue()
+	}
+	return vmRet
+}
+
+func (e *Engine) vmModifyTimestamp(call otto.FunctionCall) otto.Value {
+	if len(call.ArgumentList) > 3 {
+		e.Logger.WithField("function", "ModifyTimestamp").WithField("trace", "true").Error("Too many arguments in call.")
+		return otto.FalseValue()
+	}
+	if len(call.ArgumentList) < 3 {
+		e.Logger.WithField("function", "ModifyTimestamp").WithField("trace", "true").Error("Too few arguments in call.")
+		return otto.FalseValue()
+	}
+
+	var path string
+	rawArg0, err := call.Argument(0).Export()
+	if err != nil {
+		e.Logger.WithField("function", "ModifyTimestamp").WithField("trace", "true").Errorf("Could not export field: %s", "path")
+		return otto.FalseValue()
+	}
+	switch v := rawArg0.(type) {
+	case string:
+		path = filepath.Clean(rawArg0.(string))
+	default:
+		e.Logger.WithField("function", "ModifyTimestamp").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
+		return otto.FalseValue()
+	}
+
+	var accessTime int64
+	rawArg1, err := call.Argument(1).Export()
+	if err != nil {
+		e.Logger.WithField("function", "ModifyTimestamp").WithField("trace", "true").Errorf("Could not export field: %s", "accessTime")
+		return otto.FalseValue()
+	}
+	switch v := rawArg1.(type) {
+	case int64:
+		accessTime = rawArg1.(int64)
+	default:
+		e.Logger.WithField("function", "ModifyTimestamp").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "int64", v)
+		return otto.FalseValue()
+	}
+
+	var modifyTime int64
+	rawArg2, err := call.Argument(2).Export()
+	if err != nil {
+		e.Logger.WithField("function", "ModifyTimestamp").WithField("trace", "true").Errorf("Could not export field: %s", "modifyTime")
+		return otto.FalseValue()
+	}
+	switch v := rawArg2.(type) {
+	case int64:
+		modifyTime = rawArg2.(int64)
+	default:
+		e.Logger.WithField("function", "ModifyTimestamp").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "int64", v)
+		return otto.FalseValue()
+	}
+	fileError := e.ModifyTimestamp(path, accessTime, modifyTime)
+	rawVMRet := VMResponse{}
+
+	if fileError != nil {
+		e.Logger.WithField("function", "ModifyTimestamp").WithField("trace", "true").Errorf("<function error> %s", fileError.Error())
+		rawVMRet["fileError"] = fileError.Error()
+	} else {
+		rawVMRet["fileError"] = nil
+	}
+	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
+	if vmRetError != nil {
+		e.Logger.WithField("function", "ModifyTimestamp").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
 		return otto.FalseValue()
 	}
 	return vmRet
@@ -1166,6 +1441,7 @@ func (e *Engine) vmObfuscateString(call otto.FunctionCall) otto.Value {
 	}
 	value := e.ObfuscateString(str)
 	rawVMRet := VMResponse{}
+
 	rawVMRet["value"] = value
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
@@ -1207,15 +1483,22 @@ func (e *Engine) vmQueryRegKey(call otto.FunctionCall) otto.Value {
 	}
 	switch v := rawArg1.(type) {
 	case string:
-		path = rawArg1.(string)
+		path = filepath.Clean(rawArg1.(string))
 	default:
 		e.Logger.WithField("function", "QueryRegKey").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
 		return otto.FalseValue()
 	}
 	keyObj, runtimeError := e.QueryRegKey(registryString, path)
 	rawVMRet := VMResponse{}
+
 	rawVMRet["keyObj"] = keyObj
-	rawVMRet["runtimeError"] = runtimeError
+
+	if runtimeError != nil {
+		e.Logger.WithField("function", "QueryRegKey").WithField("trace", "true").Errorf("<function error> %s", runtimeError.Error())
+		rawVMRet["runtimeError"] = runtimeError.Error()
+	} else {
+		rawVMRet["runtimeError"] = nil
+	}
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "QueryRegKey").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
@@ -1263,6 +1546,7 @@ func (e *Engine) vmRandomInt(call otto.FunctionCall) otto.Value {
 	}
 	value := e.RandomInt(min, max)
 	rawVMRet := VMResponse{}
+
 	rawVMRet["value"] = value
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
@@ -1297,6 +1581,7 @@ func (e *Engine) vmRandomMixedCaseString(call otto.FunctionCall) otto.Value {
 	}
 	value := e.RandomMixedCaseString(strlen)
 	rawVMRet := VMResponse{}
+
 	rawVMRet["value"] = value
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
@@ -1331,6 +1616,7 @@ func (e *Engine) vmRandomString(call otto.FunctionCall) otto.Value {
 	}
 	value := e.RandomString(strlen)
 	rawVMRet := VMResponse{}
+
 	rawVMRet["value"] = value
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
@@ -1358,15 +1644,22 @@ func (e *Engine) vmReadFile(call otto.FunctionCall) otto.Value {
 	}
 	switch v := rawArg0.(type) {
 	case string:
-		path = rawArg0.(string)
+		path = filepath.Clean(rawArg0.(string))
 	default:
 		e.Logger.WithField("function", "ReadFile").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
 		return otto.FalseValue()
 	}
 	fileBytes, fileError := e.ReadFile(path)
 	rawVMRet := VMResponse{}
+
 	rawVMRet["fileBytes"] = fileBytes
-	rawVMRet["fileError"] = fileError
+
+	if fileError != nil {
+		e.Logger.WithField("function", "ReadFile").WithField("trace", "true").Errorf("<function error> %s", fileError.Error())
+		rawVMRet["fileError"] = fileError.Error()
+	} else {
+		rawVMRet["fileError"] = nil
+	}
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "ReadFile").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
@@ -1400,7 +1693,13 @@ func (e *Engine) vmRemoveServiceByName(call otto.FunctionCall) otto.Value {
 	}
 	removalError := e.RemoveServiceByName(name)
 	rawVMRet := VMResponse{}
-	rawVMRet["removalError"] = removalError
+
+	if removalError != nil {
+		e.Logger.WithField("function", "RemoveServiceByName").WithField("trace", "true").Errorf("<function error> %s", removalError.Error())
+		rawVMRet["removalError"] = removalError.Error()
+	} else {
+		rawVMRet["removalError"] = nil
+	}
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "RemoveServiceByName").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
@@ -1420,11 +1719,46 @@ func (e *Engine) vmRunningProcs(call otto.FunctionCall) otto.Value {
 	}
 	pids, runtimeError := e.RunningProcs()
 	rawVMRet := VMResponse{}
+
 	rawVMRet["pids"] = pids
-	rawVMRet["runtimeError"] = runtimeError
+
+	if runtimeError != nil {
+		e.Logger.WithField("function", "RunningProcs").WithField("trace", "true").Errorf("<function error> %s", runtimeError.Error())
+		rawVMRet["runtimeError"] = runtimeError.Error()
+	} else {
+		rawVMRet["runtimeError"] = nil
+	}
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "RunningProcs").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
+		return otto.FalseValue()
+	}
+	return vmRet
+}
+
+func (e *Engine) vmSelfPath(call otto.FunctionCall) otto.Value {
+	if len(call.ArgumentList) > 0 {
+		e.Logger.WithField("function", "SelfPath").WithField("trace", "true").Error("Too many arguments in call.")
+		return otto.FalseValue()
+	}
+	if len(call.ArgumentList) < 0 {
+		e.Logger.WithField("function", "SelfPath").WithField("trace", "true").Error("Too few arguments in call.")
+		return otto.FalseValue()
+	}
+	path, osError := e.SelfPath()
+	rawVMRet := VMResponse{}
+
+	rawVMRet["path"] = path
+
+	if osError != nil {
+		e.Logger.WithField("function", "SelfPath").WithField("trace", "true").Errorf("<function error> %s", osError.Error())
+		rawVMRet["osError"] = osError.Error()
+	} else {
+		rawVMRet["osError"] = nil
+	}
+	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
+	if vmRetError != nil {
+		e.Logger.WithField("function", "SelfPath").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
 		return otto.FalseValue()
 	}
 	return vmRet
@@ -1469,7 +1803,13 @@ func (e *Engine) vmSignal(call otto.FunctionCall) otto.Value {
 	}
 	runtimeError := e.Signal(signal, pid)
 	rawVMRet := VMResponse{}
-	rawVMRet["runtimeError"] = runtimeError
+
+	if runtimeError != nil {
+		e.Logger.WithField("function", "Signal").WithField("trace", "true").Errorf("<function error> %s", runtimeError.Error())
+		rawVMRet["runtimeError"] = runtimeError.Error()
+	} else {
+		rawVMRet["runtimeError"] = nil
+	}
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "Signal").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
@@ -1503,7 +1843,13 @@ func (e *Engine) vmStartServiceByName(call otto.FunctionCall) otto.Value {
 	}
 	startError := e.StartServiceByName(name)
 	rawVMRet := VMResponse{}
-	rawVMRet["startError"] = startError
+
+	if startError != nil {
+		e.Logger.WithField("function", "StartServiceByName").WithField("trace", "true").Errorf("<function error> %s", startError.Error())
+		rawVMRet["startError"] = startError.Error()
+	} else {
+		rawVMRet["startError"] = nil
+	}
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "StartServiceByName").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
@@ -1537,7 +1883,13 @@ func (e *Engine) vmStopServiceByName(call otto.FunctionCall) otto.Value {
 	}
 	installError := e.StopServiceByName(name)
 	rawVMRet := VMResponse{}
-	rawVMRet["installError"] = installError
+
+	if installError != nil {
+		e.Logger.WithField("function", "StopServiceByName").WithField("trace", "true").Errorf("<function error> %s", installError.Error())
+		rawVMRet["installError"] = installError.Error()
+	} else {
+		rawVMRet["installError"] = nil
+	}
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "StopServiceByName").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
@@ -1571,6 +1923,7 @@ func (e *Engine) vmStripSpaces(call otto.FunctionCall) otto.Value {
 	}
 	value := e.StripSpaces(str)
 	rawVMRet := VMResponse{}
+
 	rawVMRet["value"] = value
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
@@ -1591,6 +1944,7 @@ func (e *Engine) vmTimestamp(call otto.FunctionCall) otto.Value {
 	}
 	value := e.Timestamp()
 	rawVMRet := VMResponse{}
+
 	rawVMRet["value"] = value
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
@@ -1618,7 +1972,7 @@ func (e *Engine) vmWriteFile(call otto.FunctionCall) otto.Value {
 	}
 	switch v := rawArg0.(type) {
 	case string:
-		path = rawArg0.(string)
+		path = filepath.Clean(rawArg0.(string))
 	default:
 		e.Logger.WithField("function", "WriteFile").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
 		return otto.FalseValue()
@@ -1641,8 +1995,15 @@ func (e *Engine) vmWriteFile(call otto.FunctionCall) otto.Value {
 	}
 	bytesWritten, fileError := e.WriteFile(path, fileData, perms)
 	rawVMRet := VMResponse{}
+
 	rawVMRet["bytesWritten"] = bytesWritten
-	rawVMRet["fileError"] = fileError
+
+	if fileError != nil {
+		e.Logger.WithField("function", "WriteFile").WithField("trace", "true").Errorf("<function error> %s", fileError.Error())
+		rawVMRet["fileError"] = fileError.Error()
+	} else {
+		rawVMRet["fileError"] = nil
+	}
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "WriteFile").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
@@ -1666,6 +2027,7 @@ func (e *Engine) vmXorBytes(call otto.FunctionCall) otto.Value {
 	bByteArray := e.ValueToByteSlice(call.Argument(1))
 	value := e.XorBytes(aByteArray, bByteArray)
 	rawVMRet := VMResponse{}
+
 	rawVMRet["value"] = value
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {

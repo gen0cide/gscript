@@ -133,6 +133,23 @@ Retrieves a packed asset from the VM embedded file store.
 
 
 
+## `Chmod(path, perms)`
+
+Change the permissions on a path.
+
+### Argument List
+
+ * **path** *string*
+ * **perms** *int64*
+
+### Returned Object Fields
+
+ * **osError** *error*
+
+---
+
+
+
 ## `CreateDir(path)`
 
 Creates a directory at a given path or return an error
@@ -367,6 +384,41 @@ Perform an MD5() hash on data.
 
 
 
+## `ModTime(path)`
+
+Retrieves the last modified time of a path.
+
+### Argument List
+
+ * **path** *string*
+
+### Returned Object Fields
+
+ * **modTime** *int64*
+ * **fileError** *error*
+
+---
+
+
+
+## `ModifyTimestamp(path, accessTime, modifyTime)`
+
+Change the access and modified time of a file.
+
+### Argument List
+
+ * **path** *string*
+ * **accessTime** *int64*
+ * **modifyTime** *int64*
+
+### Returned Object Fields
+
+ * **fileError** *error*
+
+---
+
+
+
 ## `ObfuscateString(str)`
 
 Basic string obfuscator function.
@@ -494,6 +546,22 @@ Returns an array of int's representing active PIDs currently running
 
  * **pids** *[]int*
  * **runtimeError** *error*
+
+---
+
+
+
+## `SelfPath()`
+
+Retrieves the path to the currently running executable.
+
+### Argument List
+
+
+### Returned Object Fields
+
+ * **path** *string*
+ * **osError** *error*
 
 ---
 

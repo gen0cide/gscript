@@ -367,6 +367,60 @@
     - label: value
       gotype: string
       return: true
+- name: SelfPath
+  description: Retrieves the path to the currently running executable.
+  author: gen0cide (https://github.com/gen0cide)
+  package: os
+  args: []
+  returns:
+    - label: path
+      gotype: string
+      return: true
+    - label: osError
+      gotype: error
+      return: true
+- name: Chmod
+  description: Change the permissions on a path.
+  author: gen0cide (https://github.com/gen0cide)
+  package: os
+  args:
+    - label: path
+      gotype: string
+    - label: perms
+      gotype: int64
+  returns:
+    - label: osError
+      gotype: error
+      return: true
+- name: ModTime
+  description: Retrieves the last modified time of a path.
+  author: gen0cide (https://github.com/gen0cide)
+  package: os
+  args:
+    - label: path
+      gotype: string
+  returns:
+    - label: modTime
+      gotype: int64
+      return: true
+    - label: fileError
+      gotype: error
+      return: true
+- name: ModifyTimestamp
+  description: Change the access and modified time of a file.
+  author: gen0cide (https://github.com/gen0cide)
+  package: os
+  args:
+    - label: path
+      gotype: string
+    - label: accessTime
+      gotype: int64
+    - label: modifyTime
+      gotype: int64
+  returns:
+    - label: fileError
+      gotype: error
+      return: true
 #####################################################################
 #
 # registry package

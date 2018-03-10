@@ -14,6 +14,7 @@
 package {{ $.Package }}
 
 import (
+  "path/filepath"
 
   "github.com/robertkrimen/otto"
 )
@@ -54,7 +55,11 @@ func (e *Engine) vm{{ $f.Name }}(call otto.FunctionCall) otto.Value {
   }
   switch v := rawArg{{ $aidx }}.(type) {
   case {{ $a.GoType }}:
+    {{- if eq $a.Name "path" }}
+    {{ $a.Name }} = filepath.Clean(rawArg{{ $aidx }}.({{ $a.GoType }}))
+    {{ else }}
     {{ $a.Name }} = rawArg{{ $aidx }}.({{ $a.GoType }})
+    {{ end -}}
   default:
     e.Logger.WithField("function", "{{ $f.Name }}").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "{{ $a.GoType }}", v)
     return otto.FalseValue()
@@ -64,7 +69,16 @@ func (e *Engine) vm{{ $f.Name }}(call otto.FunctionCall) otto.Value {
   {{ $f.ReturnString }} := e.{{ $f.ReceiverString }}
   rawVMRet := VMResponse{}
   {{ range $ridx, $r := $f.ExpectedReturnTypes -}}
+    {{- if eq $r.GoType "error" }}
+    if {{ $r.Name }} != nil {
+      e.Logger.WithField("function", "{{ $f.Name }}").WithField("trace", "true").Errorf("<function error> %s", {{ $r.Name }}.Error())
+      rawVMRet["{{ $r.Name }}"] = {{ $r.Name }}.Error()
+    } else {
+      rawVMRet["{{ $r.Name }}"] = nil
+    }
+    {{ else }}
     rawVMRet["{{ $r.Name }}"] = {{ $r.Name }}
+    {{ end -}}
   {{ end -}}
   vmRet, vmRetError := e.VM.ToValue(rawVMRet)
   if vmRetError != nil {
