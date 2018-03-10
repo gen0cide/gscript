@@ -244,7 +244,7 @@
     - label: name
       gotype: string
   returns:
-    - label: installError
+    - label: runtimeError
       gotype: error
       return: true
 - name: StopServiceByName
