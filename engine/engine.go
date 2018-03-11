@@ -53,8 +53,12 @@ func (e *Engine) SetName(name string) {
 	e.Name = name
 }
 
-func (e *Engine) LoadScript(source []byte) error {
-	_, err := e.VM.Run(string(source))
+func (e *Engine) LoadScript(filename string, source []byte) error {
+	script, err := e.VM.Compile(filename, source)
+	if err != nil {
+		return err
+	}
+	_, err = e.VM.Eval(script)
 	return err
 }
 

@@ -32,7 +32,7 @@ func main() {
     {{ range $_, $embed := $vm.Embeds -}}
     gse.AddImport("{{ $embed.Filename }}", {{ $embed.NameHash }})
     {{ end -}}
-    gse.LoadScript(gse.Imports["{{ $vm.ID }}.gs"]())
+    gse.LoadScript("{{ $vm.ID }}", gse.Imports["{{ $vm.ID }}.gs"]())
     gse.ExecutePlan()
   }()
   {{ end -}}

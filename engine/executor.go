@@ -36,7 +36,7 @@ func (e *Engine) RunWithTimeout(command string) (otto.Value, error) {
 		).WithField(
 			"line",
 			strconv.Itoa(e.VM.Context().Line),
-		).Infof("%s Execution Time: %v", command, duration)
+		).Debugf("%s Execution Time: %v", command, duration)
 	}()
 
 	e.VM.Interrupt = make(chan func(), 1)
