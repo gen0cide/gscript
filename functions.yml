@@ -185,6 +185,39 @@
     - label: fileError
       gotype: error
       return: true
+- name: CopyFile
+  description: Reads the contents of one file and copies it to another with the given permissions.
+  author: ahhh (https://github.com/ahhh)
+  package: file
+  args:
+    - label: srcPath
+      gotype: string
+    - label: dstPath
+      gotype: string
+    - label: perms
+      gotype: int64
+  returns:
+    - label: fileError
+      gotype: error
+      return: true
+- name: ReplaceFileString
+  description: Searches a file for a string and replaces each instance found of that string. Returns the amount of strings replaced 
+  author: ahhh (https://github.com/ahhh)
+  package: file
+  args:
+    - label: file
+      gotype: string
+    - label: match
+      gotype: string
+    - label: replacement
+      gotype: string
+  returns:
+    - label: stringsReplaced
+      gotype: int
+      return: true
+    - label: fileError
+      gotype: error
+      return: true
 - name: AppendFileBytes
   description: Addes a given byte array to the end of a file
   author: ahhh (https://github.com/ahhh)

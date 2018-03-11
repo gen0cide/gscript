@@ -28,10 +28,12 @@
 // Functions in file:
 //  AppendFileBytes(path, fileData) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.AppendFileBytes
 //  AppendFileString(path, addString) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.AppendFileString
+//  CopyFile(srcPath, dstPath, perms) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.CopyFile
 //  CreateDir(path) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.CreateDir
 //  DeleteFile(path) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.DeleteFile
 //  FileExists(path) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.FileExists
 //  ReadFile(path) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.ReadFile
+//  ReplaceFileString(file, match, replacement) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.ReplaceFileString
 //  WriteFile(path, fileData, perms) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.WriteFile
 //
 // Library os
@@ -86,6 +88,7 @@ func (e *Engine) CreateVM() {
 	e.VM.Set("AppendFileString", e.vmAppendFileString)
 	e.VM.Set("Asset", e.vmAsset)
 	e.VM.Set("Chmod", e.vmChmod)
+	e.VM.Set("CopyFile", e.vmCopyFile)
 	e.VM.Set("CreateDir", e.vmCreateDir)
 	e.VM.Set("DelRegKey", e.vmDelRegKey)
 	e.VM.Set("DelRegKeyValue", e.vmDelRegKeyValue)
@@ -110,6 +113,7 @@ func (e *Engine) CreateVM() {
 	e.VM.Set("RandomString", e.vmRandomString)
 	e.VM.Set("ReadFile", e.vmReadFile)
 	e.VM.Set("RemoveServiceByName", e.vmRemoveServiceByName)
+	e.VM.Set("ReplaceFileString", e.vmReplaceFileString)
 	e.VM.Set("RunningProcs", e.vmRunningProcs)
 	e.VM.Set("SelfPath", e.vmSelfPath)
 	e.VM.Set("Signal", e.vmSignal)
@@ -793,6 +797,74 @@ func (e *Engine) vmChmod(call otto.FunctionCall) otto.Value {
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "Chmod").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
+		return otto.FalseValue()
+	}
+	return vmRet
+}
+
+func (e *Engine) vmCopyFile(call otto.FunctionCall) otto.Value {
+	if len(call.ArgumentList) > 3 {
+		e.Logger.WithField("function", "CopyFile").WithField("trace", "true").Error("Too many arguments in call.")
+		return otto.FalseValue()
+	}
+	if len(call.ArgumentList) < 3 {
+		e.Logger.WithField("function", "CopyFile").WithField("trace", "true").Error("Too few arguments in call.")
+		return otto.FalseValue()
+	}
+
+	var srcPath string
+	rawArg0, err := call.Argument(0).Export()
+	if err != nil {
+		e.Logger.WithField("function", "CopyFile").WithField("trace", "true").Errorf("Could not export field: %s", "srcPath")
+		return otto.FalseValue()
+	}
+	switch v := rawArg0.(type) {
+	case string:
+		srcPath = rawArg0.(string)
+	default:
+		e.Logger.WithField("function", "CopyFile").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
+		return otto.FalseValue()
+	}
+
+	var dstPath string
+	rawArg1, err := call.Argument(1).Export()
+	if err != nil {
+		e.Logger.WithField("function", "CopyFile").WithField("trace", "true").Errorf("Could not export field: %s", "dstPath")
+		return otto.FalseValue()
+	}
+	switch v := rawArg1.(type) {
+	case string:
+		dstPath = rawArg1.(string)
+	default:
+		e.Logger.WithField("function", "CopyFile").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
+		return otto.FalseValue()
+	}
+
+	var perms int64
+	rawArg2, err := call.Argument(2).Export()
+	if err != nil {
+		e.Logger.WithField("function", "CopyFile").WithField("trace", "true").Errorf("Could not export field: %s", "perms")
+		return otto.FalseValue()
+	}
+	switch v := rawArg2.(type) {
+	case int64:
+		perms = rawArg2.(int64)
+	default:
+		e.Logger.WithField("function", "CopyFile").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "int64", v)
+		return otto.FalseValue()
+	}
+	fileError := e.CopyFile(srcPath, dstPath, perms)
+	rawVMRet := VMResponse{}
+
+	if fileError != nil {
+		e.Logger.WithField("function", "CopyFile").WithField("trace", "true").Errorf("<function error> %s", fileError.Error())
+		rawVMRet["fileError"] = fileError.Error()
+	} else {
+		rawVMRet["fileError"] = nil
+	}
+	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
+	if vmRetError != nil {
+		e.Logger.WithField("function", "CopyFile").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
 		return otto.FalseValue()
 	}
 	return vmRet
@@ -1845,6 +1917,76 @@ func (e *Engine) vmRemoveServiceByName(call otto.FunctionCall) otto.Value {
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "RemoveServiceByName").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
+		return otto.FalseValue()
+	}
+	return vmRet
+}
+
+func (e *Engine) vmReplaceFileString(call otto.FunctionCall) otto.Value {
+	if len(call.ArgumentList) > 3 {
+		e.Logger.WithField("function", "ReplaceFileString").WithField("trace", "true").Error("Too many arguments in call.")
+		return otto.FalseValue()
+	}
+	if len(call.ArgumentList) < 3 {
+		e.Logger.WithField("function", "ReplaceFileString").WithField("trace", "true").Error("Too few arguments in call.")
+		return otto.FalseValue()
+	}
+
+	var file string
+	rawArg0, err := call.Argument(0).Export()
+	if err != nil {
+		e.Logger.WithField("function", "ReplaceFileString").WithField("trace", "true").Errorf("Could not export field: %s", "file")
+		return otto.FalseValue()
+	}
+	switch v := rawArg0.(type) {
+	case string:
+		file = rawArg0.(string)
+	default:
+		e.Logger.WithField("function", "ReplaceFileString").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
+		return otto.FalseValue()
+	}
+
+	var match string
+	rawArg1, err := call.Argument(1).Export()
+	if err != nil {
+		e.Logger.WithField("function", "ReplaceFileString").WithField("trace", "true").Errorf("Could not export field: %s", "match")
+		return otto.FalseValue()
+	}
+	switch v := rawArg1.(type) {
+	case string:
+		match = rawArg1.(string)
+	default:
+		e.Logger.WithField("function", "ReplaceFileString").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
+		return otto.FalseValue()
+	}
+
+	var replacement string
+	rawArg2, err := call.Argument(2).Export()
+	if err != nil {
+		e.Logger.WithField("function", "ReplaceFileString").WithField("trace", "true").Errorf("Could not export field: %s", "replacement")
+		return otto.FalseValue()
+	}
+	switch v := rawArg2.(type) {
+	case string:
+		replacement = rawArg2.(string)
+	default:
+		e.Logger.WithField("function", "ReplaceFileString").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
+		return otto.FalseValue()
+	}
+	stringsReplaced, fileError := e.ReplaceFileString(file, match, replacement)
+	rawVMRet := VMResponse{}
+
+	rawVMRet["stringsReplaced"] = stringsReplaced
+
+	if fileError != nil {
+		e.Logger.WithField("function", "ReplaceFileString").WithField("trace", "true").Errorf("<function error> %s", fileError.Error())
+		rawVMRet["fileError"] = fileError.Error()
+	} else {
+		rawVMRet["fileError"] = nil
+	}
+	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
+	if vmRetError != nil {
+		e.Logger.WithField("function", "ReplaceFileString").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
 		return otto.FalseValue()
 	}
 	return vmRet
