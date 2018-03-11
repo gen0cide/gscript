@@ -185,6 +185,43 @@
     - label: fileError
       gotype: error
       return: true
+- name: AppendFileBytes
+  description: Addes a given byte array to the end of a file
+  author: ahhh (https://github.com/ahhh)
+  package: file
+  args:
+    - label: path
+      gotype: string
+    - label: fileData
+      gotype: '[]byte'
+  returns:
+    - label: fileError
+      gotype: error
+      return: true
+- name: AppendFileString
+  description: Addes a given string to the end of a file
+  author: ahhh (https://github.com/ahhh)
+  package: file
+  args:
+    - label: path
+      gotype: string
+    - label: addString
+      gotype: string
+  returns:
+    - label: fileError
+      gotype: error
+      return: true
+- name: DeleteFile
+  description: Deletes a file at a given path or returns an error
+  author: ahhh (https://github.com/ahhh)
+  package: file
+  args:
+    - label: path
+      gotype: string
+  returns:
+    - label: fileError
+      gotype: error
+      return: true
 - name: ReadFile
   description: Reads a file path and returns a byte array
   author: ahhh (https://github.com/ahhh)
