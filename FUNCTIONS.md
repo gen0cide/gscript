@@ -116,6 +116,40 @@ Add a registry key of type string(s)
 
 
 
+## `AppendFileBytes(path, fileData)`
+
+Addes a given byte array to the end of a file
+
+### Argument List
+
+ * **path** *string*
+ * **fileData** *[]byte*
+
+### Returned Object Fields
+
+ * **fileError** *error*
+
+---
+
+
+
+## `AppendFileString(path, addString)`
+
+Addes a given string to the end of a file
+
+### Argument List
+
+ * **path** *string*
+ * **addString** *string*
+
+### Returned Object Fields
+
+ * **fileError** *error*
+
+---
+
+
+
 ## `Asset(assetName)`
 
 Retrieves a packed asset from the VM embedded file store.
@@ -196,6 +230,22 @@ Delete a registry key value
 ### Returned Object Fields
 
  * **runtimeError** *error*
+
+---
+
+
+
+## `DeleteFile(path)`
+
+Deletes a file at a given path or returns an error
+
+### Argument List
+
+ * **path** *string*
+
+### Returned Object Fields
+
+ * **fileError** *error*
 
 ---
 
