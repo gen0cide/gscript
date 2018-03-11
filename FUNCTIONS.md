@@ -184,6 +184,24 @@ Change the permissions on a path.
 
 
 
+## `CopyFile(srcPath, dstPath, perms)`
+
+Reads the contents of one file and copies it to another with the given permissions.
+
+### Argument List
+
+ * **srcPath** *string*
+ * **dstPath** *string*
+ * **perms** *int64*
+
+### Returned Object Fields
+
+ * **fileError** *error*
+
+---
+
+
+
 ## `CreateDir(path)`
 
 Creates a directory at a given path or return an error
@@ -580,6 +598,25 @@ Uninstalls a system service
 ### Returned Object Fields
 
  * **removalError** *error*
+
+---
+
+
+
+## `ReplaceFileString(file, match, replacement)`
+
+Searches a file for a string and replaces each instance found of that string. Returns the amount of strings replaced
+
+### Argument List
+
+ * **file** *string*
+ * **match** *string*
+ * **replacement** *string*
+
+### Returned Object Fields
+
+ * **stringsReplaced** *int*
+ * **fileError** *error*
 
 ---
 
