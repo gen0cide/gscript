@@ -5,7 +5,7 @@
 // generator/templates/vm_functions.go.tmpl
 // DO NOT EDIT!
 
-package main
+package generator
 
 import (
 	"bytes"

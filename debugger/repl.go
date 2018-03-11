@@ -11,15 +11,24 @@ import (
 	"github.com/fatih/color"
 	"github.com/gen0cide/gscript/compiler"
 	"github.com/gen0cide/gscript/engine"
+	"github.com/gen0cide/gscript/generator"
 	"github.com/gen0cide/gscript/logging"
 	"github.com/robertkrimen/otto"
 	"github.com/sirupsen/logrus"
 )
 
+var FunctionBlacklist = []string{
+	"arguments",
+	"Object",
+	"console",
+}
+
 type Debugger struct {
-	Engine *engine.Engine
-	Logger *logrus.Logger
-	Prompt *prompt.Prompt
+	Engine          *engine.Engine
+	Logger          *logrus.Logger
+	Prompt          *prompt.Prompt
+	BuiltInFuncs    map[string]*generator.FunctionDef
+	REPLSuggestions []prompt.Suggest
 }
 
 func New(name string) *Debugger {
@@ -27,10 +36,29 @@ func New(name string) *Debugger {
 	logger.Formatter = &logging.GSEFormatter{}
 	logger.Out = logging.LogWriter{Name: name}
 	logger.Level = logrus.DebugLevel
+	g := generator.Generator{
+		Logger: logger,
+	}
+	funcDefs := map[string]*generator.FunctionDef{}
+	for name, funcObj := range g.ExtractFunctionList(compiler.MustAsset("templates/builtin.yml")) {
+		funcDefs[name] = funcObj
+	}
+	for name, funcObj := range g.ExtractFunctionList(compiler.MustAsset("templates/functions.yml")) {
+		funcDefs[name] = funcObj
+	}
+	suggestions := []prompt.Suggest{}
+	for name, funcObj := range funcDefs {
+		suggestions = append(suggestions, prompt.Suggest{
+			Text:        name,
+			Description: funcObj.Description,
+		})
+	}
 	gse := engine.New(name)
 	return &Debugger{
-		Engine: gse,
-		Logger: logger,
+		Engine:          gse,
+		Logger:          logger,
+		BuiltInFuncs:    funcDefs,
+		REPLSuggestions: suggestions,
 	}
 }
 
@@ -41,7 +69,10 @@ func (d *Debugger) SetupDebugEngine() {
 }
 
 func (d *Debugger) SessionCompleter(p prompt.Document) []prompt.Suggest {
-	return []prompt.Suggest{}
+	if p.TextBeforeCursor() == "" {
+		return []prompt.Suggest{}
+	}
+	return prompt.FilterHasPrefix(d.REPLSuggestions, p.GetWordBeforeCursor(), true)
 }
 
 func (d *Debugger) DebugConsole(call otto.FunctionCall) otto.Value {
@@ -54,13 +85,27 @@ func (d *Debugger) SessionExecutor(in string) {
 	if newIn == "exit" || newIn == "quit" {
 		os.Exit(0)
 	}
-	val, err := d.Engine.VM.Eval(newIn)
+	if newIn == "_symboldebug" {
+		c := d.Engine.VM.Context()
+		for k := range c.Symbols {
+			fmt.Printf("SYMBOL: %s\n", k)
+		}
+		return
+	}
+	s, err := d.Engine.VM.Compile("repl", newIn)
 	if err != nil {
 		d.Engine.Logger.Errorf("Console Error: %s", err.Error())
-	}
-	retVal, _ := val.Export()
-	if retVal != nil {
-		fmt.Printf(">>> %v\n", retVal)
+	} else {
+		v, err := d.Engine.VM.Eval(s)
+		if err != nil {
+			if oerr, ok := err.(*otto.Error); ok {
+				d.Engine.Logger.Errorf("Runtime Error: %s", oerr.String())
+			} else {
+				d.Engine.Logger.Errorf("Runtime Error: %s", err.Error())
+			}
+		} else {
+			fmt.Printf(">>> %s\n", v.String())
+		}
 	}
 }
 
@@ -105,6 +150,13 @@ func (d *Debugger) InteractiveSession() {
 		prompt.OptionPrefix("gscript> "),
 		prompt.OptionPrefixTextColor(prompt.Red),
 		prompt.OptionTitle("Genesis Scripting Engine Console"),
+		prompt.OptionDescriptionBGColor(prompt.DarkGray),
+		prompt.OptionDescriptionTextColor(prompt.White),
+		prompt.OptionSuggestionBGColor(prompt.Black),
+		prompt.OptionSuggestionTextColor(prompt.LightGray),
+		prompt.OptionSelectedSuggestionBGColor(prompt.DarkRed),
+		prompt.OptionSelectedSuggestionTextColor(prompt.White),
+		prompt.OptionSelectedDescriptionBGColor(prompt.Red),
 	)
 	d.Prompt = p
 	entryText := []string{

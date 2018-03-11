@@ -39,12 +39,17 @@ func (e *Engine) RunWithTimeout(command string) (otto.Value, error) {
 		).Infof("%s Execution Time: %v", command, duration)
 	}()
 
-	e.VM.Interrupt = make(chan func(), 1) // The buffer prevents blocking
+	e.VM.Interrupt = make(chan func(), 1)
 
 	go func() {
-		time.Sleep(time.Duration(e.Timeout) * time.Second) // Stop after two seconds
-		e.VM.Interrupt <- func() {
-			panic(errTimeout)
+		for {
+			time.Sleep(time.Duration(e.Timeout) * time.Second)
+			if e.Paused {
+				e.VM.Interrupt <- func() {
+					panic(errTimeout)
+				}
+				return
+			}
 		}
 	}()
 
