@@ -10,7 +10,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"runtime"
 	"sort"
@@ -48,7 +47,7 @@ func main() {
 	app.Writer = color.Output
 	app.ErrWriter = color.Output
 	app.Name = "gscript"
-	app.Usage = "Command Line SDK for the Genesis Scripting Engine (GSE)"
+	app.Usage = "Command Line application for interacting with the GENESIS Scripting Engine."
 	app.Version = gscript.Version
 	app.Authors = []cli.Author{
 		{
@@ -61,7 +60,7 @@ func main() {
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{
 			Name:        "debug, d",
-			Usage:       "Run gscript in debug mode.",
+			Usage:       "Enable verbose output of runtime debugging logs.",
 			Destination: &enableDebug,
 		},
 	}
@@ -76,13 +75,13 @@ func main() {
 		{
 			Name:    "shell",
 			Aliases: []string{"s"},
-			Usage:   "Run an interactive GSE console session.",
+			Usage:   "Run an interactive gscript REPL.",
 			Action:  InteractiveShell,
 		},
 		{
 			Name:    "update",
 			Aliases: []string{"u"},
-			Usage:   "Update Genesis Scripting Engine to the latest version.",
+			Usage:   "Update the gscript CLI binary to the latest version.",
 			Action:  UpdateCLI,
 		},
 		{
@@ -135,7 +134,7 @@ func main() {
 		{
 			Name:    "run",
 			Aliases: []string{"r"},
-			Usage:   "Run a Genesis script (Careful, don't infect yourself!).",
+			Usage:   "Run a Genesis script locally (Careful not to infect yourself).",
 			Action:  RunScript,
 		},
 	}
@@ -146,46 +145,31 @@ func main() {
 	app.Run(os.Args)
 }
 
-func TraceScript(c *cli.Context) error {
-	files := c.Args()
-	for _, f := range files {
-		fmt.Printf("Argument: %s\n", f)
-		fmt.Printf("Base: %s\n", filepath.Base(f))
-	}
-	return nil
-}
-
 func TestScript(c *cli.Context) error {
-	logger := logrus.New()
-	logger.Formatter = &logging.GSEFormatter{}
-	logger.Out = logging.LogWriter{Name: "test"}
-	logger.Level = logrus.DebugLevel
 	logging.PrintLogo()
+	dbg := debugger.New("runner")
+	dbg.SetupDebugEngine()
 	filename := c.Args().Get(0)
 	if len(filename) == 0 {
-		logger.Fatalf("You did not supply a filename!")
+		dbg.Engine.Logger.Fatalf("You did not supply a filename!")
 	}
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
-		logger.Fatalf("File does not exist: %s", filename)
+		dbg.Engine.Logger.Fatalf("File does not exist: %s", filename)
 	}
-	_, err := exec.LookPath("jshint")
-	if err != nil {
-		logger.Fatalf("You do not have jshint in your path. Run: npm install -g jshint")
-	}
-
-	jshCmd := exec.Command("jshint", filename)
-	jshOutput, err := jshCmd.CombinedOutput()
-	if err != nil {
-		logger.Fatalf("File Not Valid Javascript!\n -- JSHint Output:\n%s", jshOutput)
-	}
+	dbg = debugger.New(filepath.Base(filename))
+	dbg.SetupDebugEngine()
 	data, err := ioutil.ReadFile(filename)
-	err = compiler.ValidateAST(data)
 	if err != nil {
-		logger.Errorf("Invalid Script Error: %s", err.Error())
-	} else {
-		logger.Infof("Script Valid: %s", filename)
+		dbg.Engine.Logger.Fatalf("Error reading file: %s", err.Error())
 	}
+	dbg.LoadScript(string(data), filepath.Base(filename))
+	if err != nil {
+		dbg.Engine.Logger.Errorf("Script Error: %s", err.Error())
+		return err
+	}
+	dbg.Engine.Logger.Infof("Script is passed static analysis")
 	return nil
+
 }
 
 func InteractiveShell(c *cli.Context) error {
@@ -271,6 +255,9 @@ func RunScript(c *cli.Context) error {
 	}
 	dbg = debugger.New(filepath.Base(filename))
 	dbg.SetupDebugEngine()
+	if !enableDebug {
+		dbg.Logger.Level = logrus.InfoLevel
+	}
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {
 		dbg.Engine.Logger.Fatalf("Error reading file: %s", err.Error())
@@ -285,7 +272,7 @@ func RunScript(c *cli.Context) error {
 	if err != nil {
 		dbg.Engine.Logger.Fatalf("Hooks Failure: %s", err.Error())
 	}
-	dbg.Engine.Logger.Infof("Hooks executed successfully")
+	dbg.Engine.Logger.Debugf("Hooks executed successfully")
 	return nil
 }
 

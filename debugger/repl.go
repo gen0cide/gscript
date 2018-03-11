@@ -140,7 +140,8 @@ func (d *Debugger) LoadScript(script, filename string) error {
 		})
 		d.Logger.WithField("file", filename).Debugf("Importing Remote File: %s", name)
 	}
-	return d.Engine.LoadScript([]byte(script))
+	d.Engine.LoadScript(filename, []byte(script))
+	return nil
 }
 
 func (d *Debugger) InteractiveSession() {
