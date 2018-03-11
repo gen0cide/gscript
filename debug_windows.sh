@@ -1,4 +1,4 @@
-#!/usr/local/bin/bash
+#!/usr/bin/env bash
 set -x
 CWD=$(pwd)
 cd $GOPATH/src/github.com/gen0cide/gscript/cmd/gscript

@@ -19,6 +19,7 @@ type Engine struct {
 	DebuggerEnabled bool
 	Timeout         int
 	Halted          bool
+	Paused          bool
 }
 
 func New(name string) *Engine {
@@ -31,6 +32,7 @@ func New(name string) *Engine {
 		Logger:          logger,
 		DebuggerEnabled: false,
 		Halted:          false,
+		Paused:          false,
 		Timeout:         30,
 	}
 }
