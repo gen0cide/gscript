@@ -116,6 +116,40 @@ Add a registry key of type string(s)
 
 
 
+## `AppendFileBytes(path, fileData)`
+
+Addes a given byte array to the end of a file
+
+### Argument List
+
+ * **path** *string*
+ * **fileData** *[]byte*
+
+### Returned Object Fields
+
+ * **fileError** *error*
+
+---
+
+
+
+## `AppendFileString(path, addString)`
+
+Addes a given string to the end of a file
+
+### Argument List
+
+ * **path** *string*
+ * **addString** *string*
+
+### Returned Object Fields
+
+ * **fileError** *error*
+
+---
+
+
+
 ## `Asset(assetName)`
 
 Retrieves a packed asset from the VM embedded file store.
@@ -145,6 +179,24 @@ Change the permissions on a path.
 ### Returned Object Fields
 
  * **osError** *error*
+
+---
+
+
+
+## `CopyFile(srcPath, dstPath, perms)`
+
+Reads the contents of one file and copies it to another with the given permissions.
+
+### Argument List
+
+ * **srcPath** *string*
+ * **dstPath** *string*
+ * **perms** *int64*
+
+### Returned Object Fields
+
+ * **fileError** *error*
 
 ---
 
@@ -196,6 +248,22 @@ Delete a registry key value
 ### Returned Object Fields
 
  * **runtimeError** *error*
+
+---
+
+
+
+## `DeleteFile(path)`
+
+Deletes a file at a given path or returns an error
+
+### Argument List
+
+ * **path** *string*
+
+### Returned Object Fields
+
+ * **fileError** *error*
 
 ---
 
@@ -530,6 +598,25 @@ Uninstalls a system service
 ### Returned Object Fields
 
  * **removalError** *error*
+
+---
+
+
+
+## `ReplaceFileString(file, match, replacement)`
+
+Searches a file for a string and replaces each instance found of that string. Returns the amount of strings replaced
+
+### Argument List
+
+ * **file** *string*
+ * **match** *string*
+ * **replacement** *string*
+
+### Returned Object Fields
+
+ * **stringsReplaced** *int*
+ * **fileError** *error*
 
 ---
 
