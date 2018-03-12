@@ -7,7 +7,10 @@ import (
 	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/json"
 	"errors"
+	"io/ioutil"
 	"math/big"
 	"net"
 	"net/http"
@@ -18,6 +21,40 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
+// DNSQuestion - Issues a DNS query and returns it's response
+//
+// Package
+//
+// net
+//
+// Author
+//
+// - Vyrus (https://github.com/vyrus001)
+//
+// Javascript
+//
+// Here is the Javascript method signature:
+//  DNSQuestion(target, request)
+//
+// Arguments
+//
+// Here is a list of the arguments for the Javascript function:
+//  * target (string)
+//  * request (string)
+//
+// Returns
+//
+// Here is a list of fields in the return object:
+//  * obj.answer (string)
+//  * obj.runtimeError (error)
+//
+// Example
+//
+// Here is an example of how to use this function in gscript:
+//  var obj = DNSQuestion(target, request);
+//  // obj.answer
+//  // obj.runtimeError
+//
 func (e *Engine) DNSQuestion(target, request string) (string, error) {
 	if request == "A" {
 		var stringAnswerArray []string
@@ -82,6 +119,41 @@ func (e *Engine) DNSQuestion(target, request string) (string, error) {
 	}
 }
 
+// HTTPGetFile - Retrives a file from an HTTP(s) endpoint
+//
+// Package
+//
+// net
+//
+// Author
+//
+// - Vyrus (https://github.com/vyrus001)
+//
+// Javascript
+//
+// Here is the Javascript method signature:
+//  HTTPGetFile(url)
+//
+// Arguments
+//
+// Here is a list of the arguments for the Javascript function:
+//  * url (string)
+//
+// Returns
+//
+// Here is a list of fields in the return object:
+//  * obj.statusCode (int)
+//  * obj.file ([]byte)
+//  * obj.runtimeError (error)
+//
+// Example
+//
+// Here is an example of how to use this function in gscript:
+//  var obj = HTTPGetFile(url);
+//  // obj.statusCode
+//  // obj.file
+//  // obj.runtimeError
+//
 func (e *Engine) HTTPGetFile(url string) (int, []byte, error) {
 	resp, err := http.Get(url)
 	if err != nil {
@@ -95,6 +167,42 @@ func (e *Engine) HTTPGetFile(url string) (int, []byte, error) {
 	return resp.StatusCode, pageData, nil
 }
 
+// PostJSON - Transmits a JSON object to a URL and retruns the HTTP status code and response
+//
+// Package
+//
+// net
+//
+// Author
+//
+// - Vyrus (https://github.com/vyrus001)
+//
+// Javascript
+//
+// Here is the Javascript method signature:
+//  PostJSON(url, json)
+//
+// Arguments
+//
+// Here is a list of the arguments for the Javascript function:
+//  * url (string)
+//  * json ([]byte)
+//
+// Returns
+//
+// Here is a list of fields in the return object:
+//  * obj.statusCode (int)
+//  * obj.response ([]byte)
+//  * obj.runtimeError (error)
+//
+// Example
+//
+// Here is an example of how to use this function in gscript:
+//  var obj = PostJSON(url, json);
+//  // obj.statusCode
+//  // obj.response
+//  // obj.runtimeError
+//
 func (e *Engine) PostJSON(url string, jsonString []byte) (int, []byte, error) {
 	// encode json to sanity check, then decode to ensure the transmition syntax is clean
 	var jsonObj interface{}
@@ -118,6 +226,43 @@ func (e *Engine) PostJSON(url string, jsonString []byte) (int, []byte, error) {
 	return resp.StatusCode, pageData, nil
 }
 
+// SSHCmd - Runs a command on a target host via SSH and returns the result (stdOut only). Uses both password and key authentication options
+//
+// Package
+//
+// net
+//
+// Author
+//
+// - Vyrus (https://github.com/vyrus001)
+//
+// Javascript
+//
+// Here is the Javascript method signature:
+//  SSHCmd(hostAndPort, cmd, username, password, key)
+//
+// Arguments
+//
+// Here is a list of the arguments for the Javascript function:
+//  * hostAndPort (string)
+//  * cmd (string)
+//  * username (string)
+//  * password (string)
+//  * key ([]byte)
+//
+// Returns
+//
+// Here is a list of fields in the return object:
+//  * obj.response (string)
+//  * obj.runtimeError (error)
+//
+// Example
+//
+// Here is an example of how to use this function in gscript:
+//  var obj = SSHCmd(hostAndPort, cmd, username, password, key);
+//  // obj.response
+//  // obj.runtimeError
+//
 func (e *Engine) SSHCmd(hostAndPort, cmd, username, password string, key []byte) (string, error) {
 	// create config
 	sshConfig := &ssh.ClientConfig{
@@ -136,7 +281,7 @@ func (e *Engine) SSHCmd(hostAndPort, cmd, username, password string, key []byte)
 	}
 
 	// connect
-	client, err := ssh.Dial("tcp", host, sshConfig)
+	client, err := ssh.Dial("tcp", hostAndPort, sshConfig)
 	if err != nil {
 		return "", err
 	}
@@ -148,14 +293,47 @@ func (e *Engine) SSHCmd(hostAndPort, cmd, username, password string, key []byte)
 	defer session.Close()
 
 	// run cmd
-	responseBuffer := bytes.NewBuffer([]byte)
-	session.Stdout = &responseBuffer
+	responseBuffer := bytes.NewBuffer([]byte{})
+	session.Stdout = responseBuffer
 	if err = session.Run(cmd); err != nil {
 		return "", err
 	}
 	return responseBuffer.String(), nil
 }
 
+// ServePathOverHTTPS - Starts an HTTPS webserver on a given port (default 443) for $X (default 30) number of seconds that acts as a file server rooted in a given path
+//
+// Package
+//
+// net
+//
+// Author
+//
+// - Vyrus (https://github.com/vyrus001)
+//
+// Javascript
+//
+// Here is the Javascript method signature:
+//  ServePathOverHTTPS(port, path, timeout)
+//
+// Arguments
+//
+// Here is a list of the arguments for the Javascript function:
+//  * port (string)
+//  * path (string)
+//  * timeout (int64)
+//
+// Returns
+//
+// Here is a list of fields in the return object:
+//  * obj.runtimeError (error)
+//
+// Example
+//
+// Here is an example of how to use this function in gscript:
+//  var obj = ServePathOverHTTPS(port, path, timeout);
+//  // obj.runtimeError
+//
 func (e *Engine) ServePathOverHTTPS(port, path string, timeout int64) error {
 	// init
 	if len(port) < 1 {
@@ -193,29 +371,29 @@ func (e *Engine) ServePathOverHTTPS(port, path string, timeout int64) error {
 		return err
 	}
 	template.DNSNames = append(template.DNSNames, hostname)
-	for _, iface := range net.Interfaces() {
+	ifaces, err := net.Interfaces()
+	if err != nil {
+		return err
+	}
+	for _, iface := range ifaces {
 		addrs, err := iface.Addrs()
 		if err != nil {
 			return err
 		}
 		for _, addr := range addrs {
-			template.IPAddresses = append(template.IPAddresses, addr.String())
+			template.IPAddresses = append(template.IPAddresses, net.ParseIP(addr.String()))
 		}
 	}
 	template.IsCA = true
 	template.KeyUsage |= x509.KeyUsageCertSign
 	certData, err := x509.CreateCertificate(rand.Reader, &template, &template, privateKey.PublicKey, privateKey)
 	if err != nil {
-		return errors.New("Failed to create certificate: " + err)
-	}
-	cert, err := tls.LoadX509KeyPair(certData, keyData)
-	if err != nil {
-		return err
+		return errors.New("Failed to create certificate: " + err.Error())
 	}
 
 	// make web server obj
 	config := &tls.Config{
-		Certificates: []tls.Certificate{cert},
+		Certificates: []tls.Certificate{},
 	}
 	srv := &http.Server{
 		Addr:      "0.0.0.0:" + port,
@@ -226,7 +404,7 @@ func (e *Engine) ServePathOverHTTPS(port, path string, timeout int64) error {
 	// make new thread that waits for timeout to expire, then kills the server
 	killSwitch := make(chan struct{})
 	go func() {
-		time.Sleep(timeout * time.Second)
+		time.Sleep(time.Duration(timeout) * time.Second)
 		srv.Shutdown(context.Background())
 		close(killSwitch)
 	}()
@@ -234,8 +412,40 @@ func (e *Engine) ServePathOverHTTPS(port, path string, timeout int64) error {
 	// start server
 	return srv.ListenAndServe()
 	<-killSwitch
+	return nil
 }
 
+// IsTCPPortInUse - States whether or not a given TCP port is avalible for use
+//
+// Package
+//
+// net
+//
+// Author
+//
+// - Vyrus (https://github.com/vyrus001)
+//
+// Javascript
+//
+// Here is the Javascript method signature:
+//  IsTCPPortInUse(port)
+//
+// Arguments
+//
+// Here is a list of the arguments for the Javascript function:
+//  * port (string)
+//
+// Returns
+//
+// Here is a list of fields in the return object:
+//  * obj.state (bool)
+//
+// Example
+//
+// Here is an example of how to use this function in gscript:
+//  var obj = IsTCPPortInUse(port);
+//  // obj.state
+//
 func (e *Engine) IsTCPPortInUse(port string) bool {
 	conn, err := net.Listen("tcp", "0.0.0.0:"+port)
 	if err != nil {
@@ -245,6 +455,37 @@ func (e *Engine) IsTCPPortInUse(port string) bool {
 	return true
 }
 
+// IsUDPPortInUse - States whether or not a given UDP port is avalible for use
+//
+// Package
+//
+// net
+//
+// Author
+//
+// - Vyrus (https://github.com/vyrus001)
+//
+// Javascript
+//
+// Here is the Javascript method signature:
+//  IsUDPPortInUse(port)
+//
+// Arguments
+//
+// Here is a list of the arguments for the Javascript function:
+//  * port (string)
+//
+// Returns
+//
+// Here is a list of fields in the return object:
+//  * obj.state (bool)
+//
+// Example
+//
+// Here is an example of how to use this function in gscript:
+//  var obj = IsUDPPortInUse(port);
+//  // obj.state
+//
 func (e *Engine) IsUDPPortInUse(port string) bool {
 	conn, err := net.Listen("udp", "0.0.0.0:"+port)
 	if err != nil {
@@ -253,3 +494,4 @@ func (e *Engine) IsUDPPortInUse(port string) bool {
 	defer conn.Close()
 	return true
 }
+
