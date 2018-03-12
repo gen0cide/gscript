@@ -2,10 +2,10 @@ package engine
 
 import (
 	"crypto/md5"
-	"crypto/sha1"
 	"crypto/rand"
-	"encoding/hex"
+	"crypto/sha1"
 	"encoding/base64"
+	"encoding/hex"
 	"errors"
 	"math/big"
 	"strings"
@@ -453,17 +453,112 @@ func (e *Engine) MD5(data []byte) string {
 	return hex.EncodeToString(hasher.Sum(nil))
 }
 
+// SHA1 - Perform an SHA1() hash on data.
+//
+// Package
+//
+// core
+//
+// Author
+//
+// - ahhh (https://github.com/ahhh)
+//
+// Javascript
+//
+// Here is the Javascript method signature:
+//  SHA1(data)
+//
+// Arguments
+//
+// Here is a list of the arguments for the Javascript function:
+//  * data ([]byte)
+//
+// Returns
+//
+// Here is a list of fields in the return object:
+//  * obj.value (string)
+//
+// Example
+//
+// Here is an example of how to use this function in gscript:
+//  var obj = SHA1(data);
+//  // obj.value
+//
 func (e *Engine) SHA1(data []byte) string {
 	hasher := sha1.New()
 	hasher.Write(data)
 	return hex.EncodeToString(hasher.Sum(nil))
 }
 
+// B64Encode - Base64 encodes a byte array
+//
+// Package
+//
+// core
+//
+// Author
+//
+// - ahhh (https://github.com/ahhh)
+//
+// Javascript
+//
+// Here is the Javascript method signature:
+//  B64Encode(data)
+//
+// Arguments
+//
+// Here is a list of the arguments for the Javascript function:
+//  * data ([]byte)
+//
+// Returns
+//
+// Here is a list of fields in the return object:
+//  * obj.value (string)
+//
+// Example
+//
+// Here is an example of how to use this function in gscript:
+//  var obj = B64Encode(data);
+//  // obj.value
+//
 func (e *Engine) B64Encode(data []byte) string {
-	return string(base64.StdEncoding.EncodeToString([]byte(data))
+	return string(base64.StdEncoding.EncodeToString([]byte(data)))
 }
 
-func (e *Engine) B64Decode(data string) []byte, error {
+// B64Decode - Base64 decodes a string to a byte array
+//
+// Package
+//
+// core
+//
+// Author
+//
+// - ahhh (https://github.com/ahhh)
+//
+// Javascript
+//
+// Here is the Javascript method signature:
+//  B64Decode(data)
+//
+// Arguments
+//
+// Here is a list of the arguments for the Javascript function:
+//  * data (string)
+//
+// Returns
+//
+// Here is a list of fields in the return object:
+//  * obj.value ([]byte)
+//  * obj.execError (error)
+//
+// Example
+//
+// Here is an example of how to use this function in gscript:
+//  var obj = B64Decode(data);
+//  // obj.value
+//  // obj.execError
+//
+func (e *Engine) B64Decode(data string) ([]byte, error) {
 	valBytes, err := base64.StdEncoding.DecodeString(data)
 	if err != nil {
 		e.Logger.WithField("trace", "true").Errorf("Crypto error: %s", err.Error())
