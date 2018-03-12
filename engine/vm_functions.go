@@ -36,6 +36,17 @@
 //  ReplaceFileString(file, match, replacement) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.ReplaceFileString
 //  WriteFile(path, fileData, perms) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.WriteFile
 //
+// Library net
+//
+// Functions in net:
+//  DNSQuestion(target, request) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.DNSQuestion
+//  HTTPGetFile(url) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.HTTPGetFile
+//  IsTCPPortInUse(port) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.IsTCPPortInUse
+//  IsUDPPortInUse(port) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.IsUDPPortInUse
+//  PostJSON(url, json) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.PostJSON
+//  SSHCmd(hostAndPort, cmd, username, password, key) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.SSHCmd
+//  ServePathOverHTTPS(port, path, timeout) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.ServePathOverHTTPS
+//
 // Library os
 //
 // Functions in os:
@@ -90,6 +101,7 @@ func (e *Engine) CreateVM() {
 	e.VM.Set("Chmod", e.vmChmod)
 	e.VM.Set("CopyFile", e.vmCopyFile)
 	e.VM.Set("CreateDir", e.vmCreateDir)
+	e.VM.Set("DNSQuestion", e.vmDNSQuestion)
 	e.VM.Set("DelRegKey", e.vmDelRegKey)
 	e.VM.Set("DelRegKeyValue", e.vmDelRegKeyValue)
 	e.VM.Set("DeleteFile", e.vmDeleteFile)
@@ -101,12 +113,16 @@ func (e *Engine) CreateVM() {
 	e.VM.Set("ForkExecuteCommand", e.vmForkExecuteCommand)
 	e.VM.Set("GetEnvVar", e.vmGetEnvVar)
 	e.VM.Set("GetProcName", e.vmGetProcName)
+	e.VM.Set("HTTPGetFile", e.vmHTTPGetFile)
 	e.VM.Set("Halt", e.vmHalt)
 	e.VM.Set("InstallSystemService", e.vmInstallSystemService)
+	e.VM.Set("IsTCPPortInUse", e.vmIsTCPPortInUse)
+	e.VM.Set("IsUDPPortInUse", e.vmIsUDPPortInUse)
 	e.VM.Set("MD5", e.vmMD5)
 	e.VM.Set("ModTime", e.vmModTime)
 	e.VM.Set("ModifyTimestamp", e.vmModifyTimestamp)
 	e.VM.Set("ObfuscateString", e.vmObfuscateString)
+	e.VM.Set("PostJSON", e.vmPostJSON)
 	e.VM.Set("QueryRegKey", e.vmQueryRegKey)
 	e.VM.Set("RandomInt", e.vmRandomInt)
 	e.VM.Set("RandomMixedCaseString", e.vmRandomMixedCaseString)
@@ -115,7 +131,9 @@ func (e *Engine) CreateVM() {
 	e.VM.Set("RemoveServiceByName", e.vmRemoveServiceByName)
 	e.VM.Set("ReplaceFileString", e.vmReplaceFileString)
 	e.VM.Set("RunningProcs", e.vmRunningProcs)
+	e.VM.Set("SSHCmd", e.vmSSHCmd)
 	e.VM.Set("SelfPath", e.vmSelfPath)
+	e.VM.Set("ServePathOverHTTPS", e.vmServePathOverHTTPS)
 	e.VM.Set("Signal", e.vmSignal)
 	e.VM.Set("StartServiceByName", e.vmStartServiceByName)
 	e.VM.Set("StopServiceByName", e.vmStopServiceByName)
@@ -910,6 +928,62 @@ func (e *Engine) vmCreateDir(call otto.FunctionCall) otto.Value {
 	return vmRet
 }
 
+func (e *Engine) vmDNSQuestion(call otto.FunctionCall) otto.Value {
+	if len(call.ArgumentList) > 2 {
+		e.Logger.WithField("function", "DNSQuestion").WithField("trace", "true").Error("Too many arguments in call.")
+		return otto.FalseValue()
+	}
+	if len(call.ArgumentList) < 2 {
+		e.Logger.WithField("function", "DNSQuestion").WithField("trace", "true").Error("Too few arguments in call.")
+		return otto.FalseValue()
+	}
+
+	var target string
+	rawArg0, err := call.Argument(0).Export()
+	if err != nil {
+		e.Logger.WithField("function", "DNSQuestion").WithField("trace", "true").Errorf("Could not export field: %s", "target")
+		return otto.FalseValue()
+	}
+	switch v := rawArg0.(type) {
+	case string:
+		target = rawArg0.(string)
+	default:
+		e.Logger.WithField("function", "DNSQuestion").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
+		return otto.FalseValue()
+	}
+
+	var request string
+	rawArg1, err := call.Argument(1).Export()
+	if err != nil {
+		e.Logger.WithField("function", "DNSQuestion").WithField("trace", "true").Errorf("Could not export field: %s", "request")
+		return otto.FalseValue()
+	}
+	switch v := rawArg1.(type) {
+	case string:
+		request = rawArg1.(string)
+	default:
+		e.Logger.WithField("function", "DNSQuestion").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
+		return otto.FalseValue()
+	}
+	answer, runtimeError := e.DNSQuestion(target, request)
+	rawVMRet := VMResponse{}
+
+	rawVMRet["answer"] = answer
+
+	if runtimeError != nil {
+		e.Logger.WithField("function", "DNSQuestion").WithField("trace", "true").Errorf("<function error> %s", runtimeError.Error())
+		rawVMRet["runtimeError"] = runtimeError.Error()
+	} else {
+		rawVMRet["runtimeError"] = nil
+	}
+	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
+	if vmRetError != nil {
+		e.Logger.WithField("function", "DNSQuestion").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
+		return otto.FalseValue()
+	}
+	return vmRet
+}
+
 func (e *Engine) vmDelRegKey(call otto.FunctionCall) otto.Value {
 	if len(call.ArgumentList) > 2 {
 		e.Logger.WithField("function", "DelRegKey").WithField("trace", "true").Error("Too many arguments in call.")
@@ -1394,6 +1468,50 @@ func (e *Engine) vmGetProcName(call otto.FunctionCall) otto.Value {
 	return vmRet
 }
 
+func (e *Engine) vmHTTPGetFile(call otto.FunctionCall) otto.Value {
+	if len(call.ArgumentList) > 1 {
+		e.Logger.WithField("function", "HTTPGetFile").WithField("trace", "true").Error("Too many arguments in call.")
+		return otto.FalseValue()
+	}
+	if len(call.ArgumentList) < 1 {
+		e.Logger.WithField("function", "HTTPGetFile").WithField("trace", "true").Error("Too few arguments in call.")
+		return otto.FalseValue()
+	}
+
+	var url string
+	rawArg0, err := call.Argument(0).Export()
+	if err != nil {
+		e.Logger.WithField("function", "HTTPGetFile").WithField("trace", "true").Errorf("Could not export field: %s", "url")
+		return otto.FalseValue()
+	}
+	switch v := rawArg0.(type) {
+	case string:
+		url = rawArg0.(string)
+	default:
+		e.Logger.WithField("function", "HTTPGetFile").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
+		return otto.FalseValue()
+	}
+	statusCode, file, runtimeError := e.HTTPGetFile(url)
+	rawVMRet := VMResponse{}
+
+	rawVMRet["statusCode"] = statusCode
+
+	rawVMRet["file"] = file
+
+	if runtimeError != nil {
+		e.Logger.WithField("function", "HTTPGetFile").WithField("trace", "true").Errorf("<function error> %s", runtimeError.Error())
+		rawVMRet["runtimeError"] = runtimeError.Error()
+	} else {
+		rawVMRet["runtimeError"] = nil
+	}
+	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
+	if vmRetError != nil {
+		e.Logger.WithField("function", "HTTPGetFile").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
+		return otto.FalseValue()
+	}
+	return vmRet
+}
+
 func (e *Engine) vmHalt(call otto.FunctionCall) otto.Value {
 	if len(call.ArgumentList) > 0 {
 		e.Logger.WithField("function", "Halt").WithField("trace", "true").Error("Too many arguments in call.")
@@ -1492,6 +1610,76 @@ func (e *Engine) vmInstallSystemService(call otto.FunctionCall) otto.Value {
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "InstallSystemService").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
+		return otto.FalseValue()
+	}
+	return vmRet
+}
+
+func (e *Engine) vmIsTCPPortInUse(call otto.FunctionCall) otto.Value {
+	if len(call.ArgumentList) > 1 {
+		e.Logger.WithField("function", "IsTCPPortInUse").WithField("trace", "true").Error("Too many arguments in call.")
+		return otto.FalseValue()
+	}
+	if len(call.ArgumentList) < 1 {
+		e.Logger.WithField("function", "IsTCPPortInUse").WithField("trace", "true").Error("Too few arguments in call.")
+		return otto.FalseValue()
+	}
+
+	var port string
+	rawArg0, err := call.Argument(0).Export()
+	if err != nil {
+		e.Logger.WithField("function", "IsTCPPortInUse").WithField("trace", "true").Errorf("Could not export field: %s", "port")
+		return otto.FalseValue()
+	}
+	switch v := rawArg0.(type) {
+	case string:
+		port = rawArg0.(string)
+	default:
+		e.Logger.WithField("function", "IsTCPPortInUse").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
+		return otto.FalseValue()
+	}
+	state := e.IsTCPPortInUse(port)
+	rawVMRet := VMResponse{}
+
+	rawVMRet["state"] = state
+	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
+	if vmRetError != nil {
+		e.Logger.WithField("function", "IsTCPPortInUse").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
+		return otto.FalseValue()
+	}
+	return vmRet
+}
+
+func (e *Engine) vmIsUDPPortInUse(call otto.FunctionCall) otto.Value {
+	if len(call.ArgumentList) > 1 {
+		e.Logger.WithField("function", "IsUDPPortInUse").WithField("trace", "true").Error("Too many arguments in call.")
+		return otto.FalseValue()
+	}
+	if len(call.ArgumentList) < 1 {
+		e.Logger.WithField("function", "IsUDPPortInUse").WithField("trace", "true").Error("Too few arguments in call.")
+		return otto.FalseValue()
+	}
+
+	var port string
+	rawArg0, err := call.Argument(0).Export()
+	if err != nil {
+		e.Logger.WithField("function", "IsUDPPortInUse").WithField("trace", "true").Errorf("Could not export field: %s", "port")
+		return otto.FalseValue()
+	}
+	switch v := rawArg0.(type) {
+	case string:
+		port = rawArg0.(string)
+	default:
+		e.Logger.WithField("function", "IsUDPPortInUse").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
+		return otto.FalseValue()
+	}
+	state := e.IsUDPPortInUse(port)
+	rawVMRet := VMResponse{}
+
+	rawVMRet["state"] = state
+	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
+	if vmRetError != nil {
+		e.Logger.WithField("function", "IsUDPPortInUse").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
 		return otto.FalseValue()
 	}
 	return vmRet
@@ -1660,6 +1848,52 @@ func (e *Engine) vmObfuscateString(call otto.FunctionCall) otto.Value {
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "ObfuscateString").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
+		return otto.FalseValue()
+	}
+	return vmRet
+}
+
+func (e *Engine) vmPostJSON(call otto.FunctionCall) otto.Value {
+	if len(call.ArgumentList) > 2 {
+		e.Logger.WithField("function", "PostJSON").WithField("trace", "true").Error("Too many arguments in call.")
+		return otto.FalseValue()
+	}
+	if len(call.ArgumentList) < 2 {
+		e.Logger.WithField("function", "PostJSON").WithField("trace", "true").Error("Too few arguments in call.")
+		return otto.FalseValue()
+	}
+
+	var url string
+	rawArg0, err := call.Argument(0).Export()
+	if err != nil {
+		e.Logger.WithField("function", "PostJSON").WithField("trace", "true").Errorf("Could not export field: %s", "url")
+		return otto.FalseValue()
+	}
+	switch v := rawArg0.(type) {
+	case string:
+		url = rawArg0.(string)
+	default:
+		e.Logger.WithField("function", "PostJSON").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
+		return otto.FalseValue()
+	}
+
+	json := e.ValueToByteSlice(call.Argument(1))
+	statusCode, response, runtimeError := e.PostJSON(url, json)
+	rawVMRet := VMResponse{}
+
+	rawVMRet["statusCode"] = statusCode
+
+	rawVMRet["response"] = response
+
+	if runtimeError != nil {
+		e.Logger.WithField("function", "PostJSON").WithField("trace", "true").Errorf("<function error> %s", runtimeError.Error())
+		rawVMRet["runtimeError"] = runtimeError.Error()
+	} else {
+		rawVMRet["runtimeError"] = nil
+	}
+	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
+	if vmRetError != nil {
+		e.Logger.WithField("function", "PostJSON").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
 		return otto.FalseValue()
 	}
 	return vmRet
@@ -2020,6 +2254,92 @@ func (e *Engine) vmRunningProcs(call otto.FunctionCall) otto.Value {
 	return vmRet
 }
 
+func (e *Engine) vmSSHCmd(call otto.FunctionCall) otto.Value {
+	if len(call.ArgumentList) > 5 {
+		e.Logger.WithField("function", "SSHCmd").WithField("trace", "true").Error("Too many arguments in call.")
+		return otto.FalseValue()
+	}
+	if len(call.ArgumentList) < 5 {
+		e.Logger.WithField("function", "SSHCmd").WithField("trace", "true").Error("Too few arguments in call.")
+		return otto.FalseValue()
+	}
+
+	var hostAndPort string
+	rawArg0, err := call.Argument(0).Export()
+	if err != nil {
+		e.Logger.WithField("function", "SSHCmd").WithField("trace", "true").Errorf("Could not export field: %s", "hostAndPort")
+		return otto.FalseValue()
+	}
+	switch v := rawArg0.(type) {
+	case string:
+		hostAndPort = rawArg0.(string)
+	default:
+		e.Logger.WithField("function", "SSHCmd").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
+		return otto.FalseValue()
+	}
+
+	var cmd string
+	rawArg1, err := call.Argument(1).Export()
+	if err != nil {
+		e.Logger.WithField("function", "SSHCmd").WithField("trace", "true").Errorf("Could not export field: %s", "cmd")
+		return otto.FalseValue()
+	}
+	switch v := rawArg1.(type) {
+	case string:
+		cmd = rawArg1.(string)
+	default:
+		e.Logger.WithField("function", "SSHCmd").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
+		return otto.FalseValue()
+	}
+
+	var username string
+	rawArg2, err := call.Argument(2).Export()
+	if err != nil {
+		e.Logger.WithField("function", "SSHCmd").WithField("trace", "true").Errorf("Could not export field: %s", "username")
+		return otto.FalseValue()
+	}
+	switch v := rawArg2.(type) {
+	case string:
+		username = rawArg2.(string)
+	default:
+		e.Logger.WithField("function", "SSHCmd").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
+		return otto.FalseValue()
+	}
+
+	var password string
+	rawArg3, err := call.Argument(3).Export()
+	if err != nil {
+		e.Logger.WithField("function", "SSHCmd").WithField("trace", "true").Errorf("Could not export field: %s", "password")
+		return otto.FalseValue()
+	}
+	switch v := rawArg3.(type) {
+	case string:
+		password = rawArg3.(string)
+	default:
+		e.Logger.WithField("function", "SSHCmd").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
+		return otto.FalseValue()
+	}
+
+	key := e.ValueToByteSlice(call.Argument(4))
+	response, runtimeError := e.SSHCmd(hostAndPort, cmd, username, password, key)
+	rawVMRet := VMResponse{}
+
+	rawVMRet["response"] = response
+
+	if runtimeError != nil {
+		e.Logger.WithField("function", "SSHCmd").WithField("trace", "true").Errorf("<function error> %s", runtimeError.Error())
+		rawVMRet["runtimeError"] = runtimeError.Error()
+	} else {
+		rawVMRet["runtimeError"] = nil
+	}
+	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
+	if vmRetError != nil {
+		e.Logger.WithField("function", "SSHCmd").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
+		return otto.FalseValue()
+	}
+	return vmRet
+}
+
 func (e *Engine) vmSelfPath(call otto.FunctionCall) otto.Value {
 	if len(call.ArgumentList) > 0 {
 		e.Logger.WithField("function", "SelfPath").WithField("trace", "true").Error("Too many arguments in call.")
@@ -2043,6 +2363,74 @@ func (e *Engine) vmSelfPath(call otto.FunctionCall) otto.Value {
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "SelfPath").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
+		return otto.FalseValue()
+	}
+	return vmRet
+}
+
+func (e *Engine) vmServePathOverHTTPS(call otto.FunctionCall) otto.Value {
+	if len(call.ArgumentList) > 3 {
+		e.Logger.WithField("function", "ServePathOverHTTPS").WithField("trace", "true").Error("Too many arguments in call.")
+		return otto.FalseValue()
+	}
+	if len(call.ArgumentList) < 3 {
+		e.Logger.WithField("function", "ServePathOverHTTPS").WithField("trace", "true").Error("Too few arguments in call.")
+		return otto.FalseValue()
+	}
+
+	var port string
+	rawArg0, err := call.Argument(0).Export()
+	if err != nil {
+		e.Logger.WithField("function", "ServePathOverHTTPS").WithField("trace", "true").Errorf("Could not export field: %s", "port")
+		return otto.FalseValue()
+	}
+	switch v := rawArg0.(type) {
+	case string:
+		port = rawArg0.(string)
+	default:
+		e.Logger.WithField("function", "ServePathOverHTTPS").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
+		return otto.FalseValue()
+	}
+
+	var path string
+	rawArg1, err := call.Argument(1).Export()
+	if err != nil {
+		e.Logger.WithField("function", "ServePathOverHTTPS").WithField("trace", "true").Errorf("Could not export field: %s", "path")
+		return otto.FalseValue()
+	}
+	switch v := rawArg1.(type) {
+	case string:
+		path = filepath.Clean(rawArg1.(string))
+	default:
+		e.Logger.WithField("function", "ServePathOverHTTPS").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
+		return otto.FalseValue()
+	}
+
+	var timeout int64
+	rawArg2, err := call.Argument(2).Export()
+	if err != nil {
+		e.Logger.WithField("function", "ServePathOverHTTPS").WithField("trace", "true").Errorf("Could not export field: %s", "timeout")
+		return otto.FalseValue()
+	}
+	switch v := rawArg2.(type) {
+	case int64:
+		timeout = rawArg2.(int64)
+	default:
+		e.Logger.WithField("function", "ServePathOverHTTPS").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "int64", v)
+		return otto.FalseValue()
+	}
+	runtimeError := e.ServePathOverHTTPS(port, path, timeout)
+	rawVMRet := VMResponse{}
+
+	if runtimeError != nil {
+		e.Logger.WithField("function", "ServePathOverHTTPS").WithField("trace", "true").Errorf("<function error> %s", runtimeError.Error())
+		rawVMRet["runtimeError"] = runtimeError.Error()
+	} else {
+		rawVMRet["runtimeError"] = nil
+	}
+	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
+	if vmRetError != nil {
+		e.Logger.WithField("function", "ServePathOverHTTPS").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
 		return otto.FalseValue()
 	}
 	return vmRet

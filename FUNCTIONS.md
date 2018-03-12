@@ -218,6 +218,24 @@ Creates a directory at a given path or return an error
 
 
 
+## `DNSQuestion(target, request)`
+
+Issues a DNS query and returns it's response
+
+### Argument List
+
+ * **target** *string*
+ * **request** *string*
+
+### Returned Object Fields
+
+ * **answer** *string*
+ * **runtimeError** *error*
+
+---
+
+
+
 ## `DelRegKey(registryString, path)`
 
 Delete a registry key
@@ -402,6 +420,24 @@ Returns the name of a target proccess
 
 
 
+## `HTTPGetFile(url)`
+
+Retrives a file from an HTTP(s) endpoint
+
+### Argument List
+
+ * **url** *string*
+
+### Returned Object Fields
+
+ * **statusCode** *int*
+ * **file** *[]byte*
+ * **runtimeError** *error*
+
+---
+
+
+
 ## `Halt()`
 
 Stop the current VM from continuing execution.
@@ -431,6 +467,38 @@ Installs a target binary as a system service
 ### Returned Object Fields
 
  * **installError** *error*
+
+---
+
+
+
+## `IsTCPPortInUse(port)`
+
+States whether or not a given TCP port is avalible for use
+
+### Argument List
+
+ * **port** *string*
+
+### Returned Object Fields
+
+ * **state** *bool*
+
+---
+
+
+
+## `IsUDPPortInUse(port)`
+
+States whether or not a given UDP port is avalible for use
+
+### Argument List
+
+ * **port** *string*
+
+### Returned Object Fields
+
+ * **state** *bool*
 
 ---
 
@@ -498,6 +566,25 @@ Basic string obfuscator function.
 ### Returned Object Fields
 
  * **value** *string*
+
+---
+
+
+
+## `PostJSON(url, json)`
+
+Transmits a JSON object to a URL and retruns the HTTP status code and response
+
+### Argument List
+
+ * **url** *string*
+ * **json** *[]byte*
+
+### Returned Object Fields
+
+ * **statusCode** *int*
+ * **response** *[]byte*
+ * **runtimeError** *error*
 
 ---
 
@@ -638,6 +725,27 @@ Returns an array of int's representing active PIDs currently running
 
 
 
+## `SSHCmd(hostAndPort, cmd, username, password, key)`
+
+Runs a command on a target host via SSH and returns the result (stdOut only). Uses both password and key authentication options
+
+### Argument List
+
+ * **hostAndPort** *string*
+ * **cmd** *string*
+ * **username** *string*
+ * **password** *string*
+ * **key** *[]byte*
+
+### Returned Object Fields
+
+ * **response** *string*
+ * **runtimeError** *error*
+
+---
+
+
+
 ## `SelfPath()`
 
 Retrieves the path to the currently running executable.
@@ -649,6 +757,24 @@ Retrieves the path to the currently running executable.
 
  * **path** *string*
  * **osError** *error*
+
+---
+
+
+
+## `ServePathOverHTTPS(port, path, timeout)`
+
+Starts an HTTPS webserver on a given port (default 443) for $X (default 30) number of seconds that acts as a file server rooted in a given path
+
+### Argument List
+
+ * **port** *string*
+ * **path** *string*
+ * **timeout** *int64*
+
+### Returned Object Fields
+
+ * **runtimeError** *error*
 
 ---
 
