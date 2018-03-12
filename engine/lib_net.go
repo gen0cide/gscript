@@ -494,3 +494,49 @@ func (e *Engine) IsUDPPortInUse(port string) bool {
 	defer conn.Close()
 	return false
 }
+
+// GetLocalIPs - Gets an array of Ip addresses for the host
+//
+// Package
+//
+// net
+//
+// Author
+//
+// - ahhh (https://github.com/ahhh)
+//
+// Javascript
+//
+// Here is the Javascript method signature:
+//  GetLocalIPs()
+//
+// Arguments
+//
+// Here is a list of the arguments for the Javascript function:
+//
+// Returns
+//
+// Here is a list of fields in the return object:
+//  * obj.addresses ([]string)
+//
+// Example
+//
+// Here is an example of how to use this function in gscript:
+//  var obj = GetLocalIPs();
+//  // obj.addresses
+//
+func (e *Engine) GetLocalIPs() []string {
+	addresses := []string{}
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		return addresses
+	}
+	for _, a := range addrs {
+		if ipnet, ok := a.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				addresses = append(addresses, ipnet.IP.String())
+			}
+		}
+	}
+	return addresses
+}
