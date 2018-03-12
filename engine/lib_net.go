@@ -393,7 +393,10 @@ func (e *Engine) ServePathOverHTTPS(port, path string, timeout int64) error {
 
 	// make web server obj
 	config := &tls.Config{
-		Certificates: []tls.Certificate{},
+		Certificates: []tls.Certificate{{
+			Certificate: [][]byte{certData},
+			PrivateKey:  privateKey,
+		}},
 	}
 	srv := &http.Server{
 		Addr:      "0.0.0.0:" + port,
@@ -494,4 +497,3 @@ func (e *Engine) IsUDPPortInUse(port string) bool {
 	defer conn.Close()
 	return true
 }
-
