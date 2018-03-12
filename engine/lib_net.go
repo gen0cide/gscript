@@ -350,21 +350,19 @@ func (e *Engine) ServePathOverHTTPS(port, path string, timeout int64) error {
 	}
 
 	// make cert
-	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
-	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
-	if err != nil {
-		return errors.New("failed to generate serial number: " + err.Error())
-	}
 	template := x509.Certificate{
-		SerialNumber: serialNumber,
+		IsCA: true,
+		BasicConstraintsValid: true,
+		SubjectKeyId:          []byte{1, 2, 3},
+		SerialNumber:          big.NewInt(1234),
 		Subject: pkix.Name{
+			Country:      []string{"Wonkaville"},
 			Organization: []string{"Wonka Co"},
 		},
-		NotBefore:             time.Now(),
-		NotAfter:              time.Now().Add(48 * time.Hour),
-		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
-		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
-		BasicConstraintsValid: true,
+		NotBefore:   time.Now(),
+		NotAfter:    time.Now().Add(48 * time.Hour),
+		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
+		KeyUsage:    x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
 	}
 	hostname, err := os.Hostname()
 	if err != nil {
@@ -384,9 +382,8 @@ func (e *Engine) ServePathOverHTTPS(port, path string, timeout int64) error {
 			template.IPAddresses = append(template.IPAddresses, net.ParseIP(addr.String()))
 		}
 	}
-	template.IsCA = true
 	template.KeyUsage |= x509.KeyUsageCertSign
-	certData, err := x509.CreateCertificate(rand.Reader, &template, &template, privateKey.PublicKey, privateKey)
+	certData, err := x509.CreateCertificate(rand.Reader, &template, &template, &privateKey.PublicKey, privateKey)
 	if err != nil {
 		return errors.New("Failed to create certificate: " + err.Error())
 	}
@@ -452,10 +449,10 @@ func (e *Engine) ServePathOverHTTPS(port, path string, timeout int64) error {
 func (e *Engine) IsTCPPortInUse(port string) bool {
 	conn, err := net.Listen("tcp", "0.0.0.0:"+port)
 	if err != nil {
-		return false
+		return true
 	}
 	defer conn.Close()
-	return true
+	return false
 }
 
 // IsUDPPortInUse - States whether or not a given UDP port is avalible for use
@@ -492,8 +489,8 @@ func (e *Engine) IsTCPPortInUse(port string) bool {
 func (e *Engine) IsUDPPortInUse(port string) bool {
 	conn, err := net.Listen("udp", "0.0.0.0:"+port)
 	if err != nil {
-		return false
+		return true
 	}
 	defer conn.Close()
-	return true
+	return false
 }
