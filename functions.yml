@@ -109,6 +109,42 @@
     - label: value
       gotype: string
       return: true
+- name: SHA1
+  description: Perform an SHA1() hash on data.
+  author: ahhh (https://github.com/ahhh)
+  package: core
+  args:
+    - label: data
+      gotype: '[]byte'
+  returns:
+    - label: value
+      gotype: string
+      return: true
+- name: B64Encode
+  description: Base64 encodes a byte array
+  author: ahhh (https://github.com/ahhh)
+  package: core
+  args:
+    - label: data
+      gotype: '[]byte'
+  returns:
+    - label: value
+      gotype: string
+      return: true
+- name: B64Decode
+  description: Base64 decodes a string to a byte array
+  author: ahhh (https://github.com/ahhh)
+  package: core
+  args:
+    - label: data
+      gotype: string
+  returns:
+    - label: value
+      gotype: '[]byte'
+      return: true
+    - label: execError
+      gotype: error
+      return: true
 - name: Timestamp
   description: Get the system's current timestamp in epoch format.
   author: gen0cide (https://github.com/gen0cide)

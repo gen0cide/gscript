@@ -6,6 +6,8 @@
 //
 // Functions in core:
 //  Asset(assetName) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.Asset
+//  B64Decode(data) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.B64Decode
+//  B64Encode(data) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.B64Encode
 //  DeobfuscateString(str) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.DeobfuscateString
 //  Halt() - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.Halt
 //  MD5(data) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.MD5
@@ -13,6 +15,7 @@
 //  RandomInt(min, max) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.RandomInt
 //  RandomMixedCaseString(strlen) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.RandomMixedCaseString
 //  RandomString(strlen) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.RandomString
+//  SHA1(data) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.SHA1
 //  StripSpaces(str) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.StripSpaces
 //  Timestamp() - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.Timestamp
 //  XorBytes(aByteArray, bByteArray) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.XorBytes
@@ -98,6 +101,8 @@ func (e *Engine) CreateVM() {
 	e.VM.Set("AppendFileBytes", e.vmAppendFileBytes)
 	e.VM.Set("AppendFileString", e.vmAppendFileString)
 	e.VM.Set("Asset", e.vmAsset)
+	e.VM.Set("B64Decode", e.vmB64Decode)
+	e.VM.Set("B64Encode", e.vmB64Encode)
 	e.VM.Set("Chmod", e.vmChmod)
 	e.VM.Set("CopyFile", e.vmCopyFile)
 	e.VM.Set("CreateDir", e.vmCreateDir)
@@ -131,6 +136,7 @@ func (e *Engine) CreateVM() {
 	e.VM.Set("RemoveServiceByName", e.vmRemoveServiceByName)
 	e.VM.Set("ReplaceFileString", e.vmReplaceFileString)
 	e.VM.Set("RunningProcs", e.vmRunningProcs)
+	e.VM.Set("SHA1", e.vmSHA1)
 	e.VM.Set("SSHCmd", e.vmSSHCmd)
 	e.VM.Set("SelfPath", e.vmSelfPath)
 	e.VM.Set("ServePathOverHTTPS", e.vmServePathOverHTTPS)
@@ -761,6 +767,71 @@ func (e *Engine) vmAsset(call otto.FunctionCall) otto.Value {
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "Asset").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
+		return otto.FalseValue()
+	}
+	return vmRet
+}
+
+func (e *Engine) vmB64Decode(call otto.FunctionCall) otto.Value {
+	if len(call.ArgumentList) > 1 {
+		e.Logger.WithField("function", "B64Decode").WithField("trace", "true").Error("Too many arguments in call.")
+		return otto.FalseValue()
+	}
+	if len(call.ArgumentList) < 1 {
+		e.Logger.WithField("function", "B64Decode").WithField("trace", "true").Error("Too few arguments in call.")
+		return otto.FalseValue()
+	}
+
+	var data string
+	rawArg0, err := call.Argument(0).Export()
+	if err != nil {
+		e.Logger.WithField("function", "B64Decode").WithField("trace", "true").Errorf("Could not export field: %s", "data")
+		return otto.FalseValue()
+	}
+	switch v := rawArg0.(type) {
+	case string:
+		data = rawArg0.(string)
+	default:
+		e.Logger.WithField("function", "B64Decode").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
+		return otto.FalseValue()
+	}
+	value, execError := e.B64Decode(data)
+	rawVMRet := VMResponse{}
+
+	rawVMRet["value"] = value
+
+	if execError != nil {
+		e.Logger.WithField("function", "B64Decode").WithField("trace", "true").Errorf("<function error> %s", execError.Error())
+		rawVMRet["execError"] = execError.Error()
+	} else {
+		rawVMRet["execError"] = nil
+	}
+	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
+	if vmRetError != nil {
+		e.Logger.WithField("function", "B64Decode").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
+		return otto.FalseValue()
+	}
+	return vmRet
+}
+
+func (e *Engine) vmB64Encode(call otto.FunctionCall) otto.Value {
+	if len(call.ArgumentList) > 1 {
+		e.Logger.WithField("function", "B64Encode").WithField("trace", "true").Error("Too many arguments in call.")
+		return otto.FalseValue()
+	}
+	if len(call.ArgumentList) < 1 {
+		e.Logger.WithField("function", "B64Encode").WithField("trace", "true").Error("Too few arguments in call.")
+		return otto.FalseValue()
+	}
+
+	data := e.ValueToByteSlice(call.Argument(0))
+	value := e.B64Encode(data)
+	rawVMRet := VMResponse{}
+
+	rawVMRet["value"] = value
+	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
+	if vmRetError != nil {
+		e.Logger.WithField("function", "B64Encode").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
 		return otto.FalseValue()
 	}
 	return vmRet
@@ -2249,6 +2320,29 @@ func (e *Engine) vmRunningProcs(call otto.FunctionCall) otto.Value {
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "RunningProcs").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
+		return otto.FalseValue()
+	}
+	return vmRet
+}
+
+func (e *Engine) vmSHA1(call otto.FunctionCall) otto.Value {
+	if len(call.ArgumentList) > 1 {
+		e.Logger.WithField("function", "SHA1").WithField("trace", "true").Error("Too many arguments in call.")
+		return otto.FalseValue()
+	}
+	if len(call.ArgumentList) < 1 {
+		e.Logger.WithField("function", "SHA1").WithField("trace", "true").Error("Too few arguments in call.")
+		return otto.FalseValue()
+	}
+
+	data := e.ValueToByteSlice(call.Argument(0))
+	value := e.SHA1(data)
+	rawVMRet := VMResponse{}
+
+	rawVMRet["value"] = value
+	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
+	if vmRetError != nil {
+		e.Logger.WithField("function", "SHA1").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
 		return otto.FalseValue()
 	}
 	return vmRet

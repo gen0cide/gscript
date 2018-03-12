@@ -167,6 +167,39 @@ Retrieves a packed asset from the VM embedded file store.
 
 
 
+## `B64Decode(data)`
+
+Base64 decodes a string to a byte array
+
+### Argument List
+
+ * **data** *string*
+
+### Returned Object Fields
+
+ * **value** *[]byte*
+ * **execError** *error*
+
+---
+
+
+
+## `B64Encode(data)`
+
+Base64 encodes a byte array
+
+### Argument List
+
+ * **data** *[]byte*
+
+### Returned Object Fields
+
+ * **value** *string*
+
+---
+
+
+
 ## `Chmod(path, perms)`
 
 Change the permissions on a path.
@@ -720,6 +753,22 @@ Returns an array of int's representing active PIDs currently running
 
  * **pids** *[]int*
  * **runtimeError** *error*
+
+---
+
+
+
+## `SHA1(data)`
+
+Perform an SHA1() hash on data.
+
+### Argument List
+
+ * **data** *[]byte*
+
+### Returned Object Fields
+
+ * **value** *string*
 
 ---
 
