@@ -309,7 +309,7 @@
 #####################################################################
 - name: DNSQuestion
   description: Issues a DNS query and returns it's response
-  author: Vyrus (https://github.com/vyrus001)
+  author: ahhh (https://github.com/ahhh)
   package: net
   args:
     - label: target
