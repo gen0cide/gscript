@@ -43,6 +43,7 @@
 //
 // Functions in net:
 //  DNSQuestion(target, request) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.DNSQuestion
+//  GetLocalIPs() - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.GetLocalIPs
 //  HTTPGetFile(url) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.HTTPGetFile
 //  IsTCPPortInUse(port) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.IsTCPPortInUse
 //  IsUDPPortInUse(port) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.IsUDPPortInUse
@@ -117,6 +118,7 @@ func (e *Engine) CreateVM() {
 	e.VM.Set("FindProcByName", e.vmFindProcByName)
 	e.VM.Set("ForkExecuteCommand", e.vmForkExecuteCommand)
 	e.VM.Set("GetEnvVar", e.vmGetEnvVar)
+	e.VM.Set("GetLocalIPs", e.vmGetLocalIPs)
 	e.VM.Set("GetProcName", e.vmGetProcName)
 	e.VM.Set("HTTPGetFile", e.vmHTTPGetFile)
 	e.VM.Set("Halt", e.vmHalt)
@@ -1492,6 +1494,27 @@ func (e *Engine) vmGetEnvVar(call otto.FunctionCall) otto.Value {
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "GetEnvVar").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
+		return otto.FalseValue()
+	}
+	return vmRet
+}
+
+func (e *Engine) vmGetLocalIPs(call otto.FunctionCall) otto.Value {
+	if len(call.ArgumentList) > 0 {
+		e.Logger.WithField("function", "GetLocalIPs").WithField("trace", "true").Error("Too many arguments in call.")
+		return otto.FalseValue()
+	}
+	if len(call.ArgumentList) < 0 {
+		e.Logger.WithField("function", "GetLocalIPs").WithField("trace", "true").Error("Too few arguments in call.")
+		return otto.FalseValue()
+	}
+	addresses := e.GetLocalIPs()
+	rawVMRet := VMResponse{}
+
+	rawVMRet["addresses"] = addresses
+	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
+	if vmRetError != nil {
+		e.Logger.WithField("function", "GetLocalIPs").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
 		return otto.FalseValue()
 	}
 	return vmRet

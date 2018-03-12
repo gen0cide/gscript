@@ -454,6 +454,15 @@
     - label: state
       gotype: bool
       return: true
+- name: GetLocalIPs
+  description: Gets an array of Ip addresses for the host
+  author: ahhh (https://github.com/ahhh)
+  package: net
+  args:
+  returns:
+    - label: addresses
+      gotype: '[]string'
+      return: true
 #####################################################################
 #
 # os package

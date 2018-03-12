@@ -436,6 +436,21 @@ Returns the value of a given enviornment variable
 
 
 
+## `GetLocalIPs()`
+
+Gets an array of Ip addresses for the host
+
+### Argument List
+
+
+### Returned Object Fields
+
+ * **addresses** *[]string*
+
+---
+
+
+
 ## `GetProcName(pid)`
 
 Returns the name of a target proccess
