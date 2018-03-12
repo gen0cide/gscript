@@ -307,8 +307,117 @@
 # net package
 #
 #####################################################################
-# TODO (lib_net.go)
-
+- name: DNSQuestion
+  description: Issues a DNS query and returns it's response
+  author: Vyrus (https://github.com/vyrus001)
+  package: net
+  args:
+    - label: target
+      gotype: string
+    - label: request
+      gotype: string
+  returns:
+    - label: answer
+      gotype: string
+      return: true
+    - label: runtimeError
+      gotype: error
+      return: true
+- name: HTTPGetFile
+  description: Retrives a file from an HTTP(s) endpoint
+  author: Vyrus (https://github.com/vyrus001)
+  package: net
+  args:
+    - label: url
+      gotype: string
+  returns:
+    - label: statusCode
+      gotype: int
+      return: true
+    - label: file
+      gotype: '[]byte'
+      return: true
+    - label: runtimeError
+      gotype: error
+      return: true
+- name: PostJSON
+  description: Transmits a JSON object to a URL and retruns the HTTP status code and response
+  author: Vyrus (https://github.com/vyrus001)
+  package: net
+  args:
+    - label: url
+      gotype: string
+    - label: json
+      gotype: '[]byte'
+  returns:
+    - label: statusCode
+      gotype: int
+      return: true
+    - label: response
+      gotype: '[]byte'
+      return: true
+    - label: runtimeError
+      gotype: error
+      return: true
+- name: SSHCmd
+  description: Runs a command on a target host via SSH and returns the result (stdOut only). Uses both password and key authentication options
+  author: Vyrus (https://github.com/vyrus001)
+  package: net
+  args:
+    - label: hostAndPort
+      gotype: string
+    - label: cmd
+      gotype: string
+    - label: username
+      gotype: string
+    - label: password
+      gotype: string
+    - label: key
+      gotype: '[]byte'
+  returns:
+    - label: response
+      gotype: string
+      return: true
+    - label: runtimeError
+      gotype: error
+      return: true
+- name: ServePathOverHTTPS
+  description: Starts an HTTPS webserver on a given port (default 443) for $X (default 30) number of seconds that acts as a file server rooted in a given path
+  author: Vyrus (https://github.com/vyrus001)
+  package: net
+  args:
+    - label: port
+      gotype: string
+    - label: path
+      gotype: string
+    - label: timeout
+      gotype: int64
+  returns:
+    - label: runtimeError
+      gotype: error
+      return: true
+- name: IsTCPPortInUse
+  description: States whether or not a given TCP port is avalible for use
+  author: Vyrus (https://github.com/vyrus001)
+  package: net
+  args:
+    - label: port
+      gotype: string
+  returns:
+    - label: state
+      gotype: bool
+      return: true
+- name: IsUDPPortInUse
+  description: States whether or not a given UDP port is avalible for use
+  author: Vyrus (https://github.com/vyrus001)
+  package: net
+  args:
+    - label: port
+      gotype: string
+  returns:
+    - label: state
+      gotype: bool
+      return: true
 #####################################################################
 #
 # os package
