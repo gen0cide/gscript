@@ -2,8 +2,10 @@ package engine
 
 import (
 	"crypto/md5"
+	"crypto/sha1"
 	"crypto/rand"
 	"encoding/hex"
+	"encoding/base64"
 	"errors"
 	"math/big"
 	"strings"
@@ -449,4 +451,23 @@ func (e *Engine) MD5(data []byte) string {
 	hasher := md5.New()
 	hasher.Write(data)
 	return hex.EncodeToString(hasher.Sum(nil))
+}
+
+func (e *Engine) SHA1(data []byte) string {
+	hasher := sha1.New()
+	hasher.Write(data)
+	return hex.EncodeToString(hasher.Sum(nil))
+}
+
+func (e *Engine) B64Encode(data []byte) string {
+	return string(base64.StdEncoding.EncodeToString([]byte(data))
+}
+
+func (e *Engine) B64Decode(data string) []byte, error {
+	valBytes, err := base64.StdEncoding.DecodeString(data)
+	if err != nil {
+		e.Logger.WithField("trace", "true").Errorf("Crypto error: %s", err.Error())
+		return nil, err
+	}
+	return []byte(valBytes), nil
 }
