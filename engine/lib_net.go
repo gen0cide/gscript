@@ -497,5 +497,3 @@ func (e *Engine) IsUDPPortInUse(port string) bool {
 	defer conn.Close()
 	return true
 }
-ue
-}
