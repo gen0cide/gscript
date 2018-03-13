@@ -85,7 +85,7 @@ func templatesCommentGoTmpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/comment.go.tmpl", size: 741, mode: os.FileMode(436), modTime: time.Unix(1520713274, 0)}
+	info := bindataFileInfo{name: "templates/comment.go.tmpl", size: 741, mode: os.FileMode(420), modTime: time.Unix(1520831575, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -105,7 +105,7 @@ func templatesDocsMdTmpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/docs.md.tmpl", size: 401, mode: os.FileMode(436), modTime: time.Unix(1520713274, 0)}
+	info := bindataFileInfo{name: "templates/docs.md.tmpl", size: 401, mode: os.FileMode(420), modTime: time.Unix(1520831575, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -125,7 +125,7 @@ func templatesVm_functionsGoTmpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/vm_functions.go.tmpl", size: 3054, mode: os.FileMode(436), modTime: time.Unix(1520726631, 0)}
+	info := bindataFileInfo{name: "templates/vm_functions.go.tmpl", size: 3054, mode: os.FileMode(420), modTime: time.Unix(1520831575, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }

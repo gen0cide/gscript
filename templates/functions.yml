@@ -384,7 +384,7 @@
     - label: url
       gotype: string
     - label: json
-      gotype: '[]byte'
+      gotype: string
   returns:
     - label: statusCode
       gotype: int

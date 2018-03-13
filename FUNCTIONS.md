@@ -626,7 +626,7 @@ Transmits a JSON object to a URL and retruns the HTTP status code and response
 ### Argument List
 
  * **url** *string*
- * **json** *[]byte*
+ * **json** *string*
 
 ### Returned Object Fields
 

@@ -1971,7 +1971,19 @@ func (e *Engine) vmPostJSON(call otto.FunctionCall) otto.Value {
 		return otto.FalseValue()
 	}
 
-	json := e.ValueToByteSlice(call.Argument(1))
+	var json string
+	rawArg1, err := call.Argument(1).Export()
+	if err != nil {
+		e.Logger.WithField("function", "PostJSON").WithField("trace", "true").Errorf("Could not export field: %s", "json")
+		return otto.FalseValue()
+	}
+	switch v := rawArg1.(type) {
+	case string:
+		json = rawArg1.(string)
+	default:
+		e.Logger.WithField("function", "PostJSON").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
+		return otto.FalseValue()
+	}
 	statusCode, response, runtimeError := e.PostJSON(url, json)
 	rawVMRet := VMResponse{}
 

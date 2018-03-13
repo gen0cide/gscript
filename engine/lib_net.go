@@ -186,7 +186,7 @@ func (e *Engine) HTTPGetFile(url string) (int, []byte, error) {
 //
 // Here is a list of the arguments for the Javascript function:
 //  * url (string)
-//  * json ([]byte)
+//  * json (string)
 //
 // Returns
 //
@@ -203,10 +203,10 @@ func (e *Engine) HTTPGetFile(url string) (int, []byte, error) {
 //  // obj.response
 //  // obj.runtimeError
 //
-func (e *Engine) PostJSON(url string, jsonString []byte) (int, []byte, error) {
+func (e *Engine) PostJSON(url string, jsonString string) (int, []byte, error) {
 	// encode json to sanity check, then decode to ensure the transmition syntax is clean
 	var jsonObj interface{}
-	if err := json.Unmarshal(jsonString, &jsonObj); err != nil {
+	if err := json.Unmarshal([]byte(jsonString), &jsonObj); err != nil {
 		return 0, nil, err
 	}
 	jsonStringCleaned, err := json.Marshal(jsonObj)
