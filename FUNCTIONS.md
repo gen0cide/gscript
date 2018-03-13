@@ -451,6 +451,22 @@ Gets an array of Ip addresses for the host
 
 
 
+## `GetMACAddress()`
+
+Gets the MAC address of the interface with an IPv4 address
+
+### Argument List
+
+
+### Returned Object Fields
+
+ * **address** *string*
+ * **runtimeError** *error*
+
+---
+
+
+
 ## `GetProcName(pid)`
 
 Returns the name of a target proccess

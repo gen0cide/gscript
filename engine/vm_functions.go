@@ -44,6 +44,7 @@
 // Functions in net:
 //  DNSQuestion(target, request) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.DNSQuestion
 //  GetLocalIPs() - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.GetLocalIPs
+//  GetMACAddress() - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.GetMACAddress
 //  HTTPGetFile(url) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.HTTPGetFile
 //  IsTCPPortInUse(port) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.IsTCPPortInUse
 //  IsUDPPortInUse(port) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.IsUDPPortInUse
@@ -119,6 +120,7 @@ func (e *Engine) CreateVM() {
 	e.VM.Set("ForkExecuteCommand", e.vmForkExecuteCommand)
 	e.VM.Set("GetEnvVar", e.vmGetEnvVar)
 	e.VM.Set("GetLocalIPs", e.vmGetLocalIPs)
+	e.VM.Set("GetMACAddress", e.vmGetMACAddress)
 	e.VM.Set("GetProcName", e.vmGetProcName)
 	e.VM.Set("HTTPGetFile", e.vmHTTPGetFile)
 	e.VM.Set("Halt", e.vmHalt)
@@ -1515,6 +1517,34 @@ func (e *Engine) vmGetLocalIPs(call otto.FunctionCall) otto.Value {
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "GetLocalIPs").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
+		return otto.FalseValue()
+	}
+	return vmRet
+}
+
+func (e *Engine) vmGetMACAddress(call otto.FunctionCall) otto.Value {
+	if len(call.ArgumentList) > 0 {
+		e.Logger.WithField("function", "GetMACAddress").WithField("trace", "true").Error("Too many arguments in call.")
+		return otto.FalseValue()
+	}
+	if len(call.ArgumentList) < 0 {
+		e.Logger.WithField("function", "GetMACAddress").WithField("trace", "true").Error("Too few arguments in call.")
+		return otto.FalseValue()
+	}
+	address, runtimeError := e.GetMACAddress()
+	rawVMRet := VMResponse{}
+
+	rawVMRet["address"] = address
+
+	if runtimeError != nil {
+		e.Logger.WithField("function", "GetMACAddress").WithField("trace", "true").Errorf("<function error> %s", runtimeError.Error())
+		rawVMRet["runtimeError"] = runtimeError.Error()
+	} else {
+		rawVMRet["runtimeError"] = nil
+	}
+	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
+	if vmRetError != nil {
+		e.Logger.WithField("function", "GetMACAddress").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
 		return otto.FalseValue()
 	}
 	return vmRet

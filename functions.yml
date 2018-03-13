@@ -463,6 +463,18 @@
     - label: addresses
       gotype: '[]string'
       return: true
+- name: GetMACAddress
+  description: Gets the MAC address of the interface with an IPv4 address
+  author: ahhh (https://github.com/ahhh)
+  package: net
+  args:
+  returns:
+    - label: address
+      gotype: string
+      return: true
+    - label: runtimeError
+      gotype: error
+      return: true
 #####################################################################
 #
 # os package
