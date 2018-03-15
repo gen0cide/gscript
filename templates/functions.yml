@@ -221,6 +221,22 @@
     - label: fileError
       gotype: error
       return: true
+- name: WriteTempFile
+  description: Writes data from a byte array to a temporary file and returns the full temp file path and name.
+  author: ahhh (https://github.com/ahhh)
+  package: file
+  args:
+    - label: name
+      gotype: string
+    - label: fileData
+      gotype: '[]byte'
+  returns:
+    - label: fullpath
+      gotype: string
+      return: true
+    - label: fileError
+      gotype: error
+      return: true
 - name: CopyFile
   description: Reads the contents of one file and copies it to another with the given permissions.
   author: ahhh (https://github.com/ahhh)

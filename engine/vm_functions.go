@@ -38,6 +38,7 @@
 //  ReadFile(path) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.ReadFile
 //  ReplaceFileString(file, match, replacement) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.ReplaceFileString
 //  WriteFile(path, fileData, perms) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.WriteFile
+//  WriteTempFile(name, fileData) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.WriteTempFile
 //
 // Library net
 //
@@ -150,6 +151,7 @@ func (e *Engine) CreateVM() {
 	e.VM.Set("StripSpaces", e.vmStripSpaces)
 	e.VM.Set("Timestamp", e.vmTimestamp)
 	e.VM.Set("WriteFile", e.vmWriteFile)
+	e.VM.Set("WriteTempFile", e.vmWriteTempFile)
 	e.VM.Set("XorBytes", e.vmXorBytes)
 	_, err := e.VM.Run(vmPreload)
 	if err != nil {
@@ -2838,6 +2840,50 @@ func (e *Engine) vmWriteFile(call otto.FunctionCall) otto.Value {
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "WriteFile").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
+		return otto.FalseValue()
+	}
+	return vmRet
+}
+
+func (e *Engine) vmWriteTempFile(call otto.FunctionCall) otto.Value {
+	if len(call.ArgumentList) > 2 {
+		e.Logger.WithField("function", "WriteTempFile").WithField("trace", "true").Error("Too many arguments in call.")
+		return otto.FalseValue()
+	}
+	if len(call.ArgumentList) < 2 {
+		e.Logger.WithField("function", "WriteTempFile").WithField("trace", "true").Error("Too few arguments in call.")
+		return otto.FalseValue()
+	}
+
+	var name string
+	rawArg0, err := call.Argument(0).Export()
+	if err != nil {
+		e.Logger.WithField("function", "WriteTempFile").WithField("trace", "true").Errorf("Could not export field: %s", "name")
+		return otto.FalseValue()
+	}
+	switch v := rawArg0.(type) {
+	case string:
+		name = rawArg0.(string)
+	default:
+		e.Logger.WithField("function", "WriteTempFile").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
+		return otto.FalseValue()
+	}
+
+	fileData := e.ValueToByteSlice(call.Argument(1))
+	fullpath, fileError := e.WriteTempFile(name, fileData)
+	rawVMRet := VMResponse{}
+
+	rawVMRet["fullpath"] = fullpath
+
+	if fileError != nil {
+		e.Logger.WithField("function", "WriteTempFile").WithField("trace", "true").Errorf("<function error> %s", fileError.Error())
+		rawVMRet["fileError"] = fileError.Error()
+	} else {
+		rawVMRet["fileError"] = nil
+	}
+	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
+	if vmRetError != nil {
+		e.Logger.WithField("function", "WriteTempFile").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
 		return otto.FalseValue()
 	}
 	return vmRet

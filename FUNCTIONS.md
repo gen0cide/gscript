@@ -959,6 +959,24 @@ Writes data from a byte array to a file with the given permissions.
 
 
 
+## `WriteTempFile(name, fileData)`
+
+Writes data from a byte array to a temporary file and returns the full temp file path and name.
+
+### Argument List
+
+ * **name** *string*
+ * **fileData** *[]byte*
+
+### Returned Object Fields
+
+ * **fullpath** *string*
+ * **fileError** *error*
+
+---
+
+
+
 ## `XorBytes(aByteArray, bByteArray)`
 
 XOR two byte arrays together.
