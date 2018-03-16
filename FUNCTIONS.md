@@ -451,6 +451,22 @@ Gets an array of Ip addresses for the host
 
 
 
+## `GetMACAddress()`
+
+Gets the MAC address of the interface with an IPv4 address
+
+### Argument List
+
+
+### Returned Object Fields
+
+ * **address** *string*
+ * **runtimeError** *error*
+
+---
+
+
+
 ## `GetProcName(pid)`
 
 Returns the name of a target proccess
@@ -626,7 +642,7 @@ Transmits a JSON object to a URL and retruns the HTTP status code and response
 ### Argument List
 
  * **url** *string*
- * **json** *[]byte*
+ * **json** *string*
 
 ### Returned Object Fields
 
@@ -937,6 +953,24 @@ Writes data from a byte array to a file with the given permissions.
 ### Returned Object Fields
 
  * **bytesWritten** *int*
+ * **fileError** *error*
+
+---
+
+
+
+## `WriteTempFile(name, fileData)`
+
+Writes data from a byte array to a temporary file and returns the full temp file path and name.
+
+### Argument List
+
+ * **name** *string*
+ * **fileData** *[]byte*
+
+### Returned Object Fields
+
+ * **fullpath** *string*
  * **fileError** *error*
 
 ---

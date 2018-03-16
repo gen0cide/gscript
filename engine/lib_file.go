@@ -4,6 +4,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path"
 	"strings"
 )
 
@@ -49,6 +50,60 @@ func (e *Engine) WriteFile(path string, fileData []byte, perms int64) (int, erro
 		return 0, err
 	}
 	return len(fileData), nil
+}
+
+// WriteTempFile - Writes data from a byte array to a temporary file and returns the full temp file path and name.
+//
+// Package
+//
+// file
+//
+// Author
+//
+// - ahhh (https://github.com/ahhh)
+//
+// Javascript
+//
+// Here is the Javascript method signature:
+//  WriteTempFile(name, fileData)
+//
+// Arguments
+//
+// Here is a list of the arguments for the Javascript function:
+//  * name (string)
+//  * fileData ([]byte)
+//
+// Returns
+//
+// Here is a list of fields in the return object:
+//  * obj.fullpath (string)
+//  * obj.fileError (error)
+//
+// Example
+//
+// Here is an example of how to use this function in gscript:
+//  var obj = WriteTempFile(name, fileData);
+//  // obj.fullpath
+//  // obj.fileError
+//
+func (e *Engine) WriteTempFile(name string, fileData []byte) (string, error) {
+	fileGuy, err := ioutil.TempFile("", name)
+	if err != nil {
+		e.Logger.WithField("trace", "true").Errorf("Error creating temp file %s", err.Error())
+		return "", err
+	}
+	_, err = fileGuy.Write(fileData)
+	if err != nil {
+		e.Logger.WithField("trace", "true").Errorf("Error writing the temp file: %s", err.Error())
+		return "", err
+	}
+	err = fileGuy.Close()
+	if err != nil {
+		e.Logger.WithField("trace", "true").Errorf("Error closing the temp file: %s", err.Error())
+		return "", err
+	}
+	filepath := path.Join(path.Dir(fileGuy.Name()), fileGuy.Name())
+	return filepath, nil
 }
 
 // ReplaceFileString - Searches a file for a string and replaces each instance found of that string. Returns the amount of strings replaced

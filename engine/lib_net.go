@@ -186,7 +186,7 @@ func (e *Engine) HTTPGetFile(url string) (int, []byte, error) {
 //
 // Here is a list of the arguments for the Javascript function:
 //  * url (string)
-//  * json ([]byte)
+//  * json (string)
 //
 // Returns
 //
@@ -203,10 +203,10 @@ func (e *Engine) HTTPGetFile(url string) (int, []byte, error) {
 //  // obj.response
 //  // obj.runtimeError
 //
-func (e *Engine) PostJSON(url string, jsonString []byte) (int, []byte, error) {
+func (e *Engine) PostJSON(url string, jsonString string) (int, []byte, error) {
 	// encode json to sanity check, then decode to ensure the transmition syntax is clean
 	var jsonObj interface{}
-	if err := json.Unmarshal(jsonString, &jsonObj); err != nil {
+	if err := json.Unmarshal([]byte(jsonString), &jsonObj); err != nil {
 		return 0, nil, err
 	}
 	jsonStringCleaned, err := json.Marshal(jsonObj)
@@ -539,4 +539,67 @@ func (e *Engine) GetLocalIPs() []string {
 		}
 	}
 	return addresses
+}
+
+// GetMACAddress - Gets the MAC address of the interface with an IPv4 address
+//
+// Package
+//
+// net
+//
+// Author
+//
+// - ahhh (https://github.com/ahhh)
+//
+// Javascript
+//
+// Here is the Javascript method signature:
+//  GetMACAddress()
+//
+// Arguments
+//
+// Here is a list of the arguments for the Javascript function:
+//
+// Returns
+//
+// Here is a list of fields in the return object:
+//  * obj.address (string)
+//  * obj.runtimeError (error)
+//
+// Example
+//
+// Here is an example of how to use this function in gscript:
+//  var obj = GetMACAddress();
+//  // obj.address
+//  // obj.runtimeError
+//
+func (e *Engine) GetMACAddress() (string, error) {
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		return "", err
+	}
+	var currentIP, currentNetworkHardwareName string
+	for _, address := range addrs {
+		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				currentIP = ipnet.IP.String()
+			}
+		}
+	}
+	interfaces, _ := net.Interfaces()
+	for _, interf := range interfaces {
+		if addrs, err := interf.Addrs(); err == nil {
+			for _, addr := range addrs {
+				if strings.Contains(addr.String(), currentIP) {
+					currentNetworkHardwareName = interf.Name
+				}
+			}
+		}
+	}
+	netInterface, err := net.InterfaceByName(currentNetworkHardwareName)
+	if err != nil {
+		return "", err
+	}
+	macAddress := netInterface.HardwareAddr
+	return macAddress.String(), nil
 }
