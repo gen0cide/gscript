@@ -39,7 +39,7 @@ func allocate(size uintptr) (uintptr, error) {
 	return addr, nil
 }
 
-func InjectIntoProc(shellcode string, pid int64) error {
+func (e *Engine) InjectIntoProc(shellcode string, pid int64) error {
 	sc, err := hex.DecodeString(shellcode)
 	if err != nil {
 		return errors.New("conversion from hex-encoded string failed")
@@ -66,7 +66,7 @@ func InjectIntoProc(shellcode string, pid int64) error {
 	return errors.New("could not inject into given process")
 }
 
-func InjectIntoSelf(shellcode string) error {
+func (e *Engine) InjectIntoSelf(shellcode string) error {
 	pid := os.Getpid()
 	sc, err := hex.DecodeString(shellcode)
 	if err != nil {

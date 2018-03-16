@@ -352,8 +352,30 @@
 # injection package
 #
 #####################################################################
-# TODO (lib_injection.go)
-
+- name: InjectIntoProc
+  description: Inject shellcode into a provided PID
+  author: Vyrus (https://github.com/vyrus001)
+  package: injection
+  args:
+    - label: shellcode
+      gotype: string
+    - label: proccessID
+      gotype: int64
+  returns:
+    - label: runtimeError
+      gotype: error
+      return: true
+- name: InjectIntoSelf
+  description: Inject shellcode into the parrent proccess
+  author: Vyrus (https://github.com/vyrus001)
+  package: injection
+  args:
+    - label: shellcode
+      gotype: string
+  returns:
+    - label: runtimeError
+      gotype: error
+      return: true
 #####################################################################
 #
 # net package
@@ -824,3 +846,87 @@
     - label: runtimeError
       gotype: error
       return: true
+#####################################################################
+#
+# stealth package
+#
+#####################################################################
+- name: MakeUnDebuggable
+  description: Make the current proccess un debuggable by attaching a debugger to itself
+  author: Vyrus (https://github.com/vyrus001)
+  package: stealth
+  args: []
+  returns:
+    - label: worked
+      gotype: bool
+      return: true
+    - label: runtimeError
+      gotype: error
+      return: true
+- name: MakeDebuggable
+  description: Reverse the debugging state set by MakeUnDebuggable by detaching the debugger
+  author: Vyrus (https://github.com/vyrus001)
+  package: stealth
+  args: []
+  returns:
+    - label: worked
+      gotype: bool
+      return: true
+    - label: runtimeError
+      gotype: error
+      return: true
+- name: IsDebuggerPresent
+  description: Discovers weather or not the current proccess is being debugged
+  author: Vyrus (https://github.com/vyrus001)
+  package: stealth
+  args: []
+  returns:
+    - label: isBeingDebugged
+      gotype: bool
+      return: true
+    - label: runtimeError
+      gotype: error
+      return: true
+- name: CheckIfWineGetUnixFileNameExists
+  description: Checks for the existance of a stdLib function called "unix_file_name_exists". This is a sandbox check to discover if the current proccess is running within a Wine enviornment
+  author: Vyrus (https://github.com/vyrus001)
+  package: stealth
+  args: []
+  returns:
+    - label: areWeRunningInWine
+      gotype: bool
+      return: true
+    - label: runtimeError
+      gotype: error
+      return: true
+- name: CheckSandboxUsernames
+  description: Checks to see if the current username contains a series of typical sandbox strings.
+  author: Vyrus (https://github.com/vyrus001)
+  package: stealth
+  args: []
+  returns:
+    - label: areWeInASandbox
+      gotype: bool
+      return: true
+    - label: runtimeError
+      gotype: error
+      return: true
+- name: CheckIfCPUCountIsHigherThanOne
+  description: Checks to see if the system we are on has at least 2 CPUs (or cores) (sandbox check).
+  author: Vyrus (https://github.com/vyrus001)
+  package: stealth
+  args: []
+  returns:
+    - label: areWeInASandbox
+      gotype: bool
+      return: true
+- name: CheckIfRAMAmountIsBelow1GB
+  description: Checks to see if the system we are on has at least 1GB of ram (sandbox check).
+  author: Vyrus (https://github.com/vyrus001)
+  package: stealth
+  args: []
+  returns:
+    - label: areWeInASandbox
+      gotype: bool
+      return: true
+######################

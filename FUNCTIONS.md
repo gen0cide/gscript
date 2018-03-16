@@ -200,6 +200,68 @@ Base64 encodes a byte array
 
 
 
+## `CheckIfCPUCountIsHigherThanOne()`
+
+Checks to see if the system we are on has at least 2 CPUs (or cores) (sandbox check).
+
+### Argument List
+
+
+### Returned Object Fields
+
+ * **areWeInASandbox** *bool*
+
+---
+
+
+
+## `CheckIfRAMAmountIsBelow1GB()`
+
+Checks to see if the system we are on has at least 1GB of ram (sandbox check).
+
+### Argument List
+
+
+### Returned Object Fields
+
+ * **areWeInASandbox** *bool*
+
+---
+
+
+
+## `CheckIfWineGetUnixFileNameExists()`
+
+Checks for the existance of a stdLib function called "unix_file_name_exists". This is a sandbox check to discover if the current proccess is running within a Wine enviornment
+
+### Argument List
+
+
+### Returned Object Fields
+
+ * **areWeRunningInWine** *bool*
+ * **runtimeError** *error*
+
+---
+
+
+
+## `CheckSandboxUsernames()`
+
+Checks to see if the current username contains a series of typical sandbox strings.
+
+### Argument List
+
+
+### Returned Object Fields
+
+ * **areWeInASandbox** *bool*
+ * **runtimeError** *error*
+
+---
+
+
+
 ## `Chmod(path, perms)`
 
 Change the permissions on a path.
@@ -517,6 +579,39 @@ Stop the current VM from continuing execution.
 
 
 
+## `InjectIntoProc(shellcode, proccessID)`
+
+Inject shellcode into a provided PID
+
+### Argument List
+
+ * **shellcode** *string*
+ * **proccessID** *int64*
+
+### Returned Object Fields
+
+ * **runtimeError** *error*
+
+---
+
+
+
+## `InjectIntoSelf(shellcode)`
+
+Inject shellcode into the parrent proccess
+
+### Argument List
+
+ * **shellcode** *string*
+
+### Returned Object Fields
+
+ * **runtimeError** *error*
+
+---
+
+
+
 ## `InstallSystemService(path, name, displayName, description)`
 
 Installs a target binary as a system service
@@ -531,6 +626,22 @@ Installs a target binary as a system service
 ### Returned Object Fields
 
  * **installError** *error*
+
+---
+
+
+
+## `IsDebuggerPresent()`
+
+Discovers weather or not the current proccess is being debugged
+
+### Argument List
+
+
+### Returned Object Fields
+
+ * **isBeingDebugged** *bool*
+ * **runtimeError** *error*
 
 ---
 
@@ -579,6 +690,38 @@ Perform an MD5() hash on data.
 ### Returned Object Fields
 
  * **value** *string*
+
+---
+
+
+
+## `MakeDebuggable()`
+
+Reverse the debugging state set by MakeUnDebuggable by detaching the debugger
+
+### Argument List
+
+
+### Returned Object Fields
+
+ * **worked** *bool*
+ * **runtimeError** *error*
+
+---
+
+
+
+## `MakeUnDebuggable()`
+
+Make the current proccess un debuggable by attaching a debugger to itself
+
+### Argument List
+
+
+### Returned Object Fields
+
+ * **worked** *bool*
+ * **runtimeError** *error*
 
 ---
 

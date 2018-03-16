@@ -920,9 +920,6 @@
     - label: areWeInASandbox
       gotype: bool
       return: true
-    - label: runtimeError
-      gotype: error
-      return: true
 - name: CheckIfRAMAmountIsBelow1GB
   description: Checks to see if the system we are on has at least 1GB of ram (sandbox check).
   author: Vyrus (https://github.com/vyrus001)
@@ -931,8 +928,5 @@
   returns:
     - label: areWeInASandbox
       gotype: bool
-      return: true
-    - label: runtimeError
-      gotype: error
       return: true
 ######################

