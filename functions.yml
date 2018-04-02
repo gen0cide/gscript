@@ -934,11 +934,13 @@
 # polymorph package (*untested*)
 #
 #####################################################################
-- name: RetrievePolymorphicData
+- name: RetrievePEPolymorphicData
   description: Retrive data stored within uninitalized space at the end of the gscript binary
   author: Vyrus (https://github.com/vyrus001)
   package: polymorph
-  args: []
+  args:
+    - label: peFile
+      gotype: string
   returns:
     - label: data
       gotype: '[]byte'
@@ -946,11 +948,13 @@
     - label: runtimeError
       gotype: error
       return: true
-- name: WritePolymorphicData
+- name: WritePEPolymorphicData
   description: Write data to the uninitalized space at the end of the gscript binary
   author: Vyrus (https://github.com/vyrus001)
   package: polymorph
   args:
+    - label: peFile
+      gotype: string
     - label: data
       gotype: '[]byte'
   returns:
