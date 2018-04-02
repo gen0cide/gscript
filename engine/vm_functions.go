@@ -77,6 +77,12 @@
 //  StartServiceByName(name) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.StartServiceByName
 //  StopServiceByName(name) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.StopServiceByName
 //
+// Library polymorph
+//
+// Functions in polymorph:
+//  RetrievePolymorphicData() - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.RetrievePolymorphicData
+//  WritePolymorphicData(data) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.WritePolymorphicData
+//
 // Library registry
 //
 // Functions in registry:
@@ -162,6 +168,7 @@ func (e *Engine) CreateVM() {
 	e.VM.Set("ReadFile", e.vmReadFile)
 	e.VM.Set("RemoveServiceByName", e.vmRemoveServiceByName)
 	e.VM.Set("ReplaceFileString", e.vmReplaceFileString)
+	e.VM.Set("RetrievePolymorphicData", e.vmRetrievePolymorphicData)
 	e.VM.Set("RunningProcs", e.vmRunningProcs)
 	e.VM.Set("SHA1", e.vmSHA1)
 	e.VM.Set("SSHCmd", e.vmSSHCmd)
@@ -173,6 +180,7 @@ func (e *Engine) CreateVM() {
 	e.VM.Set("StripSpaces", e.vmStripSpaces)
 	e.VM.Set("Timestamp", e.vmTimestamp)
 	e.VM.Set("WriteFile", e.vmWriteFile)
+	e.VM.Set("WritePolymorphicData", e.vmWritePolymorphicData)
 	e.VM.Set("WriteTempFile", e.vmWriteTempFile)
 	e.VM.Set("XorBytes", e.vmXorBytes)
 	_, err := e.VM.Run(vmPreload)
@@ -2662,6 +2670,34 @@ func (e *Engine) vmReplaceFileString(call otto.FunctionCall) otto.Value {
 	return vmRet
 }
 
+func (e *Engine) vmRetrievePolymorphicData(call otto.FunctionCall) otto.Value {
+	if len(call.ArgumentList) > 0 {
+		e.Logger.WithField("function", "RetrievePolymorphicData").WithField("trace", "true").Error("Too many arguments in call.")
+		return otto.FalseValue()
+	}
+	if len(call.ArgumentList) < 0 {
+		e.Logger.WithField("function", "RetrievePolymorphicData").WithField("trace", "true").Error("Too few arguments in call.")
+		return otto.FalseValue()
+	}
+	data, runtimeError := e.RetrievePolymorphicData()
+	rawVMRet := VMResponse{}
+
+	rawVMRet["data"] = data
+
+	if runtimeError != nil {
+		e.Logger.WithField("function", "RetrievePolymorphicData").WithField("trace", "true").Errorf("<function error> %s", runtimeError.Error())
+		rawVMRet["runtimeError"] = runtimeError.Error()
+	} else {
+		rawVMRet["runtimeError"] = nil
+	}
+	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
+	if vmRetError != nil {
+		e.Logger.WithField("function", "RetrievePolymorphicData").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
+		return otto.FalseValue()
+	}
+	return vmRet
+}
+
 func (e *Engine) vmRunningProcs(call otto.FunctionCall) otto.Value {
 	if len(call.ArgumentList) > 0 {
 		e.Logger.WithField("function", "RunningProcs").WithField("trace", "true").Error("Too many arguments in call.")
@@ -3138,6 +3174,34 @@ func (e *Engine) vmWriteFile(call otto.FunctionCall) otto.Value {
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "WriteFile").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
+		return otto.FalseValue()
+	}
+	return vmRet
+}
+
+func (e *Engine) vmWritePolymorphicData(call otto.FunctionCall) otto.Value {
+	if len(call.ArgumentList) > 1 {
+		e.Logger.WithField("function", "WritePolymorphicData").WithField("trace", "true").Error("Too many arguments in call.")
+		return otto.FalseValue()
+	}
+	if len(call.ArgumentList) < 1 {
+		e.Logger.WithField("function", "WritePolymorphicData").WithField("trace", "true").Error("Too few arguments in call.")
+		return otto.FalseValue()
+	}
+
+	data := e.ValueToByteSlice(call.Argument(0))
+	runtimeError := e.WritePolymorphicData(data)
+	rawVMRet := VMResponse{}
+
+	if runtimeError != nil {
+		e.Logger.WithField("function", "WritePolymorphicData").WithField("trace", "true").Errorf("<function error> %s", runtimeError.Error())
+		rawVMRet["runtimeError"] = runtimeError.Error()
+	} else {
+		rawVMRet["runtimeError"] = nil
+	}
+	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
+	if vmRetError != nil {
+		e.Logger.WithField("function", "WritePolymorphicData").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
 		return otto.FalseValue()
 	}
 	return vmRet

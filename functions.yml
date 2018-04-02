@@ -931,13 +931,13 @@
       return: true
 #####################################################################
 #
-# polymorphic package (*untested*)
+# polymorph package (*untested*)
 #
 #####################################################################
 - name: RetrievePolymorphicData
   description: Retrive data stored within uninitalized space at the end of the gscript binary
   author: Vyrus (https://github.com/vyrus001)
-  package: polymorphic
+  package: polymorph
   args: []
   returns:
     - label: data
@@ -949,10 +949,10 @@
 - name: WritePolymorphicData
   description: Write data to the uninitalized space at the end of the gscript binary
   author: Vyrus (https://github.com/vyrus001)
-  package: polymorphic
+  package: polymorph
   args:
-    - label: polymorphicData
-    gotype: '[]byte'
+    - label: data
+      gotype: '[]byte'
   returns:
     - label: runtimeError
       gotype: error

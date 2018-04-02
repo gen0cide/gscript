@@ -916,6 +916,22 @@ Searches a file for a string and replaces each instance found of that string. Re
 
 
 
+## `RetrievePolymorphicData()`
+
+Retrive data stored within uninitalized space at the end of the gscript binary
+
+### Argument List
+
+
+### Returned Object Fields
+
+ * **data** *[]byte*
+ * **runtimeError** *error*
+
+---
+
+
+
 ## `RunningProcs()`
 
 Returns an array of int's representing active PIDs currently running
@@ -1097,6 +1113,22 @@ Writes data from a byte array to a file with the given permissions.
 
  * **bytesWritten** *int*
  * **fileError** *error*
+
+---
+
+
+
+## `WritePolymorphicData(data)`
+
+Write data to the uninitalized space at the end of the gscript binary
+
+### Argument List
+
+ * **data** *[]byte*
+
+### Returned Object Fields
+
+ * **runtimeError** *error*
 
 ---
 
