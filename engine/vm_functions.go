@@ -80,8 +80,8 @@
 // Library polymorph
 //
 // Functions in polymorph:
-//  RetrievePolymorphicData() - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.RetrievePolymorphicData
-//  WritePolymorphicData(data) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.WritePolymorphicData
+//  RetrievePEPolymorphicData(peFile) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.RetrievePEPolymorphicData
+//  WritePEPolymorphicData(peFile, data) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.WritePEPolymorphicData
 //
 // Library registry
 //
@@ -168,7 +168,7 @@ func (e *Engine) CreateVM() {
 	e.VM.Set("ReadFile", e.vmReadFile)
 	e.VM.Set("RemoveServiceByName", e.vmRemoveServiceByName)
 	e.VM.Set("ReplaceFileString", e.vmReplaceFileString)
-	e.VM.Set("RetrievePolymorphicData", e.vmRetrievePolymorphicData)
+	e.VM.Set("RetrievePEPolymorphicData", e.vmRetrievePEPolymorphicData)
 	e.VM.Set("RunningProcs", e.vmRunningProcs)
 	e.VM.Set("SHA1", e.vmSHA1)
 	e.VM.Set("SSHCmd", e.vmSSHCmd)
@@ -180,7 +180,7 @@ func (e *Engine) CreateVM() {
 	e.VM.Set("StripSpaces", e.vmStripSpaces)
 	e.VM.Set("Timestamp", e.vmTimestamp)
 	e.VM.Set("WriteFile", e.vmWriteFile)
-	e.VM.Set("WritePolymorphicData", e.vmWritePolymorphicData)
+	e.VM.Set("WritePEPolymorphicData", e.vmWritePEPolymorphicData)
 	e.VM.Set("WriteTempFile", e.vmWriteTempFile)
 	e.VM.Set("XorBytes", e.vmXorBytes)
 	_, err := e.VM.Run(vmPreload)
@@ -2670,29 +2670,43 @@ func (e *Engine) vmReplaceFileString(call otto.FunctionCall) otto.Value {
 	return vmRet
 }
 
-func (e *Engine) vmRetrievePolymorphicData(call otto.FunctionCall) otto.Value {
-	if len(call.ArgumentList) > 0 {
-		e.Logger.WithField("function", "RetrievePolymorphicData").WithField("trace", "true").Error("Too many arguments in call.")
+func (e *Engine) vmRetrievePEPolymorphicData(call otto.FunctionCall) otto.Value {
+	if len(call.ArgumentList) > 1 {
+		e.Logger.WithField("function", "RetrievePEPolymorphicData").WithField("trace", "true").Error("Too many arguments in call.")
 		return otto.FalseValue()
 	}
-	if len(call.ArgumentList) < 0 {
-		e.Logger.WithField("function", "RetrievePolymorphicData").WithField("trace", "true").Error("Too few arguments in call.")
+	if len(call.ArgumentList) < 1 {
+		e.Logger.WithField("function", "RetrievePEPolymorphicData").WithField("trace", "true").Error("Too few arguments in call.")
 		return otto.FalseValue()
 	}
-	data, runtimeError := e.RetrievePolymorphicData()
+
+	var peFile string
+	rawArg0, err := call.Argument(0).Export()
+	if err != nil {
+		e.Logger.WithField("function", "RetrievePEPolymorphicData").WithField("trace", "true").Errorf("Could not export field: %s", "peFile")
+		return otto.FalseValue()
+	}
+	switch v := rawArg0.(type) {
+	case string:
+		peFile = rawArg0.(string)
+	default:
+		e.Logger.WithField("function", "RetrievePEPolymorphicData").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
+		return otto.FalseValue()
+	}
+	data, runtimeError := e.RetrievePEPolymorphicData(peFile)
 	rawVMRet := VMResponse{}
 
 	rawVMRet["data"] = data
 
 	if runtimeError != nil {
-		e.Logger.WithField("function", "RetrievePolymorphicData").WithField("trace", "true").Errorf("<function error> %s", runtimeError.Error())
+		e.Logger.WithField("function", "RetrievePEPolymorphicData").WithField("trace", "true").Errorf("<function error> %s", runtimeError.Error())
 		rawVMRet["runtimeError"] = runtimeError.Error()
 	} else {
 		rawVMRet["runtimeError"] = nil
 	}
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
-		e.Logger.WithField("function", "RetrievePolymorphicData").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
+		e.Logger.WithField("function", "RetrievePEPolymorphicData").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
 		return otto.FalseValue()
 	}
 	return vmRet
@@ -3179,29 +3193,43 @@ func (e *Engine) vmWriteFile(call otto.FunctionCall) otto.Value {
 	return vmRet
 }
 
-func (e *Engine) vmWritePolymorphicData(call otto.FunctionCall) otto.Value {
-	if len(call.ArgumentList) > 1 {
-		e.Logger.WithField("function", "WritePolymorphicData").WithField("trace", "true").Error("Too many arguments in call.")
+func (e *Engine) vmWritePEPolymorphicData(call otto.FunctionCall) otto.Value {
+	if len(call.ArgumentList) > 2 {
+		e.Logger.WithField("function", "WritePEPolymorphicData").WithField("trace", "true").Error("Too many arguments in call.")
 		return otto.FalseValue()
 	}
-	if len(call.ArgumentList) < 1 {
-		e.Logger.WithField("function", "WritePolymorphicData").WithField("trace", "true").Error("Too few arguments in call.")
+	if len(call.ArgumentList) < 2 {
+		e.Logger.WithField("function", "WritePEPolymorphicData").WithField("trace", "true").Error("Too few arguments in call.")
 		return otto.FalseValue()
 	}
 
-	data := e.ValueToByteSlice(call.Argument(0))
-	runtimeError := e.WritePolymorphicData(data)
+	var peFile string
+	rawArg0, err := call.Argument(0).Export()
+	if err != nil {
+		e.Logger.WithField("function", "WritePEPolymorphicData").WithField("trace", "true").Errorf("Could not export field: %s", "peFile")
+		return otto.FalseValue()
+	}
+	switch v := rawArg0.(type) {
+	case string:
+		peFile = rawArg0.(string)
+	default:
+		e.Logger.WithField("function", "WritePEPolymorphicData").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
+		return otto.FalseValue()
+	}
+
+	data := e.ValueToByteSlice(call.Argument(1))
+	runtimeError := e.WritePEPolymorphicData(peFile, data)
 	rawVMRet := VMResponse{}
 
 	if runtimeError != nil {
-		e.Logger.WithField("function", "WritePolymorphicData").WithField("trace", "true").Errorf("<function error> %s", runtimeError.Error())
+		e.Logger.WithField("function", "WritePEPolymorphicData").WithField("trace", "true").Errorf("<function error> %s", runtimeError.Error())
 		rawVMRet["runtimeError"] = runtimeError.Error()
 	} else {
 		rawVMRet["runtimeError"] = nil
 	}
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
-		e.Logger.WithField("function", "WritePolymorphicData").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
+		e.Logger.WithField("function", "WritePEPolymorphicData").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
 		return otto.FalseValue()
 	}
 	return vmRet

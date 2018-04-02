@@ -916,12 +916,13 @@ Searches a file for a string and replaces each instance found of that string. Re
 
 
 
-## `RetrievePolymorphicData()`
+## `RetrievePEPolymorphicData(peFile)`
 
 Retrive data stored within uninitalized space at the end of the gscript binary
 
 ### Argument List
 
+ * **peFile** *string*
 
 ### Returned Object Fields
 
@@ -1118,12 +1119,13 @@ Writes data from a byte array to a file with the given permissions.
 
 
 
-## `WritePolymorphicData(data)`
+## `WritePEPolymorphicData(peFile, data)`
 
 Write data to the uninitalized space at the end of the gscript binary
 
 ### Argument List
 
+ * **peFile** *string*
  * **data** *[]byte*
 
 ### Returned Object Fields

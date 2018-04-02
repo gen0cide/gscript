@@ -27,6 +27,39 @@ func getPEImgSize(peFile string) (int64, error) {
 	return int64(imgSize), nil
 }
 
+// RetrievePEPolymorphicData - Retrive data stored within uninitalized space at the end of the gscript binary
+//
+// Package
+//
+// polymorph
+//
+// Author
+//
+// - Vyrus (https://github.com/vyrus001)
+//
+// Javascript
+//
+// Here is the Javascript method signature:
+//  RetrievePEPolymorphicData(peFile)
+//
+// Arguments
+//
+// Here is a list of the arguments for the Javascript function:
+//  * peFile (string)
+//
+// Returns
+//
+// Here is a list of fields in the return object:
+//  * obj.data ([]byte)
+//  * obj.runtimeError (error)
+//
+// Example
+//
+// Here is an example of how to use this function in gscript:
+//  var obj = RetrievePEPolymorphicData(peFile);
+//  // obj.data
+//  // obj.runtimeError
+//
 func (e *Engine) RetrievePEPolymorphicData(peFile string) ([]byte, error) {
 	var polymorphicData []byte
 	pEImgSize, err := getPEImgSize(peFile)
@@ -42,6 +75,38 @@ func (e *Engine) RetrievePEPolymorphicData(peFile string) ([]byte, error) {
 	return polymorphicData, err
 }
 
+// WritePEPolymorphicData - Write data to the uninitalized space at the end of the gscript binary
+//
+// Package
+//
+// polymorph
+//
+// Author
+//
+// - Vyrus (https://github.com/vyrus001)
+//
+// Javascript
+//
+// Here is the Javascript method signature:
+//  WritePEPolymorphicData(peFile, data)
+//
+// Arguments
+//
+// Here is a list of the arguments for the Javascript function:
+//  * peFile (string)
+//  * data ([]byte)
+//
+// Returns
+//
+// Here is a list of fields in the return object:
+//  * obj.runtimeError (error)
+//
+// Example
+//
+// Here is an example of how to use this function in gscript:
+//  var obj = WritePEPolymorphicData(peFile, data);
+//  // obj.runtimeError
+//
 func (e *Engine) WritePEPolymorphicData(peFile string, polymorphicData []byte) error {
 	pEImgSize, err := getPEImgSize(peFile)
 	if err != nil {
