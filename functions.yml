@@ -848,7 +848,7 @@
       return: true
 #####################################################################
 #
-# stealth package
+# stealth package (*untested*)
 #
 #####################################################################
 - name: MakeUnDebuggable
@@ -928,5 +928,33 @@
   returns:
     - label: areWeInASandbox
       gotype: bool
+      return: true
+#####################################################################
+#
+# polymorphic package (*untested*)
+#
+#####################################################################
+- name: RetrievePolymorphicData
+  description: Retrive data stored within uninitalized space at the end of the gscript binary
+  author: Vyrus (https://github.com/vyrus001)
+  package: polymorphic
+  args: []
+  returns:
+    - label: data
+      gotype: '[]byte'
+      return: true
+    - label: runtimeError
+      gotype: error
+      return: true
+- name: WritePolymorphicData
+  description: Write data to the uninitalized space at the end of the gscript binary
+  author: Vyrus (https://github.com/vyrus001)
+  package: polymorphic
+  args:
+    - label: polymorphicData
+    gotype: '[]byte'
+  returns:
+    - label: runtimeError
+      gotype: error
       return: true
 ######################
