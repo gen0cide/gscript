@@ -498,6 +498,22 @@ Returns the value of a given enviornment variable
 
 
 
+## `GetHost()`
+
+Retrieves the hostname of the machine
+
+### Argument List
+
+
+### Returned Object Fields
+
+ * **hostname** *string*
+ * **osError** *error*
+
+---
+
+
+
 ## `GetLocalIPs()`
 
 Gets an array of Ip addresses for the host
@@ -797,7 +813,7 @@ Transmits a JSON object to a URL and retruns the HTTP status code and response
 
 
 
-## `QueryRegKey(registryString, path)`
+## `QueryRegKey(registryString, path, key)`
 
 Retrive a registry key
 
@@ -805,6 +821,7 @@ Retrive a registry key
 
  * **registryString** *string*
  * **path** *string*
+ * **key** *string*
 
 ### Returned Object Fields
 

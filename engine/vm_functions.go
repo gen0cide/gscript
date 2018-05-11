@@ -66,6 +66,7 @@
 //  EnvVars() - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.EnvVars
 //  FindProcByName(procName) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.FindProcByName
 //  GetEnvVar(vars) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.GetEnvVar
+//  GetHost() - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.GetHost
 //  GetProcName(pid) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.GetProcName
 //  InstallSystemService(path, name, displayName, description) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.InstallSystemService
 //  ModTime(path) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.ModTime
@@ -94,7 +95,7 @@
 //  AddRegKeyStrings(registryString, path, name, value) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.AddRegKeyStrings
 //  DelRegKey(registryString, path) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.DelRegKey
 //  DelRegKeyValue(registryString, path, value) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.DelRegKeyValue
-//  QueryRegKey(registryString, path) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.QueryRegKey
+//  QueryRegKey(registryString, path, key) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.QueryRegKey
 //
 // Library stealth
 //
@@ -143,6 +144,7 @@ func (e *Engine) CreateVM() {
 	e.VM.Set("FindProcByName", e.vmFindProcByName)
 	e.VM.Set("ForkExecuteCommand", e.vmForkExecuteCommand)
 	e.VM.Set("GetEnvVar", e.vmGetEnvVar)
+	e.VM.Set("GetHost", e.vmGetHost)
 	e.VM.Set("GetLocalIPs", e.vmGetLocalIPs)
 	e.VM.Set("GetMACAddress", e.vmGetMACAddress)
 	e.VM.Set("GetProcName", e.vmGetProcName)
@@ -1631,6 +1633,34 @@ func (e *Engine) vmGetEnvVar(call otto.FunctionCall) otto.Value {
 	return vmRet
 }
 
+func (e *Engine) vmGetHost(call otto.FunctionCall) otto.Value {
+	if len(call.ArgumentList) > 0 {
+		e.Logger.WithField("function", "GetHost").WithField("trace", "true").Error("Too many arguments in call.")
+		return otto.FalseValue()
+	}
+	if len(call.ArgumentList) < 0 {
+		e.Logger.WithField("function", "GetHost").WithField("trace", "true").Error("Too few arguments in call.")
+		return otto.FalseValue()
+	}
+	hostname, osError := e.GetHost()
+	rawVMRet := VMResponse{}
+
+	rawVMRet["hostname"] = hostname
+
+	if osError != nil {
+		e.Logger.WithField("function", "GetHost").WithField("trace", "true").Errorf("<function error> %s", osError.Error())
+		rawVMRet["osError"] = osError.Error()
+	} else {
+		rawVMRet["osError"] = nil
+	}
+	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
+	if vmRetError != nil {
+		e.Logger.WithField("function", "GetHost").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
+		return otto.FalseValue()
+	}
+	return vmRet
+}
+
 func (e *Engine) vmGetLocalIPs(call otto.FunctionCall) otto.Value {
 	if len(call.ArgumentList) > 0 {
 		e.Logger.WithField("function", "GetLocalIPs").WithField("trace", "true").Error("Too many arguments in call.")
@@ -2344,11 +2374,11 @@ func (e *Engine) vmPostJSON(call otto.FunctionCall) otto.Value {
 }
 
 func (e *Engine) vmQueryRegKey(call otto.FunctionCall) otto.Value {
-	if len(call.ArgumentList) > 2 {
+	if len(call.ArgumentList) > 3 {
 		e.Logger.WithField("function", "QueryRegKey").WithField("trace", "true").Error("Too many arguments in call.")
 		return otto.FalseValue()
 	}
-	if len(call.ArgumentList) < 2 {
+	if len(call.ArgumentList) < 3 {
 		e.Logger.WithField("function", "QueryRegKey").WithField("trace", "true").Error("Too few arguments in call.")
 		return otto.FalseValue()
 	}
@@ -2380,7 +2410,21 @@ func (e *Engine) vmQueryRegKey(call otto.FunctionCall) otto.Value {
 		e.Logger.WithField("function", "QueryRegKey").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
 		return otto.FalseValue()
 	}
-	keyObj, runtimeError := e.QueryRegKey(registryString, path)
+
+	var key string
+	rawArg2, err := call.Argument(2).Export()
+	if err != nil {
+		e.Logger.WithField("function", "QueryRegKey").WithField("trace", "true").Errorf("Could not export field: %s", "key")
+		return otto.FalseValue()
+	}
+	switch v := rawArg2.(type) {
+	case string:
+		key = rawArg2.(string)
+	default:
+		e.Logger.WithField("function", "QueryRegKey").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
+		return otto.FalseValue()
+	}
+	keyObj, runtimeError := e.QueryRegKey(registryString, path, key)
 	rawVMRet := VMResponse{}
 
 	rawVMRet["keyObj"] = keyObj

@@ -695,6 +695,18 @@
     - label: fileError
       gotype: error
       return: true
+- name: GetHost
+  description: Retrieves the hostname of the machine
+  author: ahhh (https://github.com/ahhh)
+  package: os
+  args: []
+  returns:
+    - label: hostname
+      gotype: string
+      return: true
+    - label: osError
+      gotype: error
+      return: true
 #####################################################################
 #
 # registry package
@@ -838,6 +850,8 @@
     - label: registryString
       gotype: string
     - label: path
+      gotype: string
+    - label: key
       gotype: string
   returns:
     - label: keyObj
