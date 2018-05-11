@@ -56,7 +56,7 @@ func main() {
 		},
 		{
 			Name:  "Dan Borges",
-			Email: "ahhh@gmail.com",
+			Email: "ahhh.db@gmail.com",
 		},
 	}
 	app.Copyright = "(c) 2018 Alex Levinson"

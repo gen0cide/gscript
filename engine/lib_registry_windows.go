@@ -107,7 +107,7 @@ func (e *Engine) AddRegKeyStrings(registryString string, path string, name strin
 }
 
 func (e *Engine) DelRegKey(registryString string, path string) error {
-	regKey, err := lookUpKey(path)
+	regKey, err := lookUpKey(registryString)
 	if err != nil {
 		return err
 	}
@@ -115,7 +115,7 @@ func (e *Engine) DelRegKey(registryString string, path string) error {
 }
 
 func (e *Engine) DelRegKeyValue(registryString string, path string, valueName string) error {
-	regKey, err := lookUpKey(path)
+	regKey, err := lookUpKey(registryString)
 	if err != nil {
 		return err
 	}
