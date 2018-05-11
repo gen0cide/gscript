@@ -318,13 +318,14 @@ func (e *Engine) DelRegKeyValue(registryString string, path string, valueName st
 // Javascript
 //
 // Here is the Javascript method signature:
-//  QueryRegKey(registryString, path)
+//  QueryRegKey(registryString, path, key)
 //
 // Arguments
 //
 // Here is a list of the arguments for the Javascript function:
 //  * registryString (string)
 //  * path (string)
+//  * key (string)
 //
 // Returns
 //
@@ -335,10 +336,10 @@ func (e *Engine) DelRegKeyValue(registryString string, path string, valueName st
 // Example
 //
 // Here is an example of how to use this function in gscript:
-//  var obj = QueryRegKey(registryString, path);
+//  var obj = QueryRegKey(registryString, path, key);
 //  // obj.keyObj
 //  // obj.runtimeError
 //
-func (e *Engine) QueryRegKey(registryString string, path string) (RegistryRetValue, error) {
+func (e *Engine) QueryRegKey(registryString string, path string, key string) (RegistryRetValue, error) {
 	return RegistryRetValue{}, errors.New("this function is unimplemented on non windows platforms")
 }

@@ -107,7 +107,7 @@ func (e *Engine) AddRegKeyStrings(registryString string, path string, name strin
 }
 
 func (e *Engine) DelRegKey(registryString string, path string) error {
-	regKey, err := lookUpKey(path)
+	regKey, err := lookUpKey(registryString)
 	if err != nil {
 		return err
 	}
@@ -115,7 +115,7 @@ func (e *Engine) DelRegKey(registryString string, path string) error {
 }
 
 func (e *Engine) DelRegKeyValue(registryString string, path string, valueName string) error {
-	regKey, err := lookUpKey(path)
+	regKey, err := lookUpKey(registryString)
 	if err != nil {
 		return err
 	}
@@ -123,9 +123,9 @@ func (e *Engine) DelRegKeyValue(registryString string, path string, valueName st
 	return registry.DeleteKey(regKey, path)
 }
 
-func (e *Engine) QueryRegKey(registryString string, path string) (RegistryRetValue, error) {
+func (e *Engine) QueryRegKey(registryString string, path string, key string) (RegistryRetValue, error) {
 	retVal := RegistryRetValue{}
-	regKey, err := lookUpKey(path)
+	regKey, err := lookUpKey(registryString)
 	if err != nil {
 		return retVal, err
 	}
@@ -133,41 +133,41 @@ func (e *Engine) QueryRegKey(registryString string, path string) (RegistryRetVal
 	if err != nil {
 		return retVal, err
 	}
-	_, valType, err := openRegKey.GetValue(path, nil)
+	_, valType, err := openRegKey.GetValue(key, nil)
 	if err != nil {
 		return retVal, err
 	}
 	switch valType {
 	case registry.EXPAND_SZ:
-		value, _, err := openRegKey.GetStringsValue(path)
+		value, _, err := openRegKey.GetStringsValue(key)
 		if err != nil {
 			return retVal, err
 		}
 		retVal.ValType = "StringArray"
 		retVal.StringArrayVal = value
 	case registry.SZ:
-		value, _, err := openRegKey.GetStringValue(path)
+		value, _, err := openRegKey.GetStringValue(key)
 		if err != nil {
 			return retVal, err
 		}
 		retVal.ValType = "String"
 		retVal.StringVal = value
 	case registry.BINARY:
-		value, _, err := openRegKey.GetBinaryValue(path)
+		value, _, err := openRegKey.GetBinaryValue(key)
 		if err != nil {
 			return retVal, err
 		}
 		retVal.ValType = "ByteArray"
 		retVal.ByteArrayVal = value
 	case registry.DWORD:
-		value, _, err := openRegKey.GetIntegerValue(path)
+		value, _, err := openRegKey.GetIntegerValue(key)
 		if err != nil {
 			return retVal, err
 		}
 		retVal.ValType = "Uint"
 		retVal.IntVal = uint32(value)
 	case registry.QWORD:
-		value, _, err := openRegKey.GetIntegerValue(path)
+		value, _, err := openRegKey.GetIntegerValue(key)
 		if err != nil {
 			return retVal, err
 		}

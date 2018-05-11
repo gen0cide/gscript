@@ -628,3 +628,44 @@ func (e *Engine) ModifyTimestamp(path string, accessTime, modifyTime int64) erro
 	}
 	return nil
 }
+
+// GetHost - Retrieves the hostname of the machine
+//
+// Package
+//
+// os
+//
+// Author
+//
+// - ahhh (https://github.com/ahhh)
+//
+// Javascript
+//
+// Here is the Javascript method signature:
+//  GetHost()
+//
+// Arguments
+//
+// Here is a list of the arguments for the Javascript function:
+//
+// Returns
+//
+// Here is a list of fields in the return object:
+//  * obj.hostname (string)
+//  * obj.osError (error)
+//
+// Example
+//
+// Here is an example of how to use this function in gscript:
+//  var obj = GetHost();
+//  // obj.hostname
+//  // obj.osError
+//
+func (e *Engine) GetHost() (string, error) {
+	hostname, err := os.Hostname()
+	if err != nil {
+		return "", err
+	} else {
+		return hostname, nil
+	}
+}
