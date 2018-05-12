@@ -621,6 +621,32 @@
     - label: runtimeError
       gotype: error
       return: true
+- name: KillProcByPid
+  description: Kills the target proccess
+  author: ahhh (https://github.com/ahhh)
+  package: os
+  args:
+    - label: pid
+      gotype: int64
+  returns:
+    - label: dead
+      gotype: bool
+      return: true
+    - label: runtimeError
+      gotype: error
+      return: true
+- name: KillSelf
+  description: Kills the currently running gscript process
+  author: ahhh (https://github.com/ahhh)
+  package: os
+  args:
+  returns:
+    - label: dead
+      gotype: bool
+      return: true
+    - label: runtimeError
+      gotype: error
+      return: true
 - name: EnvVars
   description: Returns a map of enviornment variable names to their corrisponding values.
   author: Vyrus (https://github.com/vyrus001)

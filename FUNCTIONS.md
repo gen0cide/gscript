@@ -695,6 +695,39 @@ States whether or not a given UDP port is avalible for use
 
 
 
+## `KillProcByPid(pid)`
+
+Kills the target proccess
+
+### Argument List
+
+ * **pid** *int64*
+
+### Returned Object Fields
+
+ * **dead** *bool*
+ * **runtimeError** *error*
+
+---
+
+
+
+## `KillSelf()`
+
+Kills the currently running gscript process
+
+### Argument List
+
+
+### Returned Object Fields
+
+ * **dead** *bool*
+ * **runtimeError** *error*
+
+---
+
+
+
 ## `MD5(data)`
 
 Perform an MD5() hash on data.
