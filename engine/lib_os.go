@@ -395,6 +395,98 @@ func (e *Engine) GetProcName(pid int) (string, error) {
 	return proc.Executable(), nil
 }
 
+// KillProcByPid - Kills the target proccess
+//
+// Package
+//
+// os
+//
+// Author
+//
+// - ahhh (https://github.com/ahhh)
+//
+// Javascript
+//
+// Here is the Javascript method signature:
+//  KillProcByPid(pid)
+//
+// Arguments
+//
+// Here is a list of the arguments for the Javascript function:
+//  * pid (int64)
+//
+// Returns
+//
+// Here is a list of fields in the return object:
+//  * obj.dead (bool)
+//  * obj.runtimeError (error)
+//
+// Example
+//
+// Here is an example of how to use this function in gscript:
+//  var obj = KillProcByPid(pid);
+//  // obj.dead
+//  // obj.runtimeError
+//
+func (e *Engine) KillProcByPid(pid int64) (bool, error) {
+	proc, err := os.FindProcess(int(pid))
+	if err != nil {
+		return false, err
+	}
+	err = proc.Kill()
+	if err != nil {
+		return false, err
+	} else {
+		return true, nil
+	}
+}
+
+// KillSelf - Kills the currently running gscript process
+//
+// Package
+//
+// os
+//
+// Author
+//
+// - ahhh (https://github.com/ahhh)
+//
+// Javascript
+//
+// Here is the Javascript method signature:
+//  KillSelf()
+//
+// Arguments
+//
+// Here is a list of the arguments for the Javascript function:
+//
+// Returns
+//
+// Here is a list of fields in the return object:
+//  * obj.dead (bool)
+//  * obj.runtimeError (error)
+//
+// Example
+//
+// Here is an example of how to use this function in gscript:
+//  var obj = KillSelf();
+//  // obj.dead
+//  // obj.runtimeError
+//
+func (e *Engine) KillSelf() (bool, error) {
+	pid := os.Getpid()
+	proc, err := os.FindProcess(int(pid))
+	if err != nil {
+		return false, err
+	}
+	err = proc.Kill()
+	if err != nil {
+		return false, err
+	} else {
+		return true, nil
+	}
+}
+
 // EnvVars - Returns a map of enviornment variable names to their corrisponding values.
 //
 // Package

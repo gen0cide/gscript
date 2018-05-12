@@ -69,6 +69,8 @@
 //  GetHost() - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.GetHost
 //  GetProcName(pid) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.GetProcName
 //  InstallSystemService(path, name, displayName, description) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.InstallSystemService
+//  KillProcByPid(pid) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.KillProcByPid
+//  KillSelf() - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.KillSelf
 //  ModTime(path) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.ModTime
 //  ModifyTimestamp(path, accessTime, modifyTime) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.ModifyTimestamp
 //  RemoveServiceByName(name) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.RemoveServiceByName
@@ -156,6 +158,8 @@ func (e *Engine) CreateVM() {
 	e.VM.Set("IsDebuggerPresent", e.vmIsDebuggerPresent)
 	e.VM.Set("IsTCPPortInUse", e.vmIsTCPPortInUse)
 	e.VM.Set("IsUDPPortInUse", e.vmIsUDPPortInUse)
+	e.VM.Set("KillProcByPid", e.vmKillProcByPid)
+	e.VM.Set("KillSelf", e.vmKillSelf)
 	e.VM.Set("MD5", e.vmMD5)
 	e.VM.Set("MakeDebuggable", e.vmMakeDebuggable)
 	e.VM.Set("MakeUnDebuggable", e.vmMakeUnDebuggable)
@@ -2086,6 +2090,76 @@ func (e *Engine) vmIsUDPPortInUse(call otto.FunctionCall) otto.Value {
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "IsUDPPortInUse").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
+		return otto.FalseValue()
+	}
+	return vmRet
+}
+
+func (e *Engine) vmKillProcByPid(call otto.FunctionCall) otto.Value {
+	if len(call.ArgumentList) > 1 {
+		e.Logger.WithField("function", "KillProcByPid").WithField("trace", "true").Error("Too many arguments in call.")
+		return otto.FalseValue()
+	}
+	if len(call.ArgumentList) < 1 {
+		e.Logger.WithField("function", "KillProcByPid").WithField("trace", "true").Error("Too few arguments in call.")
+		return otto.FalseValue()
+	}
+
+	var pid int64
+	rawArg0, err := call.Argument(0).Export()
+	if err != nil {
+		e.Logger.WithField("function", "KillProcByPid").WithField("trace", "true").Errorf("Could not export field: %s", "pid")
+		return otto.FalseValue()
+	}
+	switch v := rawArg0.(type) {
+	case int64:
+		pid = rawArg0.(int64)
+	default:
+		e.Logger.WithField("function", "KillProcByPid").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "int64", v)
+		return otto.FalseValue()
+	}
+	dead, runtimeError := e.KillProcByPid(pid)
+	rawVMRet := VMResponse{}
+
+	rawVMRet["dead"] = dead
+
+	if runtimeError != nil {
+		e.Logger.WithField("function", "KillProcByPid").WithField("trace", "true").Errorf("<function error> %s", runtimeError.Error())
+		rawVMRet["runtimeError"] = runtimeError.Error()
+	} else {
+		rawVMRet["runtimeError"] = nil
+	}
+	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
+	if vmRetError != nil {
+		e.Logger.WithField("function", "KillProcByPid").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
+		return otto.FalseValue()
+	}
+	return vmRet
+}
+
+func (e *Engine) vmKillSelf(call otto.FunctionCall) otto.Value {
+	if len(call.ArgumentList) > 0 {
+		e.Logger.WithField("function", "KillSelf").WithField("trace", "true").Error("Too many arguments in call.")
+		return otto.FalseValue()
+	}
+	if len(call.ArgumentList) < 0 {
+		e.Logger.WithField("function", "KillSelf").WithField("trace", "true").Error("Too few arguments in call.")
+		return otto.FalseValue()
+	}
+	dead, runtimeError := e.KillSelf()
+	rawVMRet := VMResponse{}
+
+	rawVMRet["dead"] = dead
+
+	if runtimeError != nil {
+		e.Logger.WithField("function", "KillSelf").WithField("trace", "true").Errorf("<function error> %s", runtimeError.Error())
+		rawVMRet["runtimeError"] = runtimeError.Error()
+	} else {
+		rawVMRet["runtimeError"] = nil
+	}
+	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
+	if vmRetError != nil {
+		e.Logger.WithField("function", "KillSelf").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
 		return otto.FalseValue()
 	}
 	return vmRet
