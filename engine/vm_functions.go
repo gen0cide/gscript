@@ -68,6 +68,7 @@
 //  GetEnvVar(vars) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.GetEnvVar
 //  GetHost() - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.GetHost
 //  GetProcName(pid) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.GetProcName
+//  GetUser() - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.GetUser
 //  InstallSystemService(path, name, displayName, description) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.InstallSystemService
 //  KillProcByPid(pid) - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.KillProcByPid
 //  KillSelf() - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.KillSelf
@@ -150,6 +151,7 @@ func (e *Engine) CreateVM() {
 	e.VM.Set("GetLocalIPs", e.vmGetLocalIPs)
 	e.VM.Set("GetMACAddress", e.vmGetMACAddress)
 	e.VM.Set("GetProcName", e.vmGetProcName)
+	e.VM.Set("GetUser", e.vmGetUser)
 	e.VM.Set("HTTPGetFile", e.vmHTTPGetFile)
 	e.VM.Set("Halt", e.vmHalt)
 	e.VM.Set("InjectIntoProc", e.vmInjectIntoProc)
@@ -1751,6 +1753,34 @@ func (e *Engine) vmGetProcName(call otto.FunctionCall) otto.Value {
 	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
 	if vmRetError != nil {
 		e.Logger.WithField("function", "GetProcName").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
+		return otto.FalseValue()
+	}
+	return vmRet
+}
+
+func (e *Engine) vmGetUser(call otto.FunctionCall) otto.Value {
+	if len(call.ArgumentList) > 0 {
+		e.Logger.WithField("function", "GetUser").WithField("trace", "true").Error("Too many arguments in call.")
+		return otto.FalseValue()
+	}
+	if len(call.ArgumentList) < 0 {
+		e.Logger.WithField("function", "GetUser").WithField("trace", "true").Error("Too few arguments in call.")
+		return otto.FalseValue()
+	}
+	username, runtimeError := e.GetUser()
+	rawVMRet := VMResponse{}
+
+	rawVMRet["username"] = username
+
+	if runtimeError != nil {
+		e.Logger.WithField("function", "GetUser").WithField("trace", "true").Errorf("<function error> %s", runtimeError.Error())
+		rawVMRet["runtimeError"] = runtimeError.Error()
+	} else {
+		rawVMRet["runtimeError"] = nil
+	}
+	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
+	if vmRetError != nil {
+		e.Logger.WithField("function", "GetUser").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
 		return otto.FalseValue()
 	}
 	return vmRet

@@ -647,6 +647,18 @@
     - label: runtimeError
       gotype: error
       return: true
+- name: GetUser
+  description: Gets the current user's name
+  author: ahhh (https://github.com/ahhh)
+  package: os
+  args:
+  returns:
+    - label: username
+      gotype: string
+      return: true
+    - label: runtimeError
+      gotype: error
+      return: true
 - name: EnvVars
   description: Returns a map of enviornment variable names to their corrisponding values.
   author: Vyrus (https://github.com/vyrus001)

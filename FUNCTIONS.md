@@ -562,6 +562,22 @@ Returns the name of a target proccess
 
 
 
+## `GetUser()`
+
+Gets the current user's name
+
+### Argument List
+
+
+### Returned Object Fields
+
+ * **username** *string*
+ * **runtimeError** *error*
+
+---
+
+
+
 ## `HTTPGetFile(url)`
 
 Retrives a file from an HTTP(s) endpoint
