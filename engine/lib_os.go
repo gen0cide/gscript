@@ -3,6 +3,7 @@ package engine
 import (
 	"errors"
 	"os"
+	"os/user"
 	"strings"
 	"syscall"
 	"time"
@@ -439,6 +440,46 @@ func (e *Engine) KillProcByPid(pid int64) (bool, error) {
 	} else {
 		return true, nil
 	}
+}
+
+// GetUser - Gets the current user's name
+//
+// Package
+//
+// os
+//
+// Author
+//
+// - ahhh (https://github.com/ahhh)
+//
+// Javascript
+//
+// Here is the Javascript method signature:
+//  GetUser()
+//
+// Arguments
+//
+// Here is a list of the arguments for the Javascript function:
+//
+// Returns
+//
+// Here is a list of fields in the return object:
+//  * obj.username (string)
+//  * obj.runtimeError (error)
+//
+// Example
+//
+// Here is an example of how to use this function in gscript:
+//  var obj = GetUser();
+//  // obj.username
+//  // obj.runtimeError
+//
+func (e *Engine) GetUser() (string, error) {
+	userObj, err := user.Current()
+	if err != nil {
+		return "", err
+	}
+	return userObj.Username, nil
 }
 
 // KillSelf - Kills the currently running gscript process
