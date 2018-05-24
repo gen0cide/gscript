@@ -15,11 +15,11 @@ function BeforeDeploy() {
 function Deploy() {
   var merlin = Asset("merlinagent.elf");
   fn = "/tmp/merlinagent";
-  WriteFile(fn, merlin, 0755);
+  WriteFile(fn, merlin.fileData, 0755);
 
   var script = Asset("merlin_nix_runner.sh");
   fn2 = "/tmp/runner.sh";
-  WriteFile(fn2, script, 0755);
+  WriteFile(fn2, script.fileData, 0755);
   return true;
 }
 
