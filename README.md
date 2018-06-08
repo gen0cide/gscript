@@ -2,8 +2,7 @@
 
 Genesis Scripting Engine
 
-![Genesis Logo](http://www.city-church.org.uk/sites/default/files/styles/sidebar_series_image/public/series/image/genesis-in-the-beginning.jpg?itok=EJFz0LWt)
-
+<div align="center"><img src="http://www.city-church.org.uk/sites/default/files/styles/sidebar_series_image/public/series/image/genesis-in-the-beginning.jpg?itok=EJFz0LWt" alt="Genesis Logo"/></div>
 
 ## Description
 
