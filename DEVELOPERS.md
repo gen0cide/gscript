@@ -104,4 +104,4 @@ Note that generation is *part* of the `build_cli.sh` script. You should see it's
 
 ### 4) Done!
 
-Now you can look at `FUNCTIONS.md` and see your new documentation rendered. 
+Now you can look at [FUNCTIONS.md](FUNCTIONS.md) and see your new documentation rendered. 
