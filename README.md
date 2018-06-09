@@ -104,7 +104,7 @@ Writing a Genesis script is simple and easy to learn. A few things to know about
  * A genesis script (.gs) is written in Javascript. This allows any editors or IDE that can work with Javascript to also apply to genesis scripts.
  * The VM targets ES5, so ES6 syntax will not be valid.
  * You can define your own functions and variables within your script.
- * GScript injects a standard library of functions into the VM to facilitate interaction outside of the Javascript sandbox. These functions, while called from Javascript, are actually implemented natively in code. For more information about function development, take a look at `DEVELOPMENT.md`.
+ * GScript injects a standard library of functions into the VM to facilitate interaction outside of the Javascript sandbox. These functions, while called from Javascript, are actually implemented natively in code. For more information about function development, take a look at [DEVELOPERS.md](DEVELOPERS.md).
  * Logging functions (LogInfo, LogError, etc.) will log output when using the `run` subcommand, or when a final binary is compiled with the flag `--enable-logging`. You do not have to remove your logging statements to keep your final binary from logging output - the compiler does this by default.
 
 ### Basic Example
