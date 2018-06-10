@@ -1,19 +1,20 @@
-### `ReadFile(path)`
+# `ReadFile(path)`
 
-Read provided `path`
+Read contents of file located at `path`
 
-##### Argument List
+## Argument List
 
  * `path` (String) - Path to file you would like to read.
 
-##### Return Type
+## Return Type
 
-`string` - Contents of target file
-
-#Example
-
-This will read a file.
+ * `obj.fileBytes` ([]byte) - Contents of target file.
+ * `obj.fileError` (error) - Error.
+ 
+## Example
 
 ```js
-console.log(ReadFile('./examples/hello.gs'))
+var obj = ReadFile("/tmp/foo")
+// obj.fileBytes
+// obj.fileError
 ```

@@ -1,26 +1,20 @@
 # `DeleteFile(path)`
 
-Delete the file located at `path`.
+Delete a file.
 
-##### Argument List
+## Argument List
 
- * `path` (String) - Path to file you wish to delete.
+ * `path` (string) - Path to file.
 
-##### Return Type
+## Return Type
 
-`boolean` (true = success, false = error)
+ * `nil`
+ * `obj.fileError` (error) - Error.
 
 ## Example
 
-```
-var file_to_drop = "/tmp/tmpfile";
-
-function Deploy() {
-		var file_1 = file_to_drop;
-    var return_value1 = DeleteFile(file_1);
-}
-
-// ....
+```js
+var obj = DeleteFile("/tmp/foo")
+// obj.fileError
 ```
 
-This will automatically delete a file in the path 

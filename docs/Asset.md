@@ -1,27 +1,35 @@
-# `Asset(filename)`
+# `Asset(assetName)`
 
-Retrieves the packed bytes of file `filename` from the GENESIS packed archive.
+Retrieves the packed bytes of file `assetName` from the GENESIS packed archive.
 
-### Argument List
+## Argument List
 
- * `file` (String) - Name of the file you imported via your gscript.
+ * `file` (string) - Name of the file you imported via your gscript.
 
-### Return Type
+## Return Type
 
-`array` - Array of bytes
+ * `obj.fileData` ([]byte) - Asset data.
+ * `obj.err` (error) - An error message.
 
 ## Example
-
-```
-//import:/tmp/foo.bin
-
-var file_to_drop;
+```js
+//import:/bin/ls
 
 function BeforeDeploy() {
-  file_to_drop = Asset("foo.bin")
+  console.log("Start of Asset() test")
+  return true; 
 }
 
-// ....
+function Deploy() {
+  data = Asset("ls").fileData
+  WriteFile("/tmp/ls", data, 0755);
+  console.log("Wrote file to /tmp/ls");
+  return true;
+}
+
+function AfterDeploy() {
+  console.log("End of Asset() test")
+  return true;
+}
 ```
 
-This will automatically compile `foo.bin` into your compiled binary and retrieves it.
