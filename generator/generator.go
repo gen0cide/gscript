@@ -35,6 +35,11 @@ type FunctionDef struct {
 	ExpectedReturnTypes []RetDef `yaml:"returns"`
 }
 
+type ParamDef struct {
+	VarName  string
+	TypeExpr string
+}
+
 type ArgDef struct {
 	Name   string `yaml:"label"`
 	GoType string `yaml:"gotype"`

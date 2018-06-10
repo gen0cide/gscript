@@ -72,7 +72,8 @@ func (d *Debugger) SessionCompleter(p prompt.Document) []prompt.Suggest {
 	if p.TextBeforeCursor() == "" {
 		return []prompt.Suggest{}
 	}
-	return prompt.FilterHasPrefix(d.REPLSuggestions, p.GetWordBeforeCursor(), true)
+	// return prompt.FilterHasPrefix(d.REPLSuggestions, p.GetWordBeforeCursor(), true)
+	return []prompt.Suggest{}
 }
 
 func (d *Debugger) DebugConsole(call otto.FunctionCall) otto.Value {
