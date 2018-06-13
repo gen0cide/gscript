@@ -39,37 +39,30 @@ import (
 //  // obj.runtimeError
 //
 func (e *Engine) CheckSandboxUsernames() (bool, error) {
+	sandboxUsers := []string{
+		"sandbox",
+		"virus",
+		"malware",
+		".bin",
+		".elf",
+		".exe",
+		"cuckoo",
+		"vagrant",
+	}
+
 	userObj, err := user.Current()
 	if err != nil {
 		return false, err
 	}
-	if strings.Contains(userObj.Name, "SANDBOX") {
-		return true, nil
+
+	for _, value := range sandboxUsers {
+		if strings.Contains(
+			strings.ToLower(userObj.Name),
+			strings.ToLower(value)) {
+			return true, nil
+		}
 	}
-	if strings.Contains(userObj.Name, "VIRUS") {
-		return true, nil
-	}
-	if strings.Contains(userObj.Name, "MALWARE") {
-		return true, nil
-	}
-	if strings.Contains(userObj.Name, "malware") {
-		return true, nil
-	}
-	if strings.Contains(userObj.Name, "virus") {
-		return true, nil
-	}
-	if strings.Contains(userObj.Name, "sandbox") {
-		return true, nil
-	}
-	if strings.Contains(userObj.Name, ".bin") {
-		return true, nil
-	}
-	if strings.Contains(userObj.Name, ".elf") {
-		return true, nil
-	}
-	if strings.Contains(userObj.Name, ".exe") {
-		return true, nil
-	}
+
 	return false, nil
 }
 
