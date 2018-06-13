@@ -102,7 +102,7 @@ func (e *Engine) WriteTempFile(name string, fileData []byte) (string, error) {
 		e.Logger.WithField("trace", "true").Errorf("Error closing the temp file: %s", err.Error())
 		return "", err
 	}
-	filepath := path.Join(path.Dir(fileGuy.Name()), fileGuy.Name())
+	filepath := path.Join(path.Dir(fileGuy.Name()), path.Base(fileGuy.Name()))
 	return filepath, nil
 }
 
