@@ -1,16 +1,19 @@
-### `Signal(pid, signal)`
+# `Signal(pid, signal)`
 
-Send a signal to another process.
+Send a signal to a process.
 
-##### Argument List
+## Argument List
 
- * `pid` (String) - Process ID you wish to signal
- * `signal` (Integer) - Type of signal you wish to send (9, 15, etc.)
+ * `pid` (String) - Process ID you wish to signal.
+ * `signal` (Integer) - Signal you wish to send (9, 15, etc.)
 
-##### Return Type
+## Return Type
 
-`boolean` (true = success, false = error)
+- `obj.runtimeError` (error) - Error.
 
-#Example
+## Example
 
-This sends a signal to another process. 
+```js
+var obj = Signal(1337, 9)
+// obj.runtimeError
+```

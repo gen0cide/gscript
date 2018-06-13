@@ -1,17 +1,35 @@
-### `WriteFile(path, bytes, perms)`
+# `WriteFile(path, bytes, perms)`
 
 Write `bytes` to `path` and set perms to `perms`.
 
-##### Argument List
+## Argument List
 
- * `path` (String) - Path to file you wish to write.
- * `bytes` (Array) - Array of bytes you wish to write to the `path` location.
- * `perms` (String) - Octal unix permissions represented as a string. ie: `0777`.
+ * `path` (string) - Path to file you wish to write.
+ * `bytes` ([]byte) - Array of bytes you wish to write to the `path` location.
+ * `perms` (string) - Unix permissions represented as a string. ie: `0777`.
 
-##### Return Type
+## Return Type
 
-`boolean` (true = success, false = error)
+ * `obj.bytesWritten` (int) - Number of bytes writen to `path`.
+ * `obj.fileError` (error) - Error. 
 
-#Example
+# Example
 
-This will write a file.
+```js
+function BeforeDeploy() {
+  console.log("WriteFile test starting")
+  return true;
+}
+
+function Deploy() {
+  filedata = "lol"
+  WriteFile("/tmp/lol", filedata, 0644)
+  return true;
+}
+
+function AfterDeploy() {
+  console.log("WriteFile test complete");
+  return true;
+}
+```
+

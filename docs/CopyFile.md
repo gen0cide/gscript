@@ -1,22 +1,23 @@
-### `CopyFile(srcPath, dstPath)`
+# `CopyFile(srcPath, dstPath, perms)`
 
-Copy file from `srcPath` to `dstPath`.
+Copy file from `srcPath` to `dstPath` with given `perms`.
 
-##### Argument List
+## Argument List
 
- * `srcPath` (String) - Path to source file.
- * `dstFile` (String) - Path to destination file.
+ * `srcPath` (string) - Path to source file.
+ * `dstFile` (string) - Path to destination file.
+ * `perms` (int64) - Permissions.
 
-##### Return Type
+## Return Type
 
-`boolean` (true = success, false = error)
+ * `nil`
+ * `obj.fileError` (error) - Error.
 
-# Example
+## Example
 
+```js
+var file_1 = "/etc/passwd";
+var file_2 = "/tmp/rock";
+var return_value = CopyFile(file_1, file_2);
 ```
-    var file_1 = "/etc/passwd";
-    var file_2 = "/tmp/rock";
-    var return_value = CopyFile(file_1, file_2);
-```
 
-This will Copy a file.
