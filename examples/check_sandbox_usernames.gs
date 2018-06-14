@@ -1,16 +1,16 @@
 function BeforeDeploy() {
-  console.log("CheckSandboxUsernames test starting")
+  LogInfo("CheckSandboxUsernames test starting")
   return true
 }
 
 function Deploy() {
   obj = CheckSandboxUsernames()
-  console.log("areWeInASandbox?: " + obj.areWeInASandbox)
+  LogInfo("areWeInASandbox?: " + obj.areWeInASandbox)
   return true
 }
 
 function AfterDeploy() {
-  console.log("CheckSandboxUsernames test complete")
+  LogInfo("CheckSandboxUsernames test complete")
   return true
 }
 
