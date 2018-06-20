@@ -1,3 +1,8 @@
+
+# !!! WARNING - BREAKING CHANGES NOTICE !!!
+
+<b>A new version of gscript will be released on August 10th, 2018 during a presentation at the Defcon Security Conference.<br/>Expect MAJOR breaking API changes and other instabilities before then. Official v1 release will follow semantic versioning guidelines from that point on.</b>
+
 # gscript
 
 Genesis Scripting Engine
