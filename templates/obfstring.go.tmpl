@@ -1,8 +1,0 @@
-var {{ $.ID }} = []rune{
-	{{- range $idx, $b := $.Data -}}
-		{{- if mod $idx 7 -}}
-		{{ printf "\n\t" }}
-		{{- end -}}
-		{{ printf "0x%x, " $b -}}
-	{{ end }}
-}

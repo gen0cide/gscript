@@ -1,0 +1,91 @@
+// Package engine is the package that implements the gscript Virtual Machine (VM).
+// 
+// VM Functions implemented:
+{{ range $libName, $lib := $.Libs -}}
+//
+// Library {{ $libName }}
+//
+// Functions in {{ $libName }}:
+{{ range $_, $f := $lib.Funcs -}}
+//  {{ $f.ReceiverString }} - https://godoc.org/github.com/gen0cide/gscript/engine/#Engine.{{ $f.Name }}
+{{ end -}}
+{{ end -}}
+//
+package {{ $.Package }}
+
+import (
+  "path/filepath"
+
+  "github.com/robertkrimen/otto"
+)
+
+func (e *Engine) CreateVM() {
+  e.VM = otto.New()
+  e.injectVars()
+  {{ range $_, $f := $.Funcs -}}
+  e.VM.Set("{{ $f.Name }}", e.vm{{ $f.Name }})
+  {{ end -}}
+  _, err := e.VM.Run(vmPreload)
+  if err != nil {
+    e.Logger.WithField("trace", "true").Fatalf("Syntax error in preload: %s", err.Error())
+  }
+  e.initializeLogger()
+}
+
+
+{{ range $idx, $f := $.Funcs }}
+func (e *Engine) vm{{ $f.Name }}(call otto.FunctionCall) otto.Value {
+  if len(call.ArgumentList) > {{ len $f.ExpectedArgTypes }} {
+    e.Logger.WithField("function", "{{ $f.Name }}").WithField("trace", "true").Error("Too many arguments in call.")
+    return otto.FalseValue()
+  }
+  if len(call.ArgumentList) < {{ len $f.ExpectedArgTypes }} {
+    e.Logger.WithField("function", "{{ $f.Name }}").WithField("trace", "true").Error("Too few arguments in call.")
+    return otto.FalseValue()
+  }
+  {{ range $aidx, $a := $f.ExpectedArgTypes -}}
+  {{- if eq $a.GoType "[]byte" }}  
+  {{ $a.Name }} := e.ValueToByteSlice(call.Argument({{ $aidx }}))
+  {{ else }}
+  var {{ $a.Name }} {{ $a.GoType }}
+  rawArg{{ $aidx }}, err := call.Argument({{ $aidx }}).Export()
+  if err != nil {
+    e.Logger.WithField("function", "{{ $f.Name }}").WithField("trace", "true").Errorf("Could not export field: %s", "{{ $a.Name }}")
+    return otto.FalseValue()
+  }
+  switch v := rawArg{{ $aidx }}.(type) {
+  case {{ $a.GoType }}:
+    {{- if eq $a.Name "path" }}
+    {{ $a.Name }} = filepath.Clean(rawArg{{ $aidx }}.({{ $a.GoType }}))
+    {{ else }}
+    {{ $a.Name }} = rawArg{{ $aidx }}.({{ $a.GoType }})
+    {{ end -}}
+  default:
+    e.Logger.WithField("function", "{{ $f.Name }}").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "{{ $a.GoType }}", v)
+    return otto.FalseValue()
+  }
+  {{ end -}}
+  {{ end -}}
+  {{ $f.ReturnString }} := e.{{ $f.ReceiverString }}
+  rawVMRet := VMResponse{}
+  {{ range $ridx, $r := $f.ExpectedReturnTypes -}}
+    {{- if eq $r.GoType "error" }}
+    if {{ $r.Name }} != nil {
+      e.Logger.WithField("function", "{{ $f.Name }}").WithField("trace", "true").Errorf("<function error> %s", {{ $r.Name }}.Error())
+      rawVMRet["{{ $r.Name }}"] = {{ $r.Name }}.Error()
+    } else {
+      rawVMRet["{{ $r.Name }}"] = nil
+    }
+    {{ else }}
+    rawVMRet["{{ $r.Name }}"] = {{ $r.Name }}
+    {{ end -}}
+  {{ end -}}
+  vmRet, vmRetError := e.VM.ToValue(rawVMRet)
+  if vmRetError != nil {
+    e.Logger.WithField("function", "{{ $f.Name }}").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
+    return otto.FalseValue()
+  }
+  return vmRet
+}
+
+{{ end }}

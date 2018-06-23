@@ -89,8 +89,6 @@ var (
 //    parse golang function parameters
 //    parse golang function returns
 //
-//
-//
 
 //parsing golang function arguments:
 // return if argument list is of size 0
