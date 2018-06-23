@@ -46,3 +46,14 @@ type Linker struct {
 	// mapping of function name to the linked function object used during generation
 	Funcs map[string]*LinkedFunction
 }
+
+// obj, err := d.Engine.VM.Object("url = {}")
+// if err != nil {
+// 	panic(err)
+// }
+// err := d.Engine.VM.Set("DecodeHex", hex.DecodeString)
+// if err != nil {
+// 	panic(err)
+// }
+
+// d.Engine.VM.Set("Dump", spew.Sdump)
