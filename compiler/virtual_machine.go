@@ -6,6 +6,20 @@ import (
 	gast "github.com/robertkrimen/otto/ast"
 )
 
+var (
+	requiredBuildTemplates = []string{
+		"init",
+		"preload",
+		"import_native_libs",
+		"import_script_libs",
+		"import_assets",
+		"unpack_assets",
+		"decrypt_assets",
+		"decode_assets",
+		"execute",
+	}
+)
+
 // GenesisVM is the object representation of a genesis script including it's imports and dynamic linking targets
 type GenesisVM struct {
 	// mutex for compiler manipulation
@@ -54,6 +68,8 @@ type GenesisVM struct {
 
 	// Object that holds the translation targets between golang and gscript
 	Linker *Linker
+
+	EntryPointMapping map[string]string
 }
 
 // scan for macros

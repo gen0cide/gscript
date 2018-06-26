@@ -10,6 +10,24 @@ import (
 	"github.com/gen0cide/gscript/engine"
 )
 
+// generate engine
+//
+
+// templates needed
+// - engine file
+// engine file includes an initialize function (Initialize())
+// engine file includes a preload function (Preload())
+// engine file includes an import native functions (ImportNativePackages())
+// engine file includes an import genesis packages (ImportGenesisPackages())
+// engine file includes an import assets function (ImportAssets())
+// engine file includes a decryption function
+// engine file includes a string detangler for all strings present
+// engine file includes an unpack function
+// engine file includes an execute plan function
+// engine file includes
+
+//
+
 func main() {
 	var wg sync.WaitGroup
 	wg.Add(1)

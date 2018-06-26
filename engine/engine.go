@@ -39,6 +39,12 @@ type Engine struct {
 	// is the genesis VM paused
 	Paused bool
 
+	// backwards compatibility to tell the planner whether to execute the before hook
+	BeforeHook bool
+
+	// backwards compatibility option to tell the planner whether to execute the after hook
+	AfterHook bool
+
 	// defines the entry point function for execution of the script
 	EntryPoint string
 }
@@ -50,17 +56,13 @@ func New(name, id string, timeout int, entrypoint string) *Engine {
 		ID:         id,
 		Timeout:    timeout,
 		EntryPoint: entrypoint,
+		AfterHook:  false,
+		BeforeHook: false,
 	}
-
-	e.VM = otto.New()
+	e.InitVM()
 	e.SetLogger(&NullLogger{})
+	return e
 }
-
-// // NativeFunc is a type alias for native function wrappers
-// type NativeFunc func(call otto.FunctionCall) otto.Value
-
-// // SymbolTable maps a native function wrapper to it's caller reference for use by the VM
-// type SymbolTable map[string]NativeFunc
 
 // DeclareNamespace adds an empty namespace to the virtual machine.
 // Caution! will overwrite any values at existing namespace.
@@ -145,6 +147,7 @@ func (e *Engine) LoadScript(filename string, source []byte) error {
 }
 
 // SetLogger overrides the logging interface for this virtual machine.
-func (e *Engine) SetLogger(l Logger) {
+func (e *Engine) SetLogger(l Logger) error {
 	e.Logger = l
+	return HijackConsoleLogging(e)
 }

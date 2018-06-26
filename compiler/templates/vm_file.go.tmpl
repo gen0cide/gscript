@@ -1,0 +1,18 @@
+package main
+
+import (
+  "github.com/gen0cide/gscript/engine"
+)
+
+type {{ $.ID }} struct {
+  E *engine.Engine
+}
+
+func New{{ $.ID }}() *{{ $.ID }} {
+  te := engine.New({{ $.Name }}, {{ $.ID }}, 30, "Execute")
+  o := &{{ $.ID }}{
+    E: te,
+  }
+  return o
+}
+
