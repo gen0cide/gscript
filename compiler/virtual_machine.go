@@ -69,7 +69,11 @@ type GenesisVM struct {
 	// Object that holds the translation targets between golang and gscript
 	Linker *Linker
 
+	// maintains a map of the function names to the obfuscated references
 	EntryPointMapping map[string]string
+
+	// unique variable name to reference this scripts entry point
+	PreloadAlias string
 }
 
 // scan for macros
@@ -109,4 +113,14 @@ func (g *GenesisVM) LocateGoPackages() error {
 // in the genesis script where these are referenced
 func (g *GenesisVM) BuildGolangAST() error {
 	return nil
+}
+
+func (g *GenesisVM) GenerateFunctionKeys() {
+	for _, x := range requiredBuildTemplates {
+		g.EntryPointMapping[x] = RandUpperAlphaString(12)
+	}
+}
+
+func (g *GenesisVM) FunctionKey(k string) string {
+	return g.EntryPointMapping[k]
 }

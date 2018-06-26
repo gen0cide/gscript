@@ -1,0 +1,4 @@
+func (o *{{ $.ID }}) {{ $.FunctionKey "preload" }}() error {
+  return o.E.LoadScript({{ $.FunctionKey "preload" }}, o.E.Imports[{{ $.PreloadAlias }}]())
+}
+

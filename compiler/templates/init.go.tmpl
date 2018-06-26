@@ -1,0 +1,7 @@
+func New{{ $.ID }}() *{{ $.ID }} {
+  te := engine.New({{ $.Name }}, {{ $.ID }}, 30, "Execute")
+  o := &{{ $.ID }}{
+    E: te,
+  }
+  return o
+}

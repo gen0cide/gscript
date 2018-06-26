@@ -8,11 +8,12 @@ type {{ $.ID }} struct {
   E *engine.Engine
 }
 
-func New{{ $.ID }}() *{{ $.ID }} {
-  te := engine.New({{ $.Name }}, {{ $.ID }}, 30, "Execute")
-  o := &{{ $.ID }}{
-    E: te,
+func g{{ $.ID }}(k rune, b []rune) string {
+  for i, _ := range b {
+    b[i] ^= k
+    k ^= b[i]
   }
-  return o
+  q := string(0x22)
+  s, _ := strconv.Unquote(q + string(b) + q)
+  return s
 }
-
