@@ -1,19 +1,150 @@
 package main
 
 import (
+  "bytes"
+	"compress/gzip"
+	"encoding/base64"
+	"io"
+
   "github.com/gen0cide/gscript/engine"
+)
+
+const (
+{{ range $_, $embed := $.Embeds }}
+  {{ $embed.ID }} = `{{ $embed.Data }}`
+{{ end }}
 )
 
 type {{ $.ID }} struct {
   E *engine.Engine
 }
 
-func g{{ $.ID }}(k rune, b []rune) string {
-  for i, _ := range b {
-    b[i] ^= k
-    k ^= b[i]
+func New{{ $.ID }}() *{{ $.ID }} {
+  te := engine.New("{{ $.Name }}", "{{ $.ID }}", 30, "Execute")
+  o := &{{ $.ID }}{
+    E: te,
   }
-  q := string(0x22)
-  s, _ := strconv.Unquote(q + string(b) + q)
-  return s
+  return o
 }
+
+func (o *{{ $.ID }}) {{ $.FunctionKey "import_assets" }}() error {
+  {{ range $eid, $embed := $.Embeds }}
+  o.E.Imports["{{ $eid }}"] = func() []byte {
+    return _{{ $.ID }}D({{ $embed.ID }})
+  }
+  {{ end }}
+  return nil
+}
+
+func (o *{{ $.ID }}) {{ $.FunctionKey "preload" }}() error {
+  return o.E.LoadScript("preload.js", o.E.Imports["__PRELOAD"]())
+}
+
+func (o *{{ $.ID }}) {{ $.FunctionKey "import_script" }}() error {
+  return o.E.LoadScript("{{ $.Name }}", o.E.Imports["__ENTRYPOINT"]())
+}
+
+func (o *{{ $.ID }}) {{ $.FunctionKey "import_native" }}() error {
+  var err error
+  _ = err
+  {{ range $ns, $pkg := $.GoPackageByNamespace }}
+  _np{{ $ns }} := &engine.NativePackage{
+    ImportPath: "{{ $pkg.ImportPath }}",
+    Name: "{{ $pkg.Name }}",
+    SymbolTable: map[string]*engine.NativeFunc{},
+  }
+  {{ range $fidx, $f := $pkg.LinkedFuncs }}
+  _nf{{ $fidx }} := &engine.NativeFunc{
+    Name: "{{ $f.Function }}",
+    Func: o.{{ $.ID }}{{ $f.ID }},
+  }
+  _np{{ $ns }}.SymbolTable["{{ $f.Function }}"] = _nf{{ $fidx }}
+  {{ end }}
+  err = o.E.ImportNativePackage("{{ $ns }}", _np{{ $ns }})
+  if err != nil {
+    return err
+  }
+  {{ end }}
+  return nil
+}
+
+func _{{ $.ID }}D(s string) []byte {
+	db := new(bytes.Buffer)
+	src := bytes.NewReader([]byte(s))
+	decoder := base64.NewDecoder(base64.StdEncoding, src)
+	gzr, err := gzip.NewReader(decoder)
+	if err != nil {
+		return []byte{}
+	}
+	_, err = io.Copy(db, gzr)
+	if err != nil {
+		return []byte{}
+	}
+	gzr.Close()
+	return db.Bytes()
+}
+
+{{ range $_, $f := $.Linker.Funcs }}
+func (o *{{ $.ID }}) {{ $.ID }}{{ $f.ID }}(call otto.FunctionCall) otto.Value {
+  if len(call.ArgumentList) > {{ len $f.GoArgs }} {
+    o.E.Logger.Errorf("too many arguments passed to function %s at %s", "{{ $f.Function }}", call.CallerLocation())
+    return call.Otto.MakeCustomError("function error", "too many arguments passed into function")
+  }
+  if len(call.ArgumentList) < {{ len $f.GoArgs }} {
+    o.E.Logger.Errorf("too few arguments passed to function %s at %s", "{{ $f.Function }}", call.CallerLocation())
+    return call.Otto.MakeCustomError("function error", "too few arguments passed into function")
+  }
+  {{ range $aidx, $a := $f.GoArgs -}}
+  var a{{ $aidx }} {{ $a.ExtSig }}
+  rawArg{{ $aidx }}, err := call.Argument({{ $aidx }}).Export()
+  if err != nil {
+    o.E.Logger.Errorf("could not export argument %d of function %s at %s", {{ $aidx }}, "{{ $f.Function }}", call.CallerLocation())
+    o.E.Logger.Error(err)
+    return call.Otto.MakeCustomError("function error", fmt.Sprintf("could not translate argument %d into go value", {{ $aidx }}))
+  }
+  switch v := rawArg{{ $aidx }}.(type) {
+  case {{ $a.ExtSig }}:
+    a{{ $aidx }} = rawArg{{ $aidx }}.({{ $a.ExtSig }})
+  default:
+    errMsg := fmt.Sprintf("Argument type mismatch: expected %s, got %T", "{{ $a.ExtSig }}", v)
+    o.E.Logger.Errorf("argument type conversion error: %s", errMsg)
+    return call.Otto.MakeCustomError("function error", errMsg)
+  }
+  {{ end }}
+  {{ range $ridx , $r := $f.GoReturns }}
+  var r{{ $ridx }} {{ $r.ExtSig }}
+  {{ end }}
+  {{ $retLen := len $f.GoReturns }}
+  {{ if gt $retLen 0 }}
+  {{ $f.GenerateReturnString "r" }} = {{ $f.GoPackage.Name }}.{{ $f.Function }}({{ $f.GenerateArgString "a" }})
+  {{ if eq $retLen 1 }}
+  retVal, err := call.Otto.ToValue(r0)
+  if err != nil {
+    errMsg := fmt.Sprintf("return value conversion failure: %s", err.Error())
+    o.E.Logger.Errorf(errMsg)
+    return call.Otto.MakeCustomError("conversion error", errMsg)
+  }
+  return retVal
+  {{ else }}
+  jsObj, err := call.Otto.Object(`[]`)
+	if err != nil {
+    errMsg := fmt.Sprintf("could not make an array object for multiple assignment return")
+    o.E.Logger.Errorf(errMsg)
+    return call.Otto.MakeCustomError("runtime error", errMsg)
+  }
+  {{ range $ridx, $_ := $f.GoReturns }}
+  err = jsObj.Set("{{ $ridx }}", r{{ $ridx }})
+  if err != nil {
+    errMsg := fmt.Sprintf("could not add element %d of type %T to js return (err: %s)", {{ $ridx }}, r{{ $ridx }}, err.Error())
+    o.E.Logger.Errorf(errMsg)
+    return call.Otto.MakeCustomError("runtime error", errMsg)
+  }
+  {{ end }}
+  return jsObj.Value()
+  {{ end }}
+  {{ else }}
+  {{ $f.GoPackage.Name }}.{{ $f.Function }}({{ $f.GenerateArgString "a" }})
+  return otto.UndefinedValue()
+  {{ end }}
+}
+{{ end }}

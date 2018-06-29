@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sync"
 
@@ -90,6 +91,59 @@ func (c *Compiler) AddScript(scriptPath string) error {
 	return nil
 }
 
+// Do runs all compiler functions once scripts are added to it
+func (c *Compiler) Do() error {
+	err := c.CreateBuildDir()
+	if err != nil {
+		return err
+	}
+	err = c.ProcessMacros()
+	if err != nil {
+		return err
+	}
+	err = c.InitializeImports()
+	if err != nil {
+		return err
+	}
+	err = c.DetectVersions()
+	if err != nil {
+		return err
+	}
+	err = c.GatherAssets()
+	if err != nil {
+		return err
+	}
+	err = c.WalkGenesisASTs()
+	if err != nil {
+		return err
+	}
+	err = c.LocateGoDependencies()
+	if err != nil {
+		return err
+	}
+	err = c.BuildGolangASTs()
+	if err != nil {
+		return err
+	}
+	err = c.SwizzleNativeCalls()
+	if err != nil {
+		return err
+	}
+	err = c.SanityCheckSwizzles()
+	if err != nil {
+		return err
+	}
+	err = c.WriteScripts()
+	if err != nil {
+		return err
+	}
+	err = c.WritePreloads()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // CreateBuildDir creates the compiler's build directory, with an additional asset directory as well
 func (c *Compiler) CreateBuildDir() error {
 	err := os.MkdirAll(c.BuildDir, 0744)
@@ -113,6 +167,22 @@ func (c *Compiler) CreateBuildDir() error {
 // compileSource
 // obfuscateBinary
 // compressBinary
+//
+// CreateBuildDir
+// ProcessMacros
+// DetectVersions
+// GatherAssets
+// WalkGenesisASTs
+// LocateGoDependencies
+// BuildGolangASTs
+// SwizzleNativeCalls
+// SanityCheckSwizzles
+// WriteScripts
+// EncodeAssets
+// GenerateIR
+// WriteVMBundles
+// CreateEntryPoint
+// BuildNativeBinary
 
 // ProcessMacros enumerates the compilers virtual machines with the pre-processor to extract
 // compiler macros for each virtual machine
@@ -153,12 +223,32 @@ func (c *Compiler) DetectVersions() error {
 // obfuscateBinary
 // compressBinary
 
+// GatherAssets enumerates all bundled virtual machines for any embedded assets and copies them
+// into the build directory's asset cache
+func (c *Compiler) GatherAssets() error {
+	fns := []func() error{}
+	for _, vm := range c.vms {
+		fns = append(fns, vm.CacheAssets)
+	}
+	return c.ExecuteVMActionInParallel(fns)
+}
+
 // WriteScripts enumerates the compiler's genesis VMs and writes a cached version of the
 // genesis source to the asset directory to prevent race condiditons with script filesystem locations
 func (c *Compiler) WriteScripts() error {
 	fns := []func() error{}
 	for _, vm := range c.vms {
 		fns = append(fns, vm.WriteScript)
+	}
+	return c.ExecuteVMActionInParallel(fns)
+}
+
+// InitializeImports enumerates the compiler's genesis VMs and writes a cached version of the
+// genesis source to the asset directory to prevent race condiditons with script filesystem locations
+func (c *Compiler) InitializeImports() error {
+	fns := []func() error{}
+	for _, vm := range c.vms {
+		fns = append(fns, vm.InitializeGoImports)
 	}
 	return c.ExecuteVMActionInParallel(fns)
 }
@@ -173,9 +263,9 @@ func (c *Compiler) WalkGenesisASTs() error {
 	return c.ExecuteVMActionInParallel(fns)
 }
 
-// LocateGolangDependencies gathers a list of all installed golang packages, hands a copy to each VM,
+// LocateGoDependencies gathers a list of all installed golang packages, hands a copy to each VM,
 // then has every VM resolve it's own golang dependencies from that package list
-func (c *Compiler) LocateGolangDependencies() error {
+func (c *Compiler) LocateGoDependencies() error {
 	// grab a list of currently installed golang packages
 	gopks, err := gopkgs.Packages(gopkgs.Options{NoVendor: true})
 	if err != nil {
@@ -224,6 +314,101 @@ func (c *Compiler) BuildGolangASTs() error {
 	return c.ExecuteVMActionInParallel(fns)
 }
 
+// SwizzleNativeCalls enumerates all native golang function calls mapped to genesis script
+// function calls and generates the type declarations for both arguments and return values.
+func (c *Compiler) SwizzleNativeCalls() error {
+	fns := []func() error{}
+	for _, vm := range c.vms {
+		fns = append(fns, vm.SwizzleNativeFunctionCalls)
+	}
+	return c.ExecuteVMActionInParallel(fns)
+}
+
+// SanityCheckSwizzles enumerates all VMs to make sure their linked native functions
+// are being called correctly by the corrasponding javascript callers
+func (c *Compiler) SanityCheckSwizzles() error {
+	fns := []func() error{}
+	for _, vm := range c.vms {
+		fns = append(fns, vm.SanityCheckLinkedSymbols)
+	}
+	return c.ExecuteVMActionInParallel(fns)
+}
+
+// createBuildDir
+// compileMacros
+// writeScript
+// compileAssets
+// buildEntryPoint
+// tumbleAST
+// writeSource
+// compileSource
+// obfuscateBinary
+// compressBinary
+//
+// CreateBuildDir
+// ProcessMacros
+// DetectVersions
+// GatherAssets
+// WalkGenesisASTs
+// LocateGoDependencies
+// BuildGolangASTs
+// SwizzleNativeCalls
+// SanityCheckSwizzles
+// WriteScripts
+// WritePreloads
+// EncodeAssets
+// GenerateDylibs
+// WriteVMBundles
+// CreateEntryPoint
+// BuildNativeBinary
+
+// WritePreloads renders preload libraries for every virtual machine in the compilers asset directory
+func (c *Compiler) WritePreloads() error {
+	fns := []func() error{}
+	for _, vm := range c.vms {
+		fns = append(fns, vm.WritePreload)
+	}
+	return c.ExecuteVMActionInParallel(fns)
+}
+
+// EncodeAssets renders all embedded assets into intermediate representation
+func (c *Compiler) EncodeAssets() error {
+	return nil
+}
+
+// GenerateDylibs generates the dynamic links for each virtual machine's symbol table
+func (c *Compiler) GenerateDylibs() error {
+	return nil
+}
+
+// WriteVMBundles writes the intermediate representation for each virtual machine to it's
+// vm bundle file within the build directory
+func (c *Compiler) WriteVMBundles() error {
+	return nil
+}
+
+// CreateEntryPoint renders the final main() entry point for the final binary in the build directory
+func (c *Compiler) CreateEntryPoint() error {
+	return nil
+}
+
+// BuildNativeBinary uses the golang compiler to attempt to build a native binary for
+// the target platform specified in the compiler options
+func (c *Compiler) BuildNativeBinary() error {
+	os.Chdir(c.BuildDir)
+	cmd := exec.Command("go", "build", `-v`, `-ldflags`, `-s -w`, "-o", c.OutputFile)
+	cmd.Env = os.Environ()
+	cmd.Env = append(cmd.Env, fmt.Sprintf("GOOS=%s", c.OS))
+	cmd.Env = append(cmd.Env, fmt.Sprintf("GOARCH=%s", c.Arch))
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // ExecuteVMActionInParallel is a meta function that takes an array of function pointers (hopefully for each VM)
 // and executes them in parallel to decrease compile times. This is setup to handle errors within
 // each VM gracefully and not allow a goroutine to fail silently.
@@ -253,4 +438,9 @@ func (c *Compiler) ExecuteVMActionInParallel(fns []func() error) error {
 		}
 	}
 	return nil
+}
+
+// GetVMs is a test function
+func (c *Compiler) GetVMs() []*GenesisVM {
+	return c.vms
 }

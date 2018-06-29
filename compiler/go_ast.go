@@ -66,6 +66,9 @@ type GoPackage struct {
 
 	// FuncTable is the map of each function name to it's Golang AST declaration
 	FuncTable map[string]*ast.FuncDecl
+
+	// LinkedFuncs defines references to the dynamically linked functions for this go package
+	LinkedFuncs []*LinkedFunction
 }
 
 // GoParamDef defines a type to represent parameters found in a Golang function declaration (arguments or return types)

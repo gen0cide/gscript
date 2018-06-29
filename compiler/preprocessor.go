@@ -12,6 +12,7 @@ var (
 	goImportMacro = `(?P<gopkg>\S*?) as (?P<namespace>\w*)\z`
 
 	validMacros = map[string]*regexp.Regexp{
+		"import":    generateMacroRegexp("import", basicMacro),
 		"priority":  generateMacroRegexp("priority", basicMacro),
 		"os":        generateMacroRegexp("os", basicMacro),
 		"timeout":   generateMacroRegexp("timeout", basicMacro),

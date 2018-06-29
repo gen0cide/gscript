@@ -64,9 +64,12 @@ func New(name, id string, timeout int, entrypoint string) *Engine {
 		AfterHook:  false,
 		BeforeHook: false,
 		fileSet:    &file.FileSet{},
+		Imports:    map[string]func() []byte{},
+		Packages:   map[string]*NativePackage{},
 	}
 	e.InitVM()
 	e.SetLogger(&NullLogger{})
+	e.setGlobalRef()
 	return e
 }
 
@@ -166,4 +169,8 @@ func (e *Engine) Exec(fn string) (otto.Value, error) {
 func (e *Engine) SetLogger(l Logger) error {
 	e.Logger = l
 	return HijackConsoleLogging(e)
+}
+
+func (e *Engine) setGlobalRef() error {
+	return e.SetConst("_VM", e)
 }

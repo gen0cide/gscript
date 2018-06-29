@@ -1,6 +1,7 @@
 package compiler
 
 import (
+	"bytes"
 	"fmt"
 	"go/ast"
 	"go/parser"
@@ -8,21 +9,21 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"sync"
+	"text/template"
 
 	gast "github.com/robertkrimen/otto/ast"
 	gfile "github.com/robertkrimen/otto/file"
+	"github.com/tdewolff/minify"
+	"github.com/tdewolff/minify/js"
 )
 
 var (
 	requiredBuildTemplates = []string{
 		"init",
 		"preload",
-		"import_native_libs",
-		"import_script_libs",
 		"import_assets",
-		"unpack_assets",
-		"decrypt_assets",
-		"decode_assets",
+		"import_script",
+		"import_native",
 		"execute",
 	}
 
@@ -56,11 +57,8 @@ type GenesisVM struct {
 	// Absolute path to the script file
 	SourceFile string `json:"source"`
 
-	// List of absolute file paths of embedded files
-	AssetFiles []string `json:"imports"`
-
 	// map of embedded files
-	Embeds []*EmbeddedFile `json:"-"`
+	Embeds map[string]*EmbeddedFile
 
 	// name of the script (base name of file)
 	Name string
@@ -109,6 +107,9 @@ type GenesisVM struct {
 
 	// reference to the parent compiler
 	Compiler *Compiler
+
+	// GenesisFile holds the intermediate representation of this VM's bundle code
+	GenesisFile *bytes.Buffer
 }
 
 // NewGenesisVM creates a new virtual machine object for the compiler
@@ -122,8 +123,7 @@ func NewGenesisVM(name, path, os, arch string, data []byte, prog *gast.Program) 
 		RequiredArch:         arch,
 		RequiredOS:           os,
 		AST:                  prog,
-		AssetFiles:           []string{},
-		Embeds:               []*EmbeddedFile{},
+		Embeds:               map[string]*EmbeddedFile{},
 		Macros:               []*Macro{},
 		GoPackageByImport:    map[string]*GoPackage{},
 		GoPackageByNamespace: map[string]*GoPackage{},
@@ -182,10 +182,89 @@ func (g *GenesisVM) DetectTargetEngineVersion() error {
 	return fmt.Errorf("no entry point functions were found declared in the script %s", g.Name)
 }
 
-// WriteScript writes the VM's source to a cached location in the compiler's asset directory
+// CacheAssets indexes all //import: compiler macros and retrieves the corrasponding asset
+func (g *GenesisVM) CacheAssets() error {
+	importMacros := []*Macro{}
+	for _, m := range g.Macros {
+		if m.Key == "import" {
+			importMacros = append(importMacros, m)
+		}
+	}
+	for _, m := range importMacros {
+		err := g.RetrieveAsset(m)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// RetrieveAsset attempts to copy the asset into the build directory
+func (g *GenesisVM) RetrieveAsset(m *Macro) error {
+	ef, err := NewEmbeddedFile(m.Params["value"])
+	if err != nil {
+		return err
+	}
+	err = ef.CacheFile(g.Compiler.AssetDir())
+	if err != nil {
+		return err
+	}
+	g.Lock()
+	g.Embeds[ef.OrigName] = ef
+	g.Unlock()
+	return nil
+}
+
+// WriteGenesisScript writes a genesis script to the asset directory and returns a reference to an embeddedfile
+// for use by the compiler
+func (g *GenesisVM) WriteGenesisScript(name string, src []byte) (*EmbeddedFile, error) {
+	scriptFileID := RandLowerAlphaString(18)
+	scriptName := fmt.Sprintf("%s.gs", scriptFileID)
+	scriptLocation := filepath.Join(g.Compiler.AssetDir(), scriptName)
+	m := minify.New()
+	m.AddFunc("text/javascript", js.Minify)
+	miniVersion := new(bytes.Buffer)
+	r := bytes.NewReader(src)
+	if err := m.Minify("text/javascript", miniVersion, r); err != nil {
+		return nil, err
+	}
+	err := ioutil.WriteFile(scriptLocation, miniVersion.Bytes(), 0644)
+	if err != nil {
+		return nil, err
+	}
+	scriptEmbed := &EmbeddedFile{
+		CachedPath: scriptLocation,
+		Filename:   scriptName,
+		OrigName:   name,
+		ID:         scriptFileID,
+	}
+	return scriptEmbed, nil
+}
+
+// WriteScript writes the initial user supplied script to the asset directory and tags
+// it in the embed table as the entry point for the user defined functions
 func (g *GenesisVM) WriteScript() error {
-	scriptLocation := filepath.Join(g.Compiler.AssetDir(), fmt.Sprintf("%s.gs", g.ID))
-	return ioutil.WriteFile(scriptLocation, g.Data, 0644)
+	scriptEmbed, err := g.WriteGenesisScript(g.Name, g.Data)
+	if err != nil {
+		return err
+	}
+	g.Lock()
+	g.Embeds["__ENTRYPOINT"] = scriptEmbed
+	g.Unlock()
+	return nil
+}
+
+// WritePreload writes the preload library to the asset directory and tags
+// it in the embed table as the preload library for the virtual machine
+func (g *GenesisVM) WritePreload() error {
+	scriptEmbed, err := g.WriteGenesisScript("preload.gs", []byte(Preload))
+	if err != nil {
+		return err
+	}
+	g.Lock()
+	g.Embeds["__PRELOAD"] = scriptEmbed
+	g.Unlock()
+	return nil
 }
 
 // InitializeGoImports enumerates the go_import macros to initialize mappings
@@ -204,6 +283,7 @@ func (g *GenesisVM) InitializeGoImports() error {
 			ImportsByAlias: map[string]*ast.ImportSpec{},
 			FuncToFileMap:  map[string]string{},
 			FuncTable:      map[string]*ast.FuncDecl{},
+			LinkedFuncs:    []*LinkedFunction{},
 		}
 		g.GoPackageByImport[m.Params["gopkg"]] = gop
 		g.GoPackageByNamespace[m.Params["namespace"]] = gop
@@ -310,6 +390,17 @@ func (g *GenesisVM) SwizzleNativeFunctionCalls() error {
 	return nil
 }
 
+// SanityCheckLinkedSymbols checks to make sure all linked functions do not violate
+// caller conventions between the javascript and golang method signatures.
+func (g *GenesisVM) SanityCheckLinkedSymbols() error {
+	for _, lf := range g.Linker.Funcs {
+		if len(lf.GoArgs) != len(lf.Caller.ArgumentList) {
+			return fmt.Errorf("function call %s.%s in script %s does not match golang method signature (argument mismatch)", lf.Caller.Namespace, lf.Caller.FuncName, g.Name)
+		}
+	}
+	return nil
+}
+
 // GenerateFunctionKeys creates random functions for the various parts of the VM's source file
 func (g *GenesisVM) GenerateFunctionKeys() {
 	for _, x := range requiredBuildTemplates {
@@ -321,4 +412,20 @@ func (g *GenesisVM) GenerateFunctionKeys() {
 // in the virtual machine's constructors to unique identifiers in the IR
 func (g *GenesisVM) FunctionKey(k string) string {
 	return g.EntryPointMapping[k]
+}
+
+// RenderVMBundle generates the virtual machine's bundled intermediate representation file
+func (g *GenesisVM) RenderVMBundle(templateFile string) error {
+	tmpl := template.New(g.ID)
+	tmpl2, err := tmpl.Parse(templateFile)
+	if err != nil {
+		return err
+	}
+	buf := new(bytes.Buffer)
+	err = tmpl2.Execute(buf, g)
+	if err != nil {
+		return err
+	}
+	g.GenesisFile = buf
+	return nil
 }

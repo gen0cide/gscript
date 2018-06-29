@@ -1,6 +1,7 @@
 package testlib
 
 import (
+	"errors"
 	"net/url"
 	"strings"
 )
@@ -9,12 +10,14 @@ type Aspy struct {
 	Name string
 }
 
-func Test1(a string, a2 map[*url.URL][]*Aspy, b []*Aspy, c url.URL, d *Aspy, e *url.URL) (*url.URL, error) {
+// func Test1(s string, a2 map[*url.URL][]*Aspy, b []*Aspy, c url.URL, d *Aspy, e *url.URL) (*url.URL, error) {
+func Test1(s string) (*url.URL, error) {
 	u, err := url.Parse(s)
+	_ = u
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return nil, nil
+	return u, nil
 }
 
 func Test2(p1, p2 string) string {
@@ -34,13 +37,13 @@ func Test5() *Aspy {
 	}
 }
 
-func Test4(a *Aspy) {
+func Test4(a *Aspy) string {
 	return strings.ToUpper(a.Name)
 }
 
 func (a *Aspy) Test6(s string) (*Aspy, error) {
 	if len(s) > 5 {
-		return nil, error.New("string should be 1-4 chars")
+		return nil, errors.New("string should be 1-4 chars")
 	}
 	newName := strings.Join([]string{a.Name, s}, "-")
 	return &Aspy{Name: newName}, nil
