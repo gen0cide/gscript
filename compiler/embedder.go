@@ -3,12 +3,9 @@ package compiler
 import (
 	"bytes"
 	"compress/gzip"
-	"crypto/rand"
 	"fmt"
 	"io/ioutil"
-	"math/big"
 	"path/filepath"
-	"strings"
 )
 
 // EmbeddedFile is an object that manages the lifecycle of resolving and translating
@@ -96,18 +93,4 @@ func CompressedToBytes(b []byte) []byte {
 	r, _ := gzip.NewReader(bytes.NewBuffer(b))
 	buf, _ := ioutil.ReadAll(r)
 	return buf
-}
-
-// RandUpperAlphaString generates a random uppercase alpha string used for generating embed IDs
-func RandUpperAlphaString(strlen int) string {
-	const chars = "abcdefghijklmnopqrstuvwxyz"
-	result := make([]byte, strlen)
-	for i := range result {
-		val, err := rand.Int(rand.Reader, big.NewInt(int64(len(chars))))
-		if err != nil {
-			panic(err)
-		}
-		result[i] = chars[val.Int64()]
-	}
-	return strings.ToUpper(string(result))
 }

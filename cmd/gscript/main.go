@@ -25,7 +25,7 @@ import (
 	"github.com/google/go-github/github"
 	update "github.com/inconshreveable/go-update"
 	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli"
+	"gopkg.in/urfave/cli.v1"
 )
 
 var (

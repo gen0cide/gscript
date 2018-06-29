@@ -18,6 +18,17 @@ import (
 	"github.com/tdewolff/minify/js"
 )
 
+// createBuildDir
+// compileMacros
+// writeScript
+// compileAssets
+// buildEntryPoint
+// tumbleAST
+// writeSource
+// compileSource
+// obfuscateBinary
+// compressBinary
+
 // VMBundle defines a standalone GSE VM that will be bundled into a compiled binary
 type VMBundle struct {
 	sync.RWMutex
@@ -135,6 +146,17 @@ func (c *Compiler) createBuildDir() {
 	c.AssetDir = ad
 }
 
+// createBuildDir
+// compileMacros
+// writeScript
+// compileAssets
+// buildEntryPoint
+// tumbleAST
+// writeSource
+// compileSource
+// obfuscateBinary
+// compressBinary
+
 func (c *Compiler) compileMacros() {
 	for _, vm := range c.VMs {
 		assets := c.ParseMacros(vm)
@@ -155,6 +177,17 @@ func (c *Compiler) compileMacros() {
 		}
 	}
 }
+
+// createBuildDir
+// compileMacros
+// writeScript
+// compileAssets
+// buildEntryPoint
+// tumbleAST
+// writeSource
+// compileSource
+// obfuscateBinary
+// compressBinary
 
 func (c *Compiler) writeScript() {
 	for _, vm := range c.VMs {
@@ -188,6 +221,17 @@ func (c *Compiler) writeScript() {
 	}
 }
 
+// createBuildDir
+// compileMacros
+// writeScript
+// compileAssets
+// buildEntryPoint
+// tumbleAST
+// writeSource
+// compileSource
+// obfuscateBinary
+// compressBinary
+
 func (c *Compiler) processAsset(vm *VMBundle, f string, wg *sync.WaitGroup) {
 	defer wg.Done()
 	e := &EmbeddedFile{
@@ -213,9 +257,31 @@ func (c *Compiler) compileAssets() {
 	wg.Wait()
 }
 
+// createBuildDir
+// compileMacros
+// writeScript
+// compileAssets
+// buildEntryPoint
+// tumbleAST
+// writeSource
+// compileSource
+// obfuscateBinary
+// compressBinary
+
 func RetrieveExample() []byte {
 	return MustAsset("templates/example.gs")
 }
+
+// createBuildDir
+// compileMacros
+// writeScript
+// compileAssets
+// buildEntryPoint
+// tumbleAST
+// writeSource
+// compileSource
+// obfuscateBinary
+// compressBinary
 
 func (c *Compiler) buildEntryPoint() {
 	for _, vm := range c.VMs {
@@ -239,6 +305,17 @@ func (c *Compiler) buildEntryPoint() {
 	}
 	c.SourceBuffer = buf
 }
+
+// createBuildDir
+// compileMacros
+// writeScript
+// compileAssets
+// buildEntryPoint
+// tumbleAST
+// writeSource
+// compileSource
+// obfuscateBinary
+// compressBinary
 
 func (c *Compiler) tumbleAST() {
 	c.Logger.Info("Obfuscating strings")
@@ -266,6 +343,17 @@ func (c *Compiler) tumbleAST() {
 	c.SourceBuffer.Write(newSource.Bytes())
 }
 
+// createBuildDir
+// compileMacros
+// writeScript
+// compileAssets
+// buildEntryPoint
+// tumbleAST
+// writeSource
+// compileSource
+// obfuscateBinary
+// compressBinary
+
 func (c *Compiler) writeSource() {
 	err := ioutil.WriteFile(filepath.Join(c.BuildDir, "main.go"), c.SourceBuffer.Bytes(), 0644)
 	if err != nil {
@@ -276,6 +364,17 @@ func (c *Compiler) writeSource() {
 func (c *Compiler) printSource() {
 	printer.PrettyPrintSource(c.SourceBuffer.String())
 }
+
+// createBuildDir
+// compileMacros
+// writeScript
+// compileAssets
+// buildEntryPoint
+// tumbleAST
+// writeSource
+// compileSource
+// obfuscateBinary
+// compressBinary
 
 func (c *Compiler) compileSource() {
 	os.Chdir(c.BuildDir)
@@ -291,6 +390,17 @@ func (c *Compiler) compileSource() {
 	}
 }
 
+// createBuildDir
+// compileMacros
+// writeScript
+// compileAssets
+// buildEntryPoint
+// tumbleAST
+// writeSource
+// compileSource
+// obfuscateBinary
+// compressBinary
+
 func (c *Compiler) obfuscateBinary() {
 	if c.EnableLogging == true {
 		c.Logger.Warnf("Not obfuscating binary because logging is enabled.")
@@ -299,6 +409,17 @@ func (c *Compiler) obfuscateBinary() {
 	c.Logger.Infof("Obfuscating binary")
 	c.ObfuscateBinary()
 }
+
+// createBuildDir
+// compileMacros
+// writeScript
+// compileAssets
+// buildEntryPoint
+// tumbleAST
+// writeSource
+// compileSource
+// obfuscateBinary
+// compressBinary
 
 func (c *Compiler) compressBinary() {
 	if c.CompressBinary == false {

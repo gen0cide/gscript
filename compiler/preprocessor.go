@@ -17,6 +17,7 @@ var (
 		"timeout":   generateMacroRegexp("timeout", basicMacro),
 		"arch":      generateMacroRegexp("arch", basicMacro),
 		"version":   generateMacroRegexp("version", basicMacro),
+		"lib":       generateMacroRegexp("lib", basicMacro),
 		"go_import": generateMacroRegexp("go_import", goImportMacro),
 	}
 

@@ -2,9 +2,20 @@ package compiler
 
 import (
 	"bytes"
+	"errors"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"sync"
 
-	"github.com/sirupsen/logrus"
+	"github.com/gen0cide/gscript/engine"
+	gparser "github.com/robertkrimen/otto/parser"
+	"github.com/uudashr/gopkgs"
+)
+
+var (
+	errNoVM = errors.New("compiler has no VMs to process")
 )
 
 // Compiler is the primary type for building native binaries with gscript
@@ -12,47 +23,234 @@ type Compiler struct {
 	// lock to prevent race conditions during compilation
 	sync.RWMutex
 
-	// target operating system for the final binary
-	OS string `json:"os"`
-
-	// target architecture for the final binary
-	Arch string `json:"arch"`
-
-	// location of the compiled binary to be copied to when built
-	OutputFile string `json:"output"`
-
 	// array of VMs that will be bundled into this build
-	VMs []*GenesisVM `json:"vms"`
+	vms []*GenesisVM
 
 	// a map that places subsets of VMs into buckets according to their priority
-	SortedVMs map[int][]*GenesisVM `json:"-"`
-
-	// location of the temporary build directory
-	BuildDir string `json:"build_dir"`
-
-	// location of the temporary asset directory
-	AssetDir string `json:"asset_dir"`
-
-	// compiler option to output a zip file containing source code instead of
-	// actually building a final binary
-	OutputSource bool `json:"output_source"`
-
-	// compiler option to enable UPX compression post compilation
-	CompressBinary bool `json:"compress_binary"`
-
-	// compiler option to enable verbose logging output within the final binary
-	// note: this option will DISABLE binary obfuscation.
-	EnableLogging bool `json:"enable_logging"`
+	sortedVMs map[int][]*GenesisVM
 
 	// logging object to be used
-	Logger *logrus.Logger `json:"-"`
+	logger engine.Logger
 
 	// source buffer used by the pre-compilation obfuscator
-	SourceBuffer bytes.Buffer `json:"-"`
+	sourceBuffer bytes.Buffer
 
 	// a slice of strings enumerated by the pre-compilation obfuscator
-	StringDefs []*StringDef `json:"-"`
+	stringDefs []*StringDef
 
 	// a slice of unique priorities that can be found within this VMs bundled into this build
-	UniqPriorities []int `json:"-"`
+	uniqPriorities []int
+
+	// configuration object for the compiler
+	Options
+}
+
+// NewWithDefault returns a new compiler object with default options
+func NewWithDefault() *Compiler {
+	return &Compiler{
+		logger:  &engine.NullLogger{},
+		Options: DefaultOptions(),
+	}
+}
+
+// NewWithOptions returns a new compiler object with custom options
+func NewWithOptions(o Options) *Compiler {
+	return &Compiler{
+		logger:  &engine.NullLogger{},
+		Options: o,
+	}
+}
+
+// SetLogger overrides the logger for the compiler (defaults to an engine.NullLogger)
+func (c *Compiler) SetLogger(l engine.Logger) {
+	c.logger = l
+}
+
+// AddScript attempts to create a virtual machine object based on the given parameter to be included in compilation
+func (c *Compiler) AddScript(scriptPath string) error {
+	if _, err := os.Stat(scriptPath); os.IsNotExist(err) {
+		return fmt.Errorf("script cannot be located at %s", scriptPath)
+	}
+	srcBytes, err := ioutil.ReadFile(scriptPath)
+	if err != nil {
+		return err
+	}
+	fileName := filepath.Base(scriptPath)
+	absPath, err := filepath.Abs(scriptPath)
+	if err != nil {
+		return err
+	}
+	prog, err := gparser.ParseFile(nil, fileName, srcBytes, 2)
+	if err != nil {
+		return err
+	}
+	newVM := NewGenesisVM(fileName, absPath, c.OS, c.Arch, srcBytes, prog)
+	newVM.Compiler = c
+	c.vms = append(c.vms, newVM)
+	return nil
+}
+
+// CreateBuildDir creates the compiler's build directory, with an additional asset directory as well
+func (c *Compiler) CreateBuildDir() error {
+	err := os.MkdirAll(c.BuildDir, 0744)
+	if err != nil {
+		return fmt.Errorf("cannot create build directory: %v", err)
+	}
+	err = os.MkdirAll(c.AssetDir(), 0744)
+	if err != nil {
+		return fmt.Errorf("cannot create asset directory: %v", err)
+	}
+	return nil
+}
+
+// createBuildDir
+// compileMacros
+// writeScript
+// compileAssets
+// buildEntryPoint
+// tumbleAST
+// writeSource
+// compileSource
+// obfuscateBinary
+// compressBinary
+
+// ProcessMacros enumerates the compilers virtual machines with the pre-processor to extract
+// compiler macros for each virtual machine
+func (c *Compiler) ProcessMacros() error {
+	if len(c.vms) == 0 {
+		return errNoVM
+	}
+	var wg sync.WaitGroup
+	for _, vm := range c.vms {
+		wg.Add(1)
+		go func(vm *GenesisVM) {
+			vm.ProcessMacros()
+			wg.Done()
+		}(vm)
+	}
+	wg.Wait()
+	return nil
+}
+
+// DetectVersions enumerates all VMs to determine the engine version based on the entrypoint.
+// For more information on this, look at GenesisVM.DetectTargetEngineVersion()
+func (c *Compiler) DetectVersions() error {
+	fns := []func() error{}
+	for _, vm := range c.vms {
+		fns = append(fns, vm.DetectTargetEngineVersion)
+	}
+	return c.ExecuteVMActionInParallel(fns)
+}
+
+// createBuildDir
+// compileMacros
+// writeScript
+// compileAssets
+// buildEntryPoint
+// tumbleAST
+// writeSource
+// compileSource
+// obfuscateBinary
+// compressBinary
+
+// WriteScripts enumerates the compiler's genesis VMs and writes a cached version of the
+// genesis source to the asset directory to prevent race condiditons with script filesystem locations
+func (c *Compiler) WriteScripts() error {
+	fns := []func() error{}
+	for _, vm := range c.vms {
+		fns = append(fns, vm.WriteScript)
+	}
+	return c.ExecuteVMActionInParallel(fns)
+}
+
+// WalkGenesisASTs scans all genesis VMs scripts to identify Golang packages that have been
+// called from inside the script using the namespace identifier from the compiler macros
+func (c *Compiler) WalkGenesisASTs() error {
+	fns := []func() error{}
+	for _, vm := range c.vms {
+		fns = append(fns, vm.WalkGenesisAST)
+	}
+	return c.ExecuteVMActionInParallel(fns)
+}
+
+// LocateGolangDependencies gathers a list of all installed golang packages, hands a copy to each VM,
+// then has every VM resolve it's own golang dependencies from that package list
+func (c *Compiler) LocateGolangDependencies() error {
+	// grab a list of currently installed golang packages
+	gopks, err := gopkgs.Packages(gopkgs.Options{NoVendor: true})
+	if err != nil {
+		return err
+	}
+
+	// enumerate the packages, identifying all VMs that use them
+	for _, gopkg := range gopks {
+		for _, vm := range c.vms {
+			if gop, ok := vm.GoPackageByImport[gopkg.ImportPath]; ok {
+				gop.Dir = gopkg.Dir
+				gop.ImportPath = gopkg.ImportPath
+				gop.Name = gopkg.Name
+			}
+		}
+	}
+
+	// now to check for any unmet dependencies
+	packages := map[string]bool{}
+	for _, vm := range c.vms {
+		for _, p := range vm.UnresolvedGoPackages() {
+			packages[p] = true
+		}
+	}
+
+	// handle the error
+	if len(packages) > 0 {
+		c.logger.Errorf("a number of golang dependencies could not be resolved:")
+		for k := range packages {
+			c.logger.Errorf("\t%s", k)
+		}
+		return fmt.Errorf("unresolved golang packages discovered")
+	}
+	return nil
+}
+
+// BuildGolangASTs enumerates each genesis vm's golang native packages and matches exported
+// function declarations to their genesis script caller. This creates a reference in the VM's
+// linker object which will be used to generate native interfaces between the genesis VM and
+// the underlying golang packages.
+func (c *Compiler) BuildGolangASTs() error {
+	fns := []func() error{}
+	for _, vm := range c.vms {
+		fns = append(fns, vm.BuildGolangAST)
+	}
+	return c.ExecuteVMActionInParallel(fns)
+}
+
+// ExecuteVMActionInParallel is a meta function that takes an array of function pointers (hopefully for each VM)
+// and executes them in parallel to decrease compile times. This is setup to handle errors within
+// each VM gracefully and not allow a goroutine to fail silently.
+func (c *Compiler) ExecuteVMActionInParallel(fns []func() error) error {
+	var wg sync.WaitGroup
+	errChan := make(chan error, 1)
+	finChan := make(chan bool, 1)
+	for _, fn := range fns {
+		wg.Add(1)
+		go func(f func() error) {
+			err := f()
+			if err != nil {
+				errChan <- err
+			}
+			wg.Done()
+		}(fn)
+	}
+	go func() {
+		wg.Wait()
+		close(finChan)
+	}()
+	select {
+	case <-finChan:
+	case err := <-errChan:
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

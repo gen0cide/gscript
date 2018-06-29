@@ -4,7 +4,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/gen0cide/otto"
+	"github.com/robertkrimen/otto"
+	"github.com/robertkrimen/otto/ast"
 )
 
 var errTimeout = errors.New("Script Timeout")
@@ -15,31 +16,45 @@ func (e *Engine) SetEntryPoint(fnName string) {
 }
 
 // RunWithTimeout evaluates an expression in the VM that honors the VMs timeout setting
-func (e *Engine) RunWithTimeout(command string) (otto.Value, error) {
+func (e *Engine) LoadScriptWithTimeout(script *ast.Program) (otto.Value, error) {
 	start := time.Now()
-	defer func() {
-		duration := time.Since(start)
-		if caught := recover(); caught != nil {
-			if caught == errTimeout {
-				e.Logger.Errorf("VM hit timeout after %v seconds", duration)
-				return
-			}
-		}
-	}()
-
+	defer e.recoveryHandler(start)
 	e.VM.Interrupt = make(chan func(), 1)
+	go e.timeoutMonitor()
+	return e.VM.Eval(script)
+}
 
-	go func() {
-		for {
-			time.Sleep(time.Duration(e.Timeout) * time.Second)
-			if e.Paused {
-				e.VM.Interrupt <- func() {
-					panic(errTimeout)
-				}
-				return
-			}
+// CallFunctionWithTimeout calls a given top level function in the VM that honors the VMs timeout setting
+func (e *Engine) CallFunctionWithTimeout(fn string) (otto.Value, error) {
+	start := time.Now()
+	defer e.recoveryHandler(start)
+	e.VM.Interrupt = make(chan func(), 1)
+	go e.timeoutMonitor()
+	return e.VM.Call(fn, nil, nil)
+}
+
+func (e *Engine) recoveryHandler(begin time.Time) {
+	duration := time.Since(begin)
+	if caught := recover(); caught != nil {
+		if caught == errTimeout {
+			e.Logger.Errorf("VM hit timeout after %v seconds", duration)
+			return
+		} else {
+			e.Logger.Errorf("VM encountered unexpected error: %v", caught)
+			return
 		}
-	}()
+	}
+	return
+}
 
-	return e.VM.Run(command)
+func (e *Engine) timeoutMonitor() {
+	for {
+		time.Sleep(time.Duration(e.Timeout) * time.Second)
+		if e.Paused {
+			e.VM.Interrupt <- func() {
+				panic(errTimeout)
+			}
+			return
+		}
+	}
 }

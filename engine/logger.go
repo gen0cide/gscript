@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gen0cide/otto"
+	"github.com/robertkrimen/otto"
 )
 
 var (

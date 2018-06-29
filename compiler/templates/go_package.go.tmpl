@@ -1,0 +1,52 @@
+package main
+
+
+{{ range $fnName, $lf := $.Linker.Funcs }}
+func vm{{ $.ID }}{{ $lf.ID }}(call otto.FunctionCall) otto.Value {
+	cvm := call.Otto
+	e, err := cvm.Object(`GENESIS_VM`)
+	if err != nil {
+		return cvm.MakeCustomError(err.Error())
+	}
+
+
+	if len(call.ArgumentList) > 2 {
+		e.Logger.WithField("function", "AppendFileBytes").WithField("trace", "true").Error("Too many arguments in call.")
+		return otto.FalseValue()
+	}
+	if len(call.ArgumentList) < 2 {
+		e.Logger.WithField("function", "AppendFileBytes").WithField("trace", "true").Error("Too few arguments in call.")
+		return otto.FalseValue()
+	}
+
+	var path string
+	rawArg0, err := call.Argument(0).Export()
+	if err != nil {
+		e.Logger.WithField("function", "AppendFileBytes").WithField("trace", "true").Errorf("Could not export field: %s", "path")
+		return otto.FalseValue()
+	}
+	switch v := rawArg0.(type) {
+	case string:
+		path = filepath.Clean(rawArg0.(string))
+	default:
+		e.Logger.WithField("function", "AppendFileBytes").WithField("trace", "true").Errorf("Argument type mismatch: expected %s, got %T", "string", v)
+		return otto.FalseValue()
+	}
+
+	fileData := e.ValueToByteSlice(call.Argument(1))
+	fileError := e.AppendFileBytes(path, fileData)
+	rawVMRet := VMResponse{}
+
+	if fileError != nil {
+		e.Logger.WithField("function", "AppendFileBytes").WithField("trace", "true").Errorf("<function error> %s", fileError.Error())
+		rawVMRet["fileError"] = fileError.Error()
+	} else {
+		rawVMRet["fileError"] = nil
+	}
+	vmRet, vmRetError := e.VM.ToValue(rawVMRet)
+	if vmRetError != nil {
+		e.Logger.WithField("function", "AppendFileBytes").WithField("trace", "true").Errorf("Return conversion failed: %s", vmRetError.Error())
+		return otto.FalseValue()
+	}
+	return vmRet
+}

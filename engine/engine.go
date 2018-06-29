@@ -4,7 +4,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/gen0cide/otto"
+	"github.com/robertkrimen/otto"
+	"github.com/robertkrimen/otto/file"
+	"github.com/robertkrimen/otto/parser"
 )
 
 // Engine defines the virtual machine type for the genesis scripting engine
@@ -47,6 +49,9 @@ type Engine struct {
 
 	// defines the entry point function for execution of the script
 	EntryPoint string
+
+	// used to map the various javascript files
+	fileSet *file.FileSet
 }
 
 // New returns a new genesis virtual machine with the given parameters (does not run, just returns the container object)
@@ -58,6 +63,7 @@ func New(name, id string, timeout int, entrypoint string) *Engine {
 		EntryPoint: entrypoint,
 		AfterHook:  false,
 		BeforeHook: false,
+		fileSet:    &file.FileSet{},
 	}
 	e.InitVM()
 	e.SetLogger(&NullLogger{})
@@ -138,12 +144,22 @@ func (e *Engine) InitVM() error {
 // checks it for syntax errors before evaluating the script within the virtual machine's
 // current scope
 func (e *Engine) LoadScript(filename string, source []byte) error {
-	script, err := e.VM.Compile(filename, source)
+	program, err := parser.ParseFile(e.fileSet, filename, source, 2)
 	if err != nil {
+		e.Logger.Error(err)
 		return err
 	}
-	_, err = e.VM.Eval(script)
+	_, err = e.LoadScriptWithTimeout(program)
+	if err != nil {
+		e.Logger.Error(err)
+	}
 	return err
+}
+
+// Exec takes a single string of javascript and evaluates it within the VMs current context.
+// It will return both a javascript value object as well as an error if one was encountered
+func (e *Engine) Exec(fn string) (otto.Value, error) {
+	return e.CallFunctionWithTimeout(fn)
 }
 
 // SetLogger overrides the logging interface for this virtual machine.

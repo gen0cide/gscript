@@ -2,7 +2,9 @@ package compiler
 
 import (
 	"bytes"
+	"fmt"
 	"go/ast"
+	"reflect"
 )
 
 var (
@@ -98,4 +100,117 @@ type GoParamDef struct {
 
 	// GoLabel is used to represent the label name within Golang
 	GoLabel string
+
+	// LinkedFUnction is used to reference the parent LinkedFunction object
+	LinkedFunction *LinkedFunction
+}
+
+// NewGoParamDef creates a new definition object for a go parameter (either return or argument) and returns a pointer to itself.
+func NewGoParamDef(l *LinkedFunction, idx int) *GoParamDef {
+	gpd := &GoParamDef{
+		LinkedFunction: l,
+		ImportRefs:     map[string]*ast.ImportSpec{},
+		ParamIdx:       idx,
+	}
+	gpd.NameBuffer.WriteString("_")
+	return gpd
+}
+
+// Interpret is a recursive walk function that is used to dispatch the next walker
+// depending on the type of the provided interface (i). This is used to build up
+// buffers of both names and golang type declarations to be used during linking.
+func (p *GoParamDef) Interpret(i interface{}) error {
+	switch t := i.(type) {
+	case *ast.StarExpr:
+		return p.ParseStarExpr(t)
+	case *ast.SelectorExpr:
+		return p.ParseSelectorExpr(t)
+	case *ast.Ident:
+		return p.ParseIdent(t)
+	case *ast.ArrayType:
+		return p.ParseArrayType(t)
+	case *ast.MapType:
+		return p.ParseMapType(t)
+	case *ast.ChanType:
+		return fmt.Errorf("function %s includes an unsupported parameter type: %s", p.LinkedFunction.GoDecl.Name.Name, "chan")
+	case *ast.FuncType:
+		return fmt.Errorf("function %s includes an unsupported parameter type: %s", p.LinkedFunction.GoDecl.Name.Name, "func")
+	case *ast.InterfaceType:
+		return fmt.Errorf("function %s includes an unsupported parameter type: %s", p.LinkedFunction.GoDecl.Name.Name, "interface{}")
+	case *ast.StructType:
+		return fmt.Errorf("function %s includes an unsupported parameter type: %s", p.LinkedFunction.GoDecl.Name.Name, "struct")
+	default:
+		valType := reflect.ValueOf(t)
+		return fmt.Errorf("could not determine the golang ast type of %s in func %s", valType.Type().String(), p.LinkedFunction.Function)
+	}
+}
+
+// ParseMapType interprets a golang map type into the appropriate GoParamDef structure
+func (p *GoParamDef) ParseMapType(a *ast.MapType) error {
+	p.SigBuffer.WriteString("map[")
+	p.NameBuffer.WriteString("MapOf")
+	err := p.Interpret(a.Key)
+	if err != nil {
+		return err
+	}
+	p.SigBuffer.WriteString("]")
+	p.NameBuffer.WriteString("WithValType")
+	err = p.Interpret(a.Value)
+	return err
+}
+
+// ParseArrayType interprets a golang array/slice type into the appropriate GoParamDef structure
+func (p *GoParamDef) ParseArrayType(a *ast.ArrayType) error {
+	p.SigBuffer.WriteString("[]")
+	p.NameBuffer.WriteString("ArrayOf")
+	return p.Interpret(a.Elt)
+}
+
+// ParseSelectorExpr interprets a golang namespace external to the function declarations package
+// and maps it into the appropriate GoParamDef structure
+func (p *GoParamDef) ParseSelectorExpr(a *ast.SelectorExpr) error {
+	x, ok := a.X.(*ast.Ident)
+	if !ok {
+		return fmt.Errorf("could not parse selector namespace in func %s", p.LinkedFunction.Function)
+	}
+	canResolve, err := p.LinkedFunction.CanResolveImportDep(x.Name)
+	if err != nil {
+		return err
+	}
+	if canResolve != true {
+		return fmt.Errorf("the package %s was not found in the import map", x.Name)
+	}
+	p.SigBuffer.WriteString(x.Name)
+	p.NameBuffer.WriteString(x.Name)
+	p.SigBuffer.WriteString(".")
+	p.NameBuffer.WriteString("_")
+	p.SigBuffer.WriteString(a.Sel.Name)
+	p.NameBuffer.WriteString(a.Sel.Name)
+	return nil
+}
+
+// ParseStarExpr interprets a golang pointer into the appropriate GoParamDef structure
+func (p *GoParamDef) ParseStarExpr(a *ast.StarExpr) error {
+	p.SigBuffer.WriteString("*")
+	p.NameBuffer.WriteString("PointerTo")
+	return p.Interpret(a.X)
+}
+
+// ParseIdent interprets a golang identifier into the appropriate GoParamDef structure
+func (p *GoParamDef) ParseIdent(a *ast.Ident) error {
+	if ok := builtInGoTypes[a.Name]; !ok {
+		p.SigBuffer.WriteString(p.LinkedFunction.GoPackage.Name)
+		p.SigBuffer.WriteString(".")
+		p.NameBuffer.WriteString(p.LinkedFunction.GoPackage.Name)
+		p.NameBuffer.WriteString("_")
+	}
+	p.SigBuffer.WriteString(a.Name)
+	p.NameBuffer.WriteString(a.Name)
+	return nil
+}
+
+// IsBuiltInGoType takes a string argument and determines if is a valid built-in type
+// in golang
+func IsBuiltInGoType(s string) bool {
+	return builtInGoTypes[s]
 }

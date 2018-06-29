@@ -1,109 +1,97 @@
 package main
 
 import (
-	"errors"
 	"fmt"
-	"strings"
 
-	"github.com/Sirupsen/logrus"
-
-	"github.com/robertkrimen/otto"
-	"github.com/robertkrimen/otto/repl"
+	"github.com/davecgh/go-spew/spew"
+	"github.com/robertkrimen/otto/ast"
+	"github.com/robertkrimen/otto/file"
+	"github.com/robertkrimen/otto/parser"
 )
 
 var (
-	l      = logrus.New()
-	levels = []string{
-		"log",
-		"debug",
-		"info",
-		"error",
-		"warn",
+	script = `
+	var foo = "bar";
+
+	function poop() {
+		return null;
+	}
+
+	function Deploy() {
+		poop();
+		return "happy";
+	}
+
+	function AfterDeploy() {
+		return true;
+	}
+	`
+
+	callables = map[string]string{
+		"BeforeDeploy": "no",
+		"Deploy":       "yes",
+		"AfterDeploy":  "no",
 	}
 )
 
-type Eng struct {
-	Logger *logrus.Logger
-	VM     *otto.Otto
+type walker struct {
+	source string
+	shift  file.Idx
 }
 
-func normalizeConsoleArgs(c otto.FunctionCall) string {
-	o := []string{}
-	jsonNs, err := c.Otto.Object("JSON")
-	if err != nil {
-		return errors.New("runtime error: could not locate the JSON runtime object").Error()
-	}
-	for _, i := range c.ArgumentList {
-		if i.Class() == "Object" {
-			i, err = jsonNs.Call("stringify", i, nil, 2)
-			if err != nil {
-				o = append(o, err.Error())
-				continue
-			}
-		}
-		o = append(o, fmt.Sprintf("%v", i))
-	}
-	return strings.Join(o, " ")
+func (w *walker) Exit(n ast.Node) {
+	return
+}
 
+func (w *walker) Enter(n ast.Node) ast.Visitor {
+	spew.Dump(n)
+	fmt.Println("==============================")
+	return w
 }
 
 func main() {
-	vm := &Eng{
-		Logger: logrus.New(),
-		VM:     otto.New(),
-	}
-	hijackConsole(vm)
-	err := repl.Run(vm.VM)
+	// logger := logger.NewStandardLogrusLogger(nil, "testhijack", false, false)
+	// e := engine.New("testhijack", "RANDOMVMID", 30, "Deploy")
+	// e.SetLogger(logger)
+	// err := e.LoadScript("test.gs", []byte(script))
+	// if err != nil {
+	// 	logger.Error("Not continuing since script load failed.")
+	// 	return
+	// }
+	// val, err := e.Exec("Deploy")
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// spew.Dump(val)
+
+	callableFuncs := map[string]bool{}
+	prog, err := parser.ParseFile(nil, "test", script, 2)
 	if err != nil {
 		panic(err)
 	}
-}
+	for _, s := range prog.Body {
+		funcStmt, ok := s.(*ast.FunctionStatement)
+		if !ok {
+			continue
+		}
+		fnLabel := funcStmt.Function.Name.Name
+		if callables[fnLabel] != "" {
+			fmt.Printf("Found Entrypoint: %s()\n", fnLabel)
+			callableFuncs[fnLabel] = true
+		}
+	}
 
-func hijackConsole(e *Eng) {
-	c, err := e.VM.Object(`console`)
-	if err != nil {
-		panic(err)
+	if len(callableFuncs) == 3 {
+		fmt.Println("valid legacy script")
+		return
 	}
-	for _, l := range levels {
-		err = c.Set(l, loggerFactory(e, l))
-		if err != nil {
-			panic(err)
-		}
-	}
-}
 
-func loggerFactory(e *Eng, level string) func(call otto.FunctionCall) otto.Value {
-	prefix := fmt.Sprintf("console.%s >>> ", level)
-	switch level {
-	case "log":
-		return func(call otto.FunctionCall) otto.Value {
-			e.Logger.Info(prefix, normalizeConsoleArgs(call))
-			return otto.Value{}
-		}
-	case "debug":
-		return func(call otto.FunctionCall) otto.Value {
-			e.Logger.Debug(prefix, normalizeConsoleArgs(call))
-			return otto.Value{}
-		}
-	case "info":
-		return func(call otto.FunctionCall) otto.Value {
-			e.Logger.Info(prefix, normalizeConsoleArgs(call))
-			return otto.Value{}
-		}
-	case "error":
-		return func(call otto.FunctionCall) otto.Value {
-			e.Logger.Error(prefix, normalizeConsoleArgs(call))
-			return otto.Value{}
-		}
-	case "warn":
-		return func(call otto.FunctionCall) otto.Value {
-			e.Logger.Warn(prefix, normalizeConsoleArgs(call))
-			return otto.Value{}
-		}
-	default:
-		return func(call otto.FunctionCall) otto.Value {
-			e.Logger.Info(prefix, normalizeConsoleArgs(call))
-			return otto.Value{}
-		}
+	if len(callableFuncs) == 1 && callableFuncs["Deploy"] == true {
+		fmt.Println("valid v2 script")
+		return
 	}
+
+	fmt.Println("not a valid legacy script!")
+	return
+
 }

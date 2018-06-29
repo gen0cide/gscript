@@ -1,6 +1,6 @@
 package engine
 
-import "github.com/gen0cide/otto"
+import "github.com/robertkrimen/otto"
 
 // NativePackage defines a golang library that is being imported into the genesis VM
 type NativePackage struct {

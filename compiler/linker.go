@@ -1,11 +1,18 @@
 package compiler
 
-import "go/ast"
+import (
+	"fmt"
+	"go/ast"
+	"strings"
+)
 
 // LinkedFunction is the type that represents the gscript <=> golang native binding
 // so proper interfaces can be generated at compile time for calling native go from
 // the genesis VM.
 type LinkedFunction struct {
+	// ID of the function that is linked
+	ID string
+
 	// string representation of the function basename
 	Function string
 
@@ -45,6 +52,92 @@ type Linker struct {
 
 	// mapping of function name to the linked function object used during generation
 	Funcs map[string]*LinkedFunction
+}
+
+// NewLinker creates a new linker for the given genesis VM
+func NewLinker(vm *GenesisVM) *Linker {
+	return &Linker{
+		VM:    vm,
+		Funcs: map[string]*LinkedFunction{},
+	}
+}
+
+// NewLinkedFunction creates a function mapping in the VMs linker between golang AST function declearations and genesis AST function calls
+// so the compiler can build the function interfaces between the virtual machine and the native golang package
+func (l *Linker) NewLinkedFunction(caller *FunctionCall, file *ast.File, godecl *ast.FuncDecl, imports []*ast.ImportSpec, gopkg *GoPackage) (*LinkedFunction, error) {
+	if l.Funcs[caller.FuncName] != nil {
+		return nil, fmt.Errorf("vm %s already has a linker for go func %s under package %s - new function is in package %s", l.VM.Name, caller.FuncName, l.Funcs[caller.FuncName].GoPackage.ImportPath, gopkg.ImportPath)
+	}
+	lf := &LinkedFunction{
+		ID:        RandLowerAlphaString(16),
+		Function:  caller.FuncName,
+		Caller:    caller,
+		File:      file,
+		GoDecl:    godecl,
+		Imports:   imports,
+		GoPackage: gopkg,
+		GenesisVM: l.VM,
+		GoArgs:    []*GoParamDef{},
+		GoReturns: []*GoParamDef{},
+	}
+	l.Funcs[caller.FuncName] = lf
+	return lf, nil
+}
+
+// SwizzleToTheLeft enumerates the function arguments of both the caller and the native function
+// to build a structured list of parameters and their types. It also compares the caller argument
+// signature and throws an error if the caller is providing an incompatible number of arguments.
+func (l *LinkedFunction) SwizzleToTheLeft() error {
+	aOff := 0
+	for idx, p := range l.GoDecl.Type.Params.List {
+		masterP := NewGoParamDef(l, idx)
+		err := masterP.Interpret(p.Type)
+		if err != nil {
+			return err
+		}
+		masterP.VarName = masterP.NameBuffer.String()
+		masterP.ExtSig = masterP.SigBuffer.String()
+		for i := 0; i < len(p.Names); i++ {
+			newP := NewGoParamDef(l, idx)
+			newP.VarName = fmt.Sprintf("%s%d", masterP.VarName, aOff)
+			newP.ArgOffset = aOff
+			newP.ExtSig = masterP.ExtSig
+			newP.GoLabel = p.Names[i].Name
+			aOff++
+			l.GoArgs = append(l.GoArgs, newP)
+		}
+	}
+	return nil
+}
+
+// SwizzleToTheRight enumerates the function returns of the native function to build a structured
+// list of the return value types. This is then used by the linker to generate a special wrapper
+// to allow multiple return values to be returned in single value context (required by javascript)
+func (l *LinkedFunction) SwizzleToTheRight() error {
+	return nil
+}
+
+// CanResolveImportDep takes a package string and compares it against the linked functions known import
+// table to determine if the referenced namespace is declared in the golang AST as a referenced sub-type
+func (l *LinkedFunction) CanResolveImportDep(pkg string) (bool, error) {
+	if pkg == "." {
+		return false, fmt.Errorf("should not attempt to import anonymously in package %s", l.File.Name.Name)
+	}
+	for _, i := range l.Imports {
+		if i.Name != nil {
+			if i.Name.Name == pkg {
+				return true, nil
+			}
+		} else {
+			pkgParts := strings.Split(i.Path.Value, "/")
+			packageAlias := pkgParts[len(pkgParts)-1]
+			newAlias := strings.Replace(packageAlias, `"`, ``, -1)
+			if newAlias == pkg {
+				return true, nil
+			}
+		}
+	}
+	return false, fmt.Errorf("could not resolve package %s used in function %s inside package %s", pkg, l.Function, l.GoPackage.ImportPath)
 }
 
 // obj, err := d.Engine.VM.Object("url = {}")

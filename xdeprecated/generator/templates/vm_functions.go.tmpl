@@ -1,5 +1,5 @@
 // Package engine is the package that implements the gscript Virtual Machine (VM).
-// 
+//
 // VM Functions implemented:
 {{ range $libName, $lib := $.Libs -}}
 //
@@ -44,7 +44,7 @@ func (e *Engine) vm{{ $f.Name }}(call otto.FunctionCall) otto.Value {
     return otto.FalseValue()
   }
   {{ range $aidx, $a := $f.ExpectedArgTypes -}}
-  {{- if eq $a.GoType "[]byte" }}  
+  {{- if eq $a.GoType "[]byte" }}
   {{ $a.Name }} := e.ValueToByteSlice(call.Argument({{ $aidx }}))
   {{ else }}
   var {{ $a.Name }} {{ $a.GoType }}

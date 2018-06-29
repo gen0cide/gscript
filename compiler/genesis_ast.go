@@ -112,9 +112,35 @@ type genesisWalker struct {
 }
 
 func (g *genesisWalker) Enter(n gast.Node) gast.Visitor {
+	switch a := n.(type) {
+	case *gast.CallExpression:
+		switch b := a.Callee.(type) {
+		case *gast.DotExpression:
+			namespace, ok := b.Left.(*gast.Identifier)
+			if !ok {
+				// caller's left side was not an identifier (probably a function)
+				// move on
+				return g
+			}
+			if _, ok := g.script.GoPackageByNamespace[namespace.Name]; !ok {
+				// given caller was not a known golang namespace
+				// move on
+				return g
+			}
+			// we got em :) adding to the gopackge script caller table
+			fnName := b.Identifier.Name
+			gop := g.script.GoPackageByNamespace[namespace.Name]
+			gop.ScriptCallers[fnName] = &FunctionCall{
+				Namespace:    namespace.Name,
+				FuncName:     fnName,
+				ArgumentList: a.ArgumentList,
+			}
+		}
+	}
 	return g
 }
 
 func (g *genesisWalker) Exit(n gast.Node) {
+	// we done here - bye!
 	return
 }
