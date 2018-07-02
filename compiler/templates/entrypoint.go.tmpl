@@ -1,3 +1,38 @@
 package main
 
-import
+func main() {
+  var wg sync.WaitGroup
+  {{- range $_, $pri := $.UniqPriorities }}
+  {{- range $_, $vm := (index $.SortedVMs $pri) }}
+  wg.Add(1)
+  go func() {
+    defer wg.Done()
+    a{{ $vm.ID }} := New{{ $vm.ID }}()
+    if a{{ $vm.ID }} == nil {
+      return
+    }
+    err := a{{ $vm.ID }}.{{ $vm.FunctionKey "import_assets" }}()
+    if err != nil {
+      return
+    }
+    err = a{{ $vm.ID }}.{{ $vm.FunctionKey "preload" }}()
+    if err != nil {
+      return
+    }
+    err = a{{ $vm.ID }}.{{ $vm.FunctionKey "import_native" }}()
+    if err != nil {
+      return
+    }
+    err = a{{ $vm.ID }}.{{ $vm.FunctionKey "import_script" }}()
+    if err != nil {
+      return
+    }
+    err = a{{ $vm.ID }}.{{ $vm.FunctionKey "execute" }}()
+    if err != nil {
+      return
+    }
+  }()
+  {{ end -}}
+  wg.Wait()
+  {{ end -}}
+}

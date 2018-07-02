@@ -9,10 +9,12 @@ import (
 	"os/exec"
 	"path/filepath"
 	"sync"
+	"text/template"
 
 	"github.com/gen0cide/gscript/engine"
 	gparser "github.com/robertkrimen/otto/parser"
 	"github.com/uudashr/gopkgs"
+	"golang.org/x/tools/imports"
 )
 
 var (
@@ -28,7 +30,7 @@ type Compiler struct {
 	vms []*GenesisVM
 
 	// a map that places subsets of VMs into buckets according to their priority
-	sortedVMs map[int][]*GenesisVM
+	SortedVMs map[int][]*GenesisVM
 
 	// logging object to be used
 	logger engine.Logger
@@ -40,7 +42,7 @@ type Compiler struct {
 	stringDefs []*StringDef
 
 	// a slice of unique priorities that can be found within this VMs bundled into this build
-	uniqPriorities []int
+	UniqPriorities []int
 
 	// configuration object for the compiler
 	Options
@@ -49,16 +51,22 @@ type Compiler struct {
 // NewWithDefault returns a new compiler object with default options
 func NewWithDefault() *Compiler {
 	return &Compiler{
-		logger:  &engine.NullLogger{},
-		Options: DefaultOptions(),
+		logger:         &engine.NullLogger{},
+		Options:        DefaultOptions(),
+		SortedVMs:      map[int][]*GenesisVM{},
+		vms:            []*GenesisVM{},
+		UniqPriorities: []int{},
 	}
 }
 
 // NewWithOptions returns a new compiler object with custom options
 func NewWithOptions(o Options) *Compiler {
 	return &Compiler{
-		logger:  &engine.NullLogger{},
-		Options: o,
+		logger:         &engine.NullLogger{},
+		Options:        o,
+		SortedVMs:      map[int][]*GenesisVM{},
+		vms:            []*GenesisVM{},
+		UniqPriorities: []int{},
 	}
 }
 
@@ -133,11 +141,27 @@ func (c *Compiler) Do() error {
 	if err != nil {
 		return err
 	}
+	err = c.WritePreloads()
+	if err != nil {
+		return err
+	}
 	err = c.WriteScripts()
 	if err != nil {
 		return err
 	}
-	err = c.WritePreloads()
+	err = c.EncodeAssets()
+	if err != nil {
+		return err
+	}
+	err = c.WriteVMBundles()
+	if err != nil {
+		return err
+	}
+	err = c.CreateEntryPoint()
+	if err != nil {
+		return err
+	}
+	err = c.BuildNativeBinary()
 	if err != nil {
 		return err
 	}
@@ -209,7 +233,7 @@ func (c *Compiler) DetectVersions() error {
 	for _, vm := range c.vms {
 		fns = append(fns, vm.DetectTargetEngineVersion)
 	}
-	return c.ExecuteVMActionInParallel(fns)
+	return ExecuteFuncsInParallel(fns)
 }
 
 // createBuildDir
@@ -230,7 +254,7 @@ func (c *Compiler) GatherAssets() error {
 	for _, vm := range c.vms {
 		fns = append(fns, vm.CacheAssets)
 	}
-	return c.ExecuteVMActionInParallel(fns)
+	return ExecuteFuncsInParallel(fns)
 }
 
 // WriteScripts enumerates the compiler's genesis VMs and writes a cached version of the
@@ -240,7 +264,7 @@ func (c *Compiler) WriteScripts() error {
 	for _, vm := range c.vms {
 		fns = append(fns, vm.WriteScript)
 	}
-	return c.ExecuteVMActionInParallel(fns)
+	return ExecuteFuncsInParallel(fns)
 }
 
 // InitializeImports enumerates the compiler's genesis VMs and writes a cached version of the
@@ -250,7 +274,7 @@ func (c *Compiler) InitializeImports() error {
 	for _, vm := range c.vms {
 		fns = append(fns, vm.InitializeGoImports)
 	}
-	return c.ExecuteVMActionInParallel(fns)
+	return ExecuteFuncsInParallel(fns)
 }
 
 // WalkGenesisASTs scans all genesis VMs scripts to identify Golang packages that have been
@@ -260,7 +284,7 @@ func (c *Compiler) WalkGenesisASTs() error {
 	for _, vm := range c.vms {
 		fns = append(fns, vm.WalkGenesisAST)
 	}
-	return c.ExecuteVMActionInParallel(fns)
+	return ExecuteFuncsInParallel(fns)
 }
 
 // LocateGoDependencies gathers a list of all installed golang packages, hands a copy to each VM,
@@ -311,7 +335,7 @@ func (c *Compiler) BuildGolangASTs() error {
 	for _, vm := range c.vms {
 		fns = append(fns, vm.BuildGolangAST)
 	}
-	return c.ExecuteVMActionInParallel(fns)
+	return ExecuteFuncsInParallel(fns)
 }
 
 // SwizzleNativeCalls enumerates all native golang function calls mapped to genesis script
@@ -321,7 +345,7 @@ func (c *Compiler) SwizzleNativeCalls() error {
 	for _, vm := range c.vms {
 		fns = append(fns, vm.SwizzleNativeFunctionCalls)
 	}
-	return c.ExecuteVMActionInParallel(fns)
+	return ExecuteFuncsInParallel(fns)
 }
 
 // SanityCheckSwizzles enumerates all VMs to make sure their linked native functions
@@ -331,7 +355,7 @@ func (c *Compiler) SanityCheckSwizzles() error {
 	for _, vm := range c.vms {
 		fns = append(fns, vm.SanityCheckLinkedSymbols)
 	}
-	return c.ExecuteVMActionInParallel(fns)
+	return ExecuteFuncsInParallel(fns)
 }
 
 // createBuildDir
@@ -368,27 +392,61 @@ func (c *Compiler) WritePreloads() error {
 	for _, vm := range c.vms {
 		fns = append(fns, vm.WritePreload)
 	}
-	return c.ExecuteVMActionInParallel(fns)
+	return ExecuteFuncsInParallel(fns)
 }
 
 // EncodeAssets renders all embedded assets into intermediate representation
 func (c *Compiler) EncodeAssets() error {
-	return nil
-}
-
-// GenerateDylibs generates the dynamic links for each virtual machine's symbol table
-func (c *Compiler) GenerateDylibs() error {
-	return nil
+	fns := []func() error{}
+	for _, vm := range c.vms {
+		fns = append(fns, vm.EncodeBundledAssets)
+	}
+	return ExecuteFuncsInParallel(fns)
 }
 
 // WriteVMBundles writes the intermediate representation for each virtual machine to it's
 // vm bundle file within the build directory
 func (c *Compiler) WriteVMBundles() error {
-	return nil
+	fns := []func() error{}
+	for _, vm := range c.vms {
+		fns = append(fns, vm.WriteVMBundle)
+	}
+	return ExecuteFuncsInParallel(fns)
 }
 
 // CreateEntryPoint renders the final main() entry point for the final binary in the build directory
 func (c *Compiler) CreateEntryPoint() error {
+	c.MapVMsByPriority()
+	t, err := Asset("entrypoint.go.tmpl")
+	if err != nil {
+		return err
+	}
+	filename := "main.go"
+	fileLocation := filepath.Join(c.BuildDir, filename)
+	tmpl := template.New(filename)
+	tmpl2, err := tmpl.Parse(string(t))
+	if err != nil {
+		return err
+	}
+	buf := new(bytes.Buffer)
+	err = tmpl2.Execute(buf, c)
+	if err != nil {
+		return err
+	}
+	retOpts := imports.Options{
+		Comments:  true,
+		AllErrors: true,
+		TabIndent: false,
+		TabWidth:  2,
+	}
+	newData, err := imports.Process("main.go", buf.Bytes(), &retOpts)
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(fileLocation, newData, 0644)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -409,10 +467,10 @@ func (c *Compiler) BuildNativeBinary() error {
 	return nil
 }
 
-// ExecuteVMActionInParallel is a meta function that takes an array of function pointers (hopefully for each VM)
+// ExecuteFuncsInParallel is a meta function that takes an array of function pointers (hopefully for each VM)
 // and executes them in parallel to decrease compile times. This is setup to handle errors within
 // each VM gracefully and not allow a goroutine to fail silently.
-func (c *Compiler) ExecuteVMActionInParallel(fns []func() error) error {
+func ExecuteFuncsInParallel(fns []func() error) error {
 	var wg sync.WaitGroup
 	errChan := make(chan error, 1)
 	finChan := make(chan bool, 1)
@@ -440,7 +498,14 @@ func (c *Compiler) ExecuteVMActionInParallel(fns []func() error) error {
 	return nil
 }
 
-// GetVMs is a test function
-func (c *Compiler) GetVMs() []*GenesisVM {
-	return c.vms
+// MapVMsByPriority creates a pointer mapping of each VM by it's unique priority
+func (c *Compiler) MapVMsByPriority() error {
+	for _, vm := range c.vms {
+		if c.SortedVMs[vm.Priority()] == nil {
+			c.SortedVMs[vm.Priority()] = []*GenesisVM{}
+			c.UniqPriorities = append(c.UniqPriorities, vm.Priority())
+		}
+		c.SortedVMs[vm.Priority()] = append(c.SortedVMs[vm.Priority()], vm)
+	}
+	return nil
 }

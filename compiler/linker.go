@@ -164,17 +164,6 @@ func (l *LinkedFunction) CanResolveImportDep(pkg string) (bool, error) {
 	return false, fmt.Errorf("could not resolve package %s used in function %s inside package %s", pkg, l.Function, l.GoPackage.ImportPath)
 }
 
-// obj, err := d.Engine.VM.Object("url = {}")
-// if err != nil {
-// 	panic(err)
-// }
-// err := d.Engine.VM.Set("DecodeHex", hex.DecodeString)
-// if err != nil {
-// 	panic(err)
-// }
-
-// d.Engine.VM.Set("Dump", spew.Sdump)
-
 // GenerateReturnString generates a golang return signature to use in the interface code
 func (l *LinkedFunction) GenerateReturnString(prefix string) string {
 	rets := []string{}

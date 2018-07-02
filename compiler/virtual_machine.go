@@ -8,6 +8,7 @@ import (
 	"go/token"
 	"io/ioutil"
 	"path/filepath"
+	"strconv"
 	"sync"
 	"text/template"
 
@@ -15,9 +16,12 @@ import (
 	gfile "github.com/robertkrimen/otto/file"
 	"github.com/tdewolff/minify"
 	"github.com/tdewolff/minify/js"
+	"golang.org/x/tools/imports"
 )
 
 var (
+	defaultPriority = 100
+
 	requiredBuildTemplates = []string{
 		"init",
 		"preload",
@@ -110,12 +114,15 @@ type GenesisVM struct {
 
 	// GenesisFile holds the intermediate representation of this VM's bundle code
 	GenesisFile *bytes.Buffer
+
+	// DecryptionKey is the key used to decrypt the embedded assets
+	DecryptionKey string
 }
 
 // NewGenesisVM creates a new virtual machine object for the compiler
 func NewGenesisVM(name, path, os, arch string, data []byte, prog *gast.Program) *GenesisVM {
 	vm := &GenesisVM{
-		ID:                   RandLowerAlphaString(12),
+		ID:                   RandUpperAlphaString(14),
 		SourceFile:           path,
 		Name:                 name,
 		FileSet:              &gfile.FileSet{},
@@ -128,7 +135,8 @@ func NewGenesisVM(name, path, os, arch string, data []byte, prog *gast.Program) 
 		GoPackageByImport:    map[string]*GoPackage{},
 		GoPackageByNamespace: map[string]*GoPackage{},
 		EntryPointMapping:    map[string]string{},
-		PreloadAlias:         RandLowerAlphaString(12),
+		PreloadAlias:         RandUpperAlphaString(12),
+		DecryptionKey:        RandMixedAlphaNumericString(32),
 	}
 	vm.Linker = NewLinker(vm)
 	return vm
@@ -215,10 +223,19 @@ func (g *GenesisVM) RetrieveAsset(m *Macro) error {
 	return nil
 }
 
+// EncodeBundledAssets encodes all assets within the asset pack into their compressed format
+func (g *GenesisVM) EncodeBundledAssets() error {
+	fns := []func() error{}
+	for _, e := range g.Embeds {
+		fns = append(fns, e.GenerateEmbedData)
+	}
+	return ExecuteFuncsInParallel(fns)
+}
+
 // WriteGenesisScript writes a genesis script to the asset directory and returns a reference to an embeddedfile
 // for use by the compiler
 func (g *GenesisVM) WriteGenesisScript(name string, src []byte) (*EmbeddedFile, error) {
-	scriptFileID := RandLowerAlphaString(18)
+	scriptFileID := RandUpperAlphaNumericString(18)
 	scriptName := fmt.Sprintf("%s.gs", scriptFileID)
 	scriptLocation := filepath.Join(g.Compiler.AssetDir(), scriptName)
 	m := minify.New()
@@ -233,10 +250,11 @@ func (g *GenesisVM) WriteGenesisScript(name string, src []byte) (*EmbeddedFile, 
 		return nil, err
 	}
 	scriptEmbed := &EmbeddedFile{
-		CachedPath: scriptLocation,
-		Filename:   scriptName,
-		OrigName:   name,
-		ID:         scriptFileID,
+		CachedPath:    scriptLocation,
+		Filename:      scriptName,
+		OrigName:      name,
+		ID:            scriptFileID,
+		EncryptionKey: []byte(g.DecryptionKey),
 	}
 	return scriptEmbed, nil
 }
@@ -416,6 +434,7 @@ func (g *GenesisVM) FunctionKey(k string) string {
 
 // RenderVMBundle generates the virtual machine's bundled intermediate representation file
 func (g *GenesisVM) RenderVMBundle(templateFile string) error {
+	g.GenerateFunctionKeys()
 	tmpl := template.New(g.ID)
 	tmpl2, err := tmpl.Parse(templateFile)
 	if err != nil {
@@ -428,4 +447,58 @@ func (g *GenesisVM) RenderVMBundle(templateFile string) error {
 	}
 	g.GenesisFile = buf
 	return nil
+}
+
+// WriteVMBundle generates the VM bundle's intermediate representation using RenderVMBundle and then writes it
+// to the compilers build directory
+func (g *GenesisVM) WriteVMBundle() error {
+	t, err := Asset("vm_file.go.tmpl")
+	if err != nil {
+		return err
+	}
+	filename := fmt.Sprintf("%s.go", g.ID)
+	fileLocation := filepath.Join(g.Compiler.BuildDir, filename)
+	err = g.RenderVMBundle(string(t))
+	if err != nil {
+		return err
+	}
+	retOpts := imports.Options{
+		Comments:  true,
+		AllErrors: true,
+		TabIndent: false,
+		TabWidth:  2,
+	}
+	newData, err := imports.Process(filename, g.GenesisFile.Bytes(), &retOpts)
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(fileLocation, newData, 0644)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// GetSimpleMacroValue returns a string of the VM's macro defined by key argument
+func (g *GenesisVM) GetSimpleMacroValue(key string) string {
+	for _, m := range g.Macros {
+		if m.Key == key {
+			return m.Params["value"]
+		}
+	}
+	return ""
+}
+
+// Priority returns the priority value if defined in the macros, else returns default
+func (g *GenesisVM) Priority() int {
+	val := g.GetSimpleMacroValue("priority")
+	if val == "" {
+		return defaultPriority
+	}
+	num, err := strconv.Atoi(val)
+	if err != nil {
+		g.Compiler.logger.Errorf("problem parsing priority value: %v", err)
+		return defaultPriority
+	}
+	return num
 }

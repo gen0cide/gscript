@@ -3,6 +3,8 @@ package compiler
 import (
 	"bytes"
 	"compress/gzip"
+	"crypto/aes"
+	"crypto/cipher"
 	"encoding/base64"
 	"fmt"
 	"io"
@@ -89,6 +91,9 @@ type EmbeddedFile struct {
 	// compressed embedded file data
 	Compressed []byte
 
+	// used to AES encrypt the embedded assets
+	EncryptionKey []byte
+
 	// temporary buffer used to generate the intermediate representation of the compressed data
 	EmbedData *bytes.Buffer
 }
@@ -102,7 +107,7 @@ func NewEmbeddedFile(source string) (*EmbeddedFile, error) {
 	if err != nil {
 		return nil, err
 	}
-	id := RandLowerAlphaString(18)
+	id := RandUpperAlphaString(18)
 	ef := &EmbeddedFile{
 		SourcePath: absPath,
 		OrigName:   filepath.Base(source),
@@ -184,8 +189,18 @@ func (e *EmbeddedFile) GenerateEmbedData() error {
 	}
 	ioReader.Close()
 	w.Close()
+	block, err := aes.NewCipher(e.EncryptionKey)
+	if err != nil {
+		return err
+	}
+	var iv [aes.BlockSize]byte
+	stream := cipher.NewOFB(block, iv[:])
+	e.EmbedData = new(bytes.Buffer)
 	encoder := base64.NewEncoder(base64.StdEncoding, e.EmbedData)
-	pipeBuf.WriteTo(encoder)
+	encWriter := &cipher.StreamWriter{S: stream, W: encoder}
+	if _, err := io.Copy(encWriter, pipeBuf); err != nil {
+		return err
+	}
 	encoder.Close()
 	return nil
 }
@@ -226,18 +241,29 @@ func (e *EmbeddedFile) GenerateEmbedData() error {
 
 // ExampleDecodeEmbed is a reference implementation of how embedded assets should be unpacked
 // inside of a genesis engine
-func ExampleDecodeEmbed(b64encoded string) []byte {
-	db := new(bytes.Buffer)
-	src := bytes.NewReader([]byte(b64encoded))
-	decoder := base64.NewDecoder(base64.StdEncoding, src)
-	gzr, err := gzip.NewReader(decoder)
+func ExampleDecodeEmbed(b64encoded string, key string) []byte {
+	block, err := aes.NewCipher([]byte(key))
 	if err != nil {
 		panic(err)
 	}
-	_, err = io.Copy(db, gzr)
+	db1 := new(bytes.Buffer)
+	db2 := new(bytes.Buffer)
+	src := bytes.NewReader([]byte(b64encoded))
+	var iv [aes.BlockSize]byte
+	stream := cipher.NewOFB(block, iv[:])
+	decoder := base64.NewDecoder(base64.StdEncoding, src)
+	encReader := &cipher.StreamReader{S: stream, R: decoder}
+	if _, err := io.Copy(db1, encReader); err != nil {
+		panic(err)
+	}
+	gzr, err := gzip.NewReader(db1)
+	if err != nil {
+		panic(err)
+	}
+	_, err = io.Copy(db2, gzr)
 	if err != nil {
 		panic(err)
 	}
 	gzr.Close()
-	return db.Bytes()
+	return db2.Bytes()
 }

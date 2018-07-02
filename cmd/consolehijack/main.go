@@ -1,14 +1,10 @@
 package main
 
 import (
-	"bytes"
-	"compress/gzip"
-	"encoding/base64"
 	"fmt"
-	"io"
 	"os"
 
-	"github.com/davecgh/go-spew/spew"
+	"github.com/gen0cide/gscript/compiler"
 )
 
 var (
@@ -55,58 +51,79 @@ var (
 // 	return w
 // }
 
-type Embed struct {
-	CachedPath string
-	EmbedData  *bytes.Buffer
-}
+// type Embed struct {
+// 	CachedPath string
+// 	EmbedData  *bytes.Buffer
+// }
 
-func (e *Embed) GenerateEmbedData() error {
-	ioReader, err := os.Open(e.CachedPath)
-	if err != nil {
-		return err
-	}
-	buf1 := new(bytes.Buffer)
-	w, err := gzip.NewWriterLevel(buf1, gzip.BestCompression)
-	if err != nil {
-		return err
-	}
-	bw, err := io.Copy(w, ioReader)
-	fmt.Printf("bw1 = %d\n", bw)
-	ioReader.Close()
-	w.Close()
-	encoder := base64.NewEncoder(base64.StdEncoding, e.EmbedData)
-	buf1.WriteTo(encoder)
-	encoder.Close()
-	return nil
+// func (e *Embed) GenerateEmbedData() error {
+// 	ioReader, err := os.Open(e.CachedPath)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	buf1 := new(bytes.Buffer)
+// 	w, err := gzip.NewWriterLevel(buf1, gzip.BestCompression)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	bw, err := io.Copy(w, ioReader)
+// 	fmt.Printf("bw1 = %d\n", bw)
+// 	ioReader.Close()
+// 	w.Close()
+// 	encoder := base64.NewEncoder(base64.StdEncoding, e.EmbedData)
+// 	buf1.WriteTo(encoder)
+// 	encoder.Close()
+// 	return nil
 
-	// ioReader, err := os.Open(e.CachedPath)
-	// if err != nil {
-	// 	return err
-	// }
-	// defer ioReader.Close()
-	// w, err := gzip.NewWriterLevel(encoder, gzip.BestCompression)
-	// if err != nil {
-	// 	return err
-	// }
-	// defer w.Close()
-	// bytesWritten, err := io.Copy(w, ioReader)
-	// if err != nil {
-	// 	return err
-	// }
-	// fmt.Printf("Bytes written during encode: %d\n", bytesWritten)
-	// defer encoder.Close()
-	// return nil
-}
+// 	// ioReader, err := os.Open(e.CachedPath)
+// 	// if err != nil {
+// 	// 	return err
+// 	// }
+// 	// defer ioReader.Close()
+// 	// w, err := gzip.NewWriterLevel(encoder, gzip.BestCompression)
+// 	// if err != nil {
+// 	// 	return err
+// 	// }
+// 	// defer w.Close()
+// 	// bytesWritten, err := io.Copy(w, ioReader)
+// 	// if err != nil {
+// 	// 	return err
+// 	// }
+// 	// fmt.Printf("Bytes written during encode: %d\n", bytesWritten)
+// 	// defer encoder.Close()
+// 	// return nil
+// }
 
-func Reverse(s string) string {
-	runes := []rune(s)
-	for i, j := 0, len(runes)-1; i < j; i, j = i+1, j-1 {
-		runes[i], runes[j] = runes[j], runes[i]
-	}
-	return string(runes)
-}
+// func Reverse(s string) string {
+// 	runes := []rune(s)
+// 	for i, j := 0, len(runes)-1; i < j; i, j = i+1, j-1 {
+// 		runes[i], runes[j] = runes[j], runes[i]
+// 	}
+// 	return string(runes)
+// }
 
 func main() {
+
+	encKey := compiler.RandMixedAlphaNumericString(32)
+
+	scriptFile := compiler.EmbeddedFile{
+		EncryptionKey: []byte(encKey),
+		CachedPath:    os.Args[1],
+	}
+
+	err := scriptFile.GenerateEmbedData()
+	if err != nil {
+		panic(err)
+	}
+
+	encString := scriptFile.Data()
+
+	fmt.Printf("ENC STRING: %s\n", encString)
+
+	data := compiler.ExampleDecodeEmbed(encString, encKey)
+
+	fmt.Printf("DEC STRING: %s\n", string(data))
+
 	// logger := logger.NewStandardLogrusLogger(nil, "testhijack", false, false)
 	// e := engine.New("testhijack", "RANDOMVMID", 30, "Deploy")
 	// e.SetLogger(logger)
@@ -151,36 +168,36 @@ func main() {
 	// fmt.Println("not a valid legacy script!")
 	// return
 
-	e := Embed{
-		CachedPath: os.Args[1],
-		EmbedData:  new(bytes.Buffer),
-	}
-	err := e.GenerateEmbedData()
-	if err != nil {
-		panic(err)
-	}
+	// e := Embed{
+	// 	CachedPath: os.Args[1],
+	// 	EmbedData:  new(bytes.Buffer),
+	// }
+	// err := e.GenerateEmbedData()
+	// if err != nil {
+	// 	panic(err)
+	// }
 
-	fmt.Printf("BUF SIZE: %d\n", e.EmbedData.Len())
+	// fmt.Printf("BUF SIZE: %d\n", e.EmbedData.Len())
 
-	eData := e.EmbedData.String()
+	// eData := e.EmbedData.String()
 
-	fmt.Printf("STRING: %s\n", eData)
-	fmt.Printf("LEN: %d\n", len(eData))
+	// fmt.Printf("STRING: %s\n", eData)
+	// fmt.Printf("LEN: %d\n", len(eData))
 
-	db := new(bytes.Buffer)
-	sr := bytes.NewReader([]byte(eData))
-	decoder := base64.NewDecoder(base64.StdEncoding, sr)
-	gz, err := gzip.NewReader(decoder)
-	if err != nil {
-		panic(err)
-	}
-	bw2, err := io.Copy(db, gz)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("Bytes written during decode: %d\n", bw2)
-	gz.Close()
-	spew.Dump(db)
+	// db := new(bytes.Buffer)
+	// sr := bytes.NewReader([]byte(eData))
+	// decoder := base64.NewDecoder(base64.StdEncoding, sr)
+	// gz, err := gzip.NewReader(decoder)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// bw2, err := io.Copy(db, gz)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// fmt.Printf("Bytes written during decode: %d\n", bw2)
+	// gz.Close()
+	// spew.Dump(db)
 
 	// data, err := base64.StdEncoding.DecodeString(eData)
 	// if err != nil {
@@ -197,7 +214,7 @@ func main() {
 	// 	panic(err)
 	// }
 
-	fmt.Printf("DECODED!\n\nOUTPUT:\n%s\n", db.String())
+	// fmt.Printf("DECODED!\n\nOUTPUT:\n%s\n", db.String())
 
 	// m := minify.New()
 	// m.AddFunc("text/javascript", js.Minify)
