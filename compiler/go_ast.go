@@ -119,6 +119,19 @@ func NewGoParamDef(l *LinkedFunction, idx int) *GoParamDef {
 	return gpd
 }
 
+// 0 ""
+// 1 "map["
+// 2 "map[*"
+// 3 "map[*url"
+// 3.5 "map[*url."
+// 3.7 "map[*url.URL"
+// 4 "map[*url.URL]"
+// 5 "map[*url.URL][]"
+// 6 "map[*url.URL][]*"
+// 7 "map[*url.URL][]*ast"
+// 7.5 "map[*url.URL][]*ast."
+// 7.7 "map[*url.URL][]*ast.Field"
+
 // Interpret is a recursive walk function that is used to dispatch the next walker
 // depending on the type of the provided interface (i). This is used to build up
 // buffers of both names and golang type declarations to be used during linking.

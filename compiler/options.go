@@ -82,6 +82,14 @@ type Options struct {
 	// DEFAULT: false
 	SkipCompilation bool
 
+	// Do not obfuscate the IDs of the various packages and gscript VM bundle IDs
+	// DEFAULT: false
+	UseHumanReadableNames bool
+
+	// Import all native functions into the virtual machine from native go packages, not just ones used in the script
+	// DEFAULT: false
+	ImportAllNativeFuncs bool
+
 	// Determines the compilers level of obfuscation performed on the final binary
 	// DEFAULT: 0 (look at compiler const for available options)
 	ObfuscationLevel int
@@ -146,16 +154,18 @@ func DefaultOptions() Options {
 	dirName := RandMixedAlphaNumericString(16)
 	buildDir := filepath.Join(os.TempDir(), dirName)
 	return Options{
-		OS:               currentOS,
-		Arch:             currentArch,
-		OutputFile:       finalFile,
-		BuildDir:         buildDir,
-		SaveBuildDir:     false,
-		UPXEnabled:       false,
-		LoggingEnabled:   false,
-		DebuggerEnabled:  false,
-		SkipCompilation:  false,
-		ObfuscationLevel: FullObfuscation,
+		OS:                    currentOS,
+		Arch:                  currentArch,
+		OutputFile:            finalFile,
+		BuildDir:              buildDir,
+		SaveBuildDir:          false,
+		UPXEnabled:            false,
+		LoggingEnabled:        false,
+		DebuggerEnabled:       false,
+		SkipCompilation:       false,
+		UseHumanReadableNames: false,
+		ImportAllNativeFuncs:  false,
+		ObfuscationLevel:      FullObfuscation,
 	}
 }
 

@@ -57,7 +57,7 @@ func (o *{{ $.ID }}) {{ $.FunctionKey "import_assets" }}() error {
 
 // {{ $.FunctionKey "preload" }} imports the runtime preload library for script {{ $.Name }}
 func (o *{{ $.ID }}) {{ $.FunctionKey "preload" }}() error {
-  return o.E.LoadScript("preload.js", o.E.Imports["__PRELOAD"]())
+  return o.E.LoadScript("preload.gs", o.E.Imports["__PRELOAD"]())
 }
 
 // {{ $.FunctionKey "import_script" }} loads the script {{ $.Name }} into the genesis VM
@@ -86,11 +86,11 @@ func (o *{{ $.ID }}) {{ $.FunctionKey "import_native" }}() error {
   }
   {{ range $fidx, $f := $pkg.LinkedFuncs -}}
   // Adding function pointer for native function {{ $pkg.Name }}.{{ $f.Function }} to symbol table
-  _nf{{ $fidx }} := &engine.NativeFunc{
+  _nf_{{ $ns }}{{ $fidx }} := &engine.NativeFunc{
     Name: "{{ $f.Function }}",
     Func: o.{{ $.ID }}{{ $f.ID }},
   }
-  _np{{ $ns }}.SymbolTable["{{ $f.Function }}"] = _nf{{ $fidx }}
+  _np{{ $ns }}.SymbolTable["{{ $f.Function }}"] = _nf_{{ $ns}}{{ $fidx }}
   {{ end -}}
   // Injecting native package into the genesis VM
   err = o.E.ImportNativePackage("{{ $ns }}", _np{{ $ns }})

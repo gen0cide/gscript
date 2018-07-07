@@ -111,6 +111,8 @@ type genesisWalker struct {
 	shift file.Idx
 }
 
+// testlib.
+
 func (g *genesisWalker) Enter(n gast.Node) gast.Visitor {
 	switch a := n.(type) {
 	case *gast.CallExpression:

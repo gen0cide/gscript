@@ -454,7 +454,7 @@ func (c *Compiler) CreateEntryPoint() error {
 // the target platform specified in the compiler options
 func (c *Compiler) BuildNativeBinary() error {
 	os.Chdir(c.BuildDir)
-	cmd := exec.Command("go", "build", `-v`, `-ldflags`, `-s -w`, "-o", c.OutputFile)
+	cmd := exec.Command("go", "build", `-ldflags`, `-s -w`, "-o", c.OutputFile)
 	cmd.Env = os.Environ()
 	cmd.Env = append(cmd.Env, fmt.Sprintf("GOOS=%s", c.OS))
 	cmd.Env = append(cmd.Env, fmt.Sprintf("GOARCH=%s", c.Arch))
