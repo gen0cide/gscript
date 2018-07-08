@@ -161,6 +161,10 @@ func (c *Compiler) Do() error {
 	if err != nil {
 		return err
 	}
+	err = c.PerformPreCompileObfuscation()
+	if err != nil {
+		return err
+	}
 	err = c.BuildNativeBinary()
 	if err != nil {
 		return err
@@ -180,33 +184,6 @@ func (c *Compiler) CreateBuildDir() error {
 	}
 	return nil
 }
-
-// createBuildDir
-// compileMacros
-// writeScript
-// compileAssets
-// buildEntryPoint
-// tumbleAST
-// writeSource
-// compileSource
-// obfuscateBinary
-// compressBinary
-//
-// CreateBuildDir
-// ProcessMacros
-// DetectVersions
-// GatherAssets
-// WalkGenesisASTs
-// LocateGoDependencies
-// BuildGolangASTs
-// SwizzleNativeCalls
-// SanityCheckSwizzles
-// WriteScripts
-// EncodeAssets
-// GenerateIR
-// WriteVMBundles
-// CreateEntryPoint
-// BuildNativeBinary
 
 // ProcessMacros enumerates the compilers virtual machines with the pre-processor to extract
 // compiler macros for each virtual machine
@@ -235,17 +212,6 @@ func (c *Compiler) DetectVersions() error {
 	}
 	return ExecuteFuncsInParallel(fns)
 }
-
-// createBuildDir
-// compileMacros
-// writeScript
-// compileAssets
-// buildEntryPoint
-// tumbleAST
-// writeSource
-// compileSource
-// obfuscateBinary
-// compressBinary
 
 // GatherAssets enumerates all bundled virtual machines for any embedded assets and copies them
 // into the build directory's asset cache
@@ -358,34 +324,6 @@ func (c *Compiler) SanityCheckSwizzles() error {
 	return ExecuteFuncsInParallel(fns)
 }
 
-// createBuildDir
-// compileMacros
-// writeScript
-// compileAssets
-// buildEntryPoint
-// tumbleAST
-// writeSource
-// compileSource
-// obfuscateBinary
-// compressBinary
-//
-// CreateBuildDir
-// ProcessMacros
-// DetectVersions
-// GatherAssets
-// WalkGenesisASTs
-// LocateGoDependencies
-// BuildGolangASTs
-// SwizzleNativeCalls
-// SanityCheckSwizzles
-// WriteScripts
-// WritePreloads
-// EncodeAssets
-// GenerateDylibs
-// WriteVMBundles
-// CreateEntryPoint
-// BuildNativeBinary
-
 // WritePreloads renders preload libraries for every virtual machine in the compilers asset directory
 func (c *Compiler) WritePreloads() error {
 	fns := []func() error{}
@@ -444,6 +382,24 @@ func (c *Compiler) CreateEntryPoint() error {
 		return err
 	}
 	err = ioutil.WriteFile(fileLocation, newData, 0644)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// PerformPreCompileObfuscation runs the pre-compilation obfuscation routines on the intermediate representation
+func (c *Compiler) PerformPreCompileObfuscation() error {
+	stylist := NewStylist(c)
+	err := stylist.LollerSkateDaStringz()
+	if err != nil {
+		return err
+	}
+	err = stylist.AddPurpleHairDyeToRoots()
+	if err != nil {
+		return err
+	}
+	err = stylist.GetTheQueenToHerThrown()
 	if err != nil {
 		return err
 	}

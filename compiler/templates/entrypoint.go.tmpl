@@ -13,22 +13,27 @@ func main() {
     }
     err := a{{ $vm.ID }}.{{ $vm.FunctionKey "import_assets" }}()
     if err != nil {
+      a{{ $vm.ID }}.E.Logger.Errorf("Error importing assets for VM %s: %v", "{{ $vm.ID }}", err)
       return
     }
     err = a{{ $vm.ID }}.{{ $vm.FunctionKey "preload" }}()
     if err != nil {
+      a{{ $vm.ID }}.E.Logger.Errorf("Error for preloading %s: %v", "{{ $vm.ID }}", err)
       return
     }
     err = a{{ $vm.ID }}.{{ $vm.FunctionKey "import_native" }}()
     if err != nil {
+      a{{ $vm.ID }}.E.Logger.Errorf("Error importing native VM %s: %v", "{{ $vm.ID }}", err)
       return
     }
     err = a{{ $vm.ID }}.{{ $vm.FunctionKey "import_script" }}()
     if err != nil {
+      a{{ $vm.ID }}.E.Logger.Errorf("Error importing script for VM %s: %v", "{{ $vm.ID }}", err)
       return
     }
     err = a{{ $vm.ID }}.{{ $vm.FunctionKey "execute" }}()
     if err != nil {
+      a{{ $vm.ID }}.E.Logger.Errorf("Error executing VM %s: %v", "{{ $vm.ID }}", err)
       return
     }
   }()
@@ -36,3 +41,18 @@ func main() {
   wg.Wait()
   {{ end -}}
 }
+
+func g(k rune, b []rune) string {
+  for i := range b {
+    b[i] ^= k
+    k ^= b[i]
+  }
+  q := string(0x22)
+  s, _ := strconv.Unquote(q + string(b) + q)
+  return s
+}
+
+// --- Tangled Hairs Below
+//
+
+

@@ -223,6 +223,11 @@ func (g *GenesisVM) RetrieveAsset(m *Macro) error {
 	return nil
 }
 
+// DecryptionKeyArray returns the decryption key as an array
+func (g *GenesisVM) DecryptionKeyArray() []byte {
+	return []byte(g.DecryptionKey)
+}
+
 // EncodeBundledAssets encodes all assets within the asset pack into their compressed format
 func (g *GenesisVM) EncodeBundledAssets() error {
 	fns := []func() error{}
@@ -436,6 +441,7 @@ func (g *GenesisVM) FunctionKey(k string) string {
 func (g *GenesisVM) RenderVMBundle(templateFile string) error {
 	g.GenerateFunctionKeys()
 	tmpl := template.New(g.ID)
+	tmpl.Funcs(template.FuncMap{"mod": func(i, j int) bool { return i%j == 0 }})
 	tmpl2, err := tmpl.Parse(templateFile)
 	if err != nil {
 		return err

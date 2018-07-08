@@ -129,5 +129,8 @@ func compileScriptCommand(c *cli.Context) error {
 		return err
 	}
 	cliLogger.Infof("Compiled binary located at:\n\n%s\n", gc.OutputFile)
+	if defaultCompilerOptions.SaveBuildDir {
+		cliLogger.Infof("Build Dir Located At: %s", gc.BuildDir)
+	}
 	return nil
 }

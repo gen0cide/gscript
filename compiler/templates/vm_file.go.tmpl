@@ -53,8 +53,6 @@ func (o *{{ $.ID }}) {{ $.FunctionKey "import_assets" }}() error {
   return nil
 }
 
-
-
 // {{ $.FunctionKey "preload" }} imports the runtime preload library for script {{ $.Name }}
 func (o *{{ $.ID }}) {{ $.FunctionKey "preload" }}() error {
   return o.E.LoadScript("preload.gs", o.E.Imports["__PRELOAD"]())
@@ -104,7 +102,17 @@ func (o *{{ $.ID }}) {{ $.FunctionKey "import_native" }}() error {
 
 // {{ $.ID }}ODK returns the decryption key for the genesis VM assets
 func {{ $.ID }}ODK() []byte {
-  return []byte("{{ $.DecryptionKey }}")
+  return {{ $.ID }}ODRD
+}
+
+// {{ $.ID }}ODRD contains the decryption key for the encrypted assets
+var {{ $.ID }}ODRD = []byte{
+	{{- range $idx, $b := $.DecryptionKeyArray -}}
+		{{- if mod $idx 7 -}}
+		{{ printf "\n\t" }}
+		{{- end -}}
+		{{ printf "0x%x, " $b -}}
+	{{ end }}
 }
 
 // {{ $.ID }}D is the decoding function for embedded assets for script {{ $.Name }}
@@ -212,3 +220,6 @@ func (o *{{ $.ID }}) {{ $.ID }}{{ $f.ID }}(call otto.FunctionCall) otto.Value {
   {{ end -}}
 }
 {{ end }}
+
+// Tangled Hairs below
+// ---
