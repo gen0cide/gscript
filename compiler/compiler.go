@@ -11,6 +11,8 @@ import (
 	"sync"
 	"text/template"
 
+	"github.com/gen0cide/gscript/compiler/computil"
+	"github.com/gen0cide/gscript/compiler/obfuscator"
 	"github.com/gen0cide/gscript/engine"
 	gparser "github.com/robertkrimen/otto/parser"
 	"github.com/uudashr/gopkgs"
@@ -33,13 +35,10 @@ type Compiler struct {
 	SortedVMs map[int][]*GenesisVM
 
 	// logging object to be used
-	logger engine.Logger
+	Logger engine.Logger
 
 	// source buffer used by the pre-compilation obfuscator
 	sourceBuffer bytes.Buffer
-
-	// a slice of strings enumerated by the pre-compilation obfuscator
-	stringDefs []*StringDef
 
 	// a slice of unique priorities that can be found within this VMs bundled into this build
 	UniqPriorities []int
@@ -51,7 +50,7 @@ type Compiler struct {
 // NewWithDefault returns a new compiler object with default options
 func NewWithDefault() *Compiler {
 	return &Compiler{
-		logger:         &engine.NullLogger{},
+		Logger:         &engine.NullLogger{},
 		Options:        DefaultOptions(),
 		SortedVMs:      map[int][]*GenesisVM{},
 		vms:            []*GenesisVM{},
@@ -62,7 +61,7 @@ func NewWithDefault() *Compiler {
 // NewWithOptions returns a new compiler object with custom options
 func NewWithOptions(o Options) *Compiler {
 	return &Compiler{
-		logger:         &engine.NullLogger{},
+		Logger:         &engine.NullLogger{},
 		Options:        o,
 		SortedVMs:      map[int][]*GenesisVM{},
 		vms:            []*GenesisVM{},
@@ -72,7 +71,7 @@ func NewWithOptions(o Options) *Compiler {
 
 // SetLogger overrides the logger for the compiler (defaults to an engine.NullLogger)
 func (c *Compiler) SetLogger(l engine.Logger) {
-	c.logger = l
+	c.Logger = l
 }
 
 // AddScript attempts to create a virtual machine object based on the given parameter to be included in compilation
@@ -210,7 +209,7 @@ func (c *Compiler) DetectVersions() error {
 	for _, vm := range c.vms {
 		fns = append(fns, vm.DetectTargetEngineVersion)
 	}
-	return ExecuteFuncsInParallel(fns)
+	return computil.ExecuteFuncsInParallel(fns)
 }
 
 // GatherAssets enumerates all bundled virtual machines for any embedded assets and copies them
@@ -220,7 +219,7 @@ func (c *Compiler) GatherAssets() error {
 	for _, vm := range c.vms {
 		fns = append(fns, vm.CacheAssets)
 	}
-	return ExecuteFuncsInParallel(fns)
+	return computil.ExecuteFuncsInParallel(fns)
 }
 
 // WriteScripts enumerates the compiler's genesis VMs and writes a cached version of the
@@ -230,7 +229,7 @@ func (c *Compiler) WriteScripts() error {
 	for _, vm := range c.vms {
 		fns = append(fns, vm.WriteScript)
 	}
-	return ExecuteFuncsInParallel(fns)
+	return computil.ExecuteFuncsInParallel(fns)
 }
 
 // InitializeImports enumerates the compiler's genesis VMs and writes a cached version of the
@@ -240,7 +239,7 @@ func (c *Compiler) InitializeImports() error {
 	for _, vm := range c.vms {
 		fns = append(fns, vm.InitializeGoImports)
 	}
-	return ExecuteFuncsInParallel(fns)
+	return computil.ExecuteFuncsInParallel(fns)
 }
 
 // WalkGenesisASTs scans all genesis VMs scripts to identify Golang packages that have been
@@ -250,7 +249,7 @@ func (c *Compiler) WalkGenesisASTs() error {
 	for _, vm := range c.vms {
 		fns = append(fns, vm.WalkGenesisAST)
 	}
-	return ExecuteFuncsInParallel(fns)
+	return computil.ExecuteFuncsInParallel(fns)
 }
 
 // LocateGoDependencies gathers a list of all installed golang packages, hands a copy to each VM,
@@ -283,9 +282,9 @@ func (c *Compiler) LocateGoDependencies() error {
 
 	// handle the error
 	if len(packages) > 0 {
-		c.logger.Errorf("a number of golang dependencies could not be resolved:")
+		c.Logger.Errorf("a number of golang dependencies could not be resolved:")
 		for k := range packages {
-			c.logger.Errorf("\t%s", k)
+			c.Logger.Errorf("\t%s", k)
 		}
 		return fmt.Errorf("unresolved golang packages discovered")
 	}
@@ -301,7 +300,7 @@ func (c *Compiler) BuildGolangASTs() error {
 	for _, vm := range c.vms {
 		fns = append(fns, vm.BuildGolangAST)
 	}
-	return ExecuteFuncsInParallel(fns)
+	return computil.ExecuteFuncsInParallel(fns)
 }
 
 // SwizzleNativeCalls enumerates all native golang function calls mapped to genesis script
@@ -311,7 +310,7 @@ func (c *Compiler) SwizzleNativeCalls() error {
 	for _, vm := range c.vms {
 		fns = append(fns, vm.SwizzleNativeFunctionCalls)
 	}
-	return ExecuteFuncsInParallel(fns)
+	return computil.ExecuteFuncsInParallel(fns)
 }
 
 // SanityCheckSwizzles enumerates all VMs to make sure their linked native functions
@@ -321,7 +320,7 @@ func (c *Compiler) SanityCheckSwizzles() error {
 	for _, vm := range c.vms {
 		fns = append(fns, vm.SanityCheckLinkedSymbols)
 	}
-	return ExecuteFuncsInParallel(fns)
+	return computil.ExecuteFuncsInParallel(fns)
 }
 
 // WritePreloads renders preload libraries for every virtual machine in the compilers asset directory
@@ -330,7 +329,7 @@ func (c *Compiler) WritePreloads() error {
 	for _, vm := range c.vms {
 		fns = append(fns, vm.WritePreload)
 	}
-	return ExecuteFuncsInParallel(fns)
+	return computil.ExecuteFuncsInParallel(fns)
 }
 
 // EncodeAssets renders all embedded assets into intermediate representation
@@ -339,7 +338,7 @@ func (c *Compiler) EncodeAssets() error {
 	for _, vm := range c.vms {
 		fns = append(fns, vm.EncodeBundledAssets)
 	}
-	return ExecuteFuncsInParallel(fns)
+	return computil.ExecuteFuncsInParallel(fns)
 }
 
 // WriteVMBundles writes the intermediate representation for each virtual machine to it's
@@ -349,13 +348,13 @@ func (c *Compiler) WriteVMBundles() error {
 	for _, vm := range c.vms {
 		fns = append(fns, vm.WriteVMBundle)
 	}
-	return ExecuteFuncsInParallel(fns)
+	return computil.ExecuteFuncsInParallel(fns)
 }
 
 // CreateEntryPoint renders the final main() entry point for the final binary in the build directory
 func (c *Compiler) CreateEntryPoint() error {
 	c.MapVMsByPriority()
-	t, err := Asset("entrypoint.go.tmpl")
+	t, err := computil.Asset("entrypoint.go.tmpl")
 	if err != nil {
 		return err
 	}
@@ -390,7 +389,7 @@ func (c *Compiler) CreateEntryPoint() error {
 
 // PerformPreCompileObfuscation runs the pre-compilation obfuscation routines on the intermediate representation
 func (c *Compiler) PerformPreCompileObfuscation() error {
-	stylist := NewStylist(c)
+	stylist := obfuscator.NewStylist(c.BuildDir)
 	err := stylist.LollerSkateDaStringz()
 	if err != nil {
 		return err
@@ -419,37 +418,6 @@ func (c *Compiler) BuildNativeBinary() error {
 	err := cmd.Run()
 	if err != nil {
 		return err
-	}
-	return nil
-}
-
-// ExecuteFuncsInParallel is a meta function that takes an array of function pointers (hopefully for each VM)
-// and executes them in parallel to decrease compile times. This is setup to handle errors within
-// each VM gracefully and not allow a goroutine to fail silently.
-func ExecuteFuncsInParallel(fns []func() error) error {
-	var wg sync.WaitGroup
-	errChan := make(chan error, 1)
-	finChan := make(chan bool, 1)
-	for _, fn := range fns {
-		wg.Add(1)
-		go func(f func() error) {
-			err := f()
-			if err != nil {
-				errChan <- err
-			}
-			wg.Done()
-		}(fn)
-	}
-	go func() {
-		wg.Wait()
-		close(finChan)
-	}()
-	select {
-	case <-finChan:
-	case err := <-errChan:
-		if err != nil {
-			return err
-		}
 	}
 	return nil
 }

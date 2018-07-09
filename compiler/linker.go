@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"go/ast"
 	"strings"
+
+	"github.com/gen0cide/gscript/compiler/computil"
 )
 
 // LinkedFunction is the type that represents the gscript <=> golang native binding
@@ -69,7 +71,7 @@ func (l *Linker) NewLinkedFunction(caller *FunctionCall, file *ast.File, godecl 
 		return nil, fmt.Errorf("vm %s already has a linker for go func %s under package %s - new function is in package %s", l.VM.Name, caller.FuncName, l.Funcs[caller.FuncName].GoPackage.ImportPath, gopkg.ImportPath)
 	}
 	lf := &LinkedFunction{
-		ID:        RandLowerAlphaString(16),
+		ID:        computil.RandLowerAlphaString(16),
 		Function:  caller.FuncName,
 		Caller:    caller,
 		File:      file,
