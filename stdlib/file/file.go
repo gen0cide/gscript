@@ -5,6 +5,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strings"
 )
 
 // WriteFileFromBytes writes data from a byte array to a dest filepath with the dest parent dirs permissions.
@@ -131,5 +133,59 @@ func AppendFileString(targetPath, addString string) error {
 		return err
 	}
 	targetFile.Close()
+	return nil
+}
+
+//ReplaceInFileWithString searches a file for a string and replaces each instance found of that string. Returns the amount of strings replaced
+func ReplaceInFileWithString(file, match, replacement string) (int, error) {
+	fileInfo, err := os.Stat(file)
+	if os.IsNotExist(err) {
+		return 0, err
+	}
+	contents, err := ioutil.ReadFile(file)
+	if err != nil {
+		return 0, err
+	}
+	var count int = 0
+	lines := strings.Split(string(contents), "\n")
+	for index, line := range lines {
+		if strings.Contains(line, match) {
+			lines[index] = strings.Replace(line, match, replacement, 10)
+			count++
+		}
+	}
+	ioutil.WriteFile(file, []byte(strings.Join(lines, "\n")), fileInfo.Mode())
+	return count, nil
+}
+
+//ReplaceInFileWithRegex searches a file for a string and replaces each instance found of that string. Returns the amount of strings replaced
+func ReplaceInFileWithRegex(file string, regexString string, replaceWith string) (int, error) {
+	re := regexp.MustCompile(regexString)
+	fileInfo, err := os.Stat(file)
+	if os.IsNotExist(err) {
+		return 0, err
+	}
+	contents, err := ioutil.ReadFile(file)
+	if err != nil {
+		return 0, err
+	}
+	var count int = 0
+	lines := strings.Split(string(contents), "\n")
+	for index, line := range lines {
+		if re.MatchString(line) {
+			lines[index] = re.ReplaceAllString(line, replaceWith)
+			count++
+		}
+	}
+	ioutil.WriteFile(file, []byte(strings.Join(lines, "\n")), fileInfo.Mode())
+	return count, nil
+}
+
+//SetPerms changes the file permissions of a givin file
+func SetPerms(targetPath string, perms int64) error {
+	err := os.Chmod(targetPath, os.FileMode(uint32(perms)))
+	if err != nil {
+		return err
+	}
 	return nil
 }

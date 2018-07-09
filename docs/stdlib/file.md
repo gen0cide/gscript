@@ -7,18 +7,12 @@ WriteFileFromBytes(data []byte, filepath string) error
 WriteFileFromString(data string, filepath string) error
 ReadFileAsBytes(filepath string) ([]byte, error)
 ReadFileAsString(filepath string) (string, error)
-
 AppendBytesToFile(data []byte, filepath string) error
 AppendStringToFile(data string, filepath string) error // will not add line breaks, manage yourself
 CopyFile(srcpath string, dstpath string, perms string) (bytesWritten int, err error)
-
-SetPerms(filepath string, perms string) error
-
 ReplaceInFileWithString(match string, new string) error
 ReplaceInFileWithRegex(regexString string, replaceWith string) error
-
-
-
+SetPerms(filepath string, perms string) error
 
 ## Details
 
@@ -254,6 +248,113 @@ AppendFileString(targetFile, data string) error
 | `targetFile` | `string`     | The location of the file to be written     |
 |--------------|--------------|--------------------------------------------|
 | `data`       | `string`     | The data to be written                     |
+
+**Returns:**
+
+| Position  | Type         | Description                                |
+|-----------|--------------|--------------------------------------------|
+| `0`       | `error`      | (optional) function error                  |
+
+**Example Usage:**
+
+```
+
+```
+-
+
+### ReplaceInFileWithString
+
+**Author:** ahhh
+
+**Description:** ReplaceInFileWithString searches a file for a string and replaces each instance found of that string. Returns the amount of strings replaced
+
+**Method Signature:**
+
+```
+ReplaceInFileWithString(file, match, replacement string) (int, error)
+```
+
+**Arguments:**
+
+| Label         | Type         | Description                                |
+|---------------|--------------|--------------------------------------------|
+| `file`        | `string`     | The location of the file to be replaced    |
+|---------------|--------------|--------------------------------------------|
+| `match`       | `string`     | The strigns to search and replace          |
+|---------------|--------------|--------------------------------------------|
+| `replacement` | `string`     | The string to replace it with              |
+
+**Returns:**
+
+| Position  | Type         | Description                                |
+|-----------|--------------|--------------------------------------------|
+| `0`       | `int`        | Number of strings replaced                 |
+|-----------|--------------|--------------------------------------------|
+| `1`       | `error`      | (optional) function error                  |
+
+**Example Usage:**
+
+```
+
+```
+-
+
+### ReplaceInFileWithRegex
+
+**Author:** ahhh
+
+**Description:** ReplaceInFileWithRegex searches a file for a regex and replaces each instance of that, with your repalce string. Returns the amount of strings replaced
+
+**Method Signature:**
+
+```
+ReplaceInFileWithRegex(file, match, replacement string) (int, error)
+```
+
+**Arguments:**
+
+| Label         | Type         | Description                                |
+|---------------|--------------|--------------------------------------------|
+| `file`        | `string`     | The location of the file to be replaced    |
+|---------------|--------------|--------------------------------------------|
+| `match`       | `string`     | the regex to match on strings on           |
+|---------------|--------------|--------------------------------------------|
+| `replacement` | `string`     | The string to replace it with              |
+
+**Returns:**
+
+| Position  | Type         | Description                                |
+|-----------|--------------|--------------------------------------------|
+| `0`       | `int`        | Number of strings replaced                 |
+|-----------|--------------|--------------------------------------------|
+| `1`       | `error`      | (optional) function error                  |
+
+**Example Usage:**
+
+```
+
+```
+-
+
+### SetPerms
+
+**Author:** ahhh
+
+**Description:** ReplaceInFileWithRegex searches a file for a regex and replaces each instance of that, with your repalce string. Returns the amount of strings replaced
+
+**Method Signature:**
+
+```
+SetPerms(file string, unixPerms int64) (error)
+```
+
+**Arguments:**
+
+| Label         | Type         | Description                                |
+|---------------|--------------|--------------------------------------------|
+| `file`        | `string`     | The location of the file to be replaced    |
+|---------------|--------------|--------------------------------------------|
+| `unixPerms`   | `int64`      | The file perms to set, unix / chmod style  |
 
 **Returns:**
 
