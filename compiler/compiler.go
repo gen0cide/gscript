@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"os/user"
 	"path/filepath"
 	"sync"
 	"text/template"
@@ -45,6 +46,8 @@ type Compiler struct {
 
 	// configuration object for the compiler
 	Options
+
+	stringCache []string
 }
 
 // NewWithDefault returns a new compiler object with default options
@@ -55,6 +58,7 @@ func NewWithDefault() *Compiler {
 		SortedVMs:      map[int][]*GenesisVM{},
 		vms:            []*GenesisVM{},
 		UniqPriorities: []int{},
+		stringCache:    []string{},
 	}
 }
 
@@ -66,6 +70,7 @@ func NewWithOptions(o Options) *Compiler {
 		SortedVMs:      map[int][]*GenesisVM{},
 		vms:            []*GenesisVM{},
 		UniqPriorities: []int{},
+		stringCache:    []string{},
 	}
 }
 
@@ -165,6 +170,10 @@ func (c *Compiler) Do() error {
 		return err
 	}
 	err = c.BuildNativeBinary()
+	if err != nil {
+		return err
+	}
+	err = c.PerformPostCompileObfuscation()
 	if err != nil {
 		return err
 	}
@@ -389,6 +398,9 @@ func (c *Compiler) CreateEntryPoint() error {
 
 // PerformPreCompileObfuscation runs the pre-compilation obfuscation routines on the intermediate representation
 func (c *Compiler) PerformPreCompileObfuscation() error {
+	if c.SkipCompilation || c.ObfuscationLevel > 2 {
+		return nil
+	}
 	stylist := obfuscator.NewStylist(c.BuildDir)
 	err := stylist.LollerSkateDaStringz()
 	if err != nil {
@@ -402,6 +414,27 @@ func (c *Compiler) PerformPreCompileObfuscation() error {
 	if err != nil {
 		return err
 	}
+	c.stringCache = stylist.GetIDLiterals()
+	return nil
+}
+
+// PerformPostCompileObfuscation runs the post-compilation obfuscation routines on compiled binary
+func (c *Compiler) PerformPostCompileObfuscation() error {
+	if c.SkipCompilation || c.ObfuscationLevel > 1 {
+		return nil
+	}
+	m := obfuscator.NewMordor(c.Logger)
+	m.AddGhosts(c.GetIDLiterals())
+	m.AddGhosts(c.stringCache)
+	for _, vm := range c.vms {
+		m.AddGhosts(vm.GetIDLiterals())
+	}
+	c.Logger.Infof("Mordorifying %d strings...", len(m.Horde))
+	err := m.Assault(c.OutputFile)
+	if err != nil {
+		return err
+	}
+	m.PrintStats()
 	return nil
 }
 
@@ -432,4 +465,22 @@ func (c *Compiler) MapVMsByPriority() error {
 		c.SortedVMs[vm.Priority()] = append(c.SortedVMs[vm.Priority()], vm)
 	}
 	return nil
+}
+
+// GetIDLiterals returns all interesting IDs used by this compiler
+func (c *Compiler) GetIDLiterals() []string {
+	lits := []string{c.BuildDir}
+	hn, err := os.Hostname()
+	if err == nil {
+		lits = append(lits, hn)
+	}
+	u, err := user.Current()
+	if err == nil {
+		lits = append(lits, u.Name)
+		lits = append(lits, u.Username)
+		if u.HomeDir != "" {
+			lits = append(lits, u.HomeDir)
+		}
+	}
+	return lits
 }

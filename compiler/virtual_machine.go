@@ -514,3 +514,27 @@ func (g *GenesisVM) Priority() int {
 func (g *GenesisVM) HasDebuggingEnabled() bool {
 	return g.Compiler.DebuggerEnabled
 }
+
+// HasLoggingEnabled is an convienience method for checking to see if logging should be included
+func (g *GenesisVM) HasLoggingEnabled() bool {
+	return g.Compiler.LoggingEnabled
+}
+
+// GetIDLiterals returns all interesting IDs used by this GenesisVM
+func (g *GenesisVM) GetIDLiterals() []string {
+	lits := []string{g.Name, g.ID, g.PreloadAlias}
+	for _, v := range g.EntryPointMapping {
+		lits = append(lits, []string{v}...)
+	}
+	for k, e := range g.Embeds {
+		lits = append(lits, []string{k, e.ID, e.OrigName}...)
+	}
+	for k, gop := range g.GoPackageByImport {
+		lits = append(lits, []string{k, gop.ImportPath, gop.Dir}...)
+	}
+	for _, lf := range g.Linker.Funcs {
+		lits = append(lits, []string{lf.ID}...)
+	}
+
+	return lits
+}

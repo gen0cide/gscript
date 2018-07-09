@@ -14,6 +14,9 @@ import (
   {{ if $.HasDebuggingEnabled -}}
   "github.com/gen0cide/gscript/debugger"
   {{- end }}
+  {{ if $.HasLoggingEnabled -}}
+  "github.com/gen0cide/gscript/logger"
+  {{- end }}
 
   {{ range $ns, $pkg := $.GoPackageByNamespace }}
   // Importing dependency package {{ $pkg.Name }} for native dependency
@@ -21,10 +24,10 @@ import (
   {{ end }}
 )
 
-const (
+var (
 {{- range $_, $embed := $.Embeds }}
   // {{ $embed.ID }} holds the data for embedded file {{ $embed.OrigName }}
-  {{ $embed.ID }} = `{{ $embed.Data }}`
+  {{ $embed.ID }} = "{{ $embed.Data }}"
 
 {{- end }}
 )
@@ -41,6 +44,10 @@ type {{ $.ID }} struct {
 // New{{ $.ID }} creates the genesis runtime for script {{ $.Name }}
 func New{{ $.ID }}() *{{ $.ID }} {
   te := engine.New("{{ $.Name }}", "{{ $.ID }}", 30, "Execute")
+  {{ if $.HasLoggingEnabled -}}
+  al := logger.NewStandardLogrusLogger(nil, "{{ $.Name }}", false, false)
+  te.SetLogger(al)
+  {{- end }}
   {{ if $.HasDebuggingEnabled }}
   de := debugger.New(te)
   {{ end }}

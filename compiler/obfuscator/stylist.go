@@ -128,7 +128,7 @@ func (c *comb) ShoutoutToThaHomies(errChan chan error, wg *sync.WaitGroup) {
 	return
 }
 
-// BurnTheShitOuttaThisWeave does more stuff
+// BurnTheShitOuttaThisWeave creates a tangled hair between the AST and the stylist
 func (c *comb) BurnTheShitOuttaThisWeave(key rune, source string) string {
 	varName := computil.RandUpperAlphaNumericString(32)
 	cipher := fmt.Sprintf("g(%d, %s)", key, varName)
@@ -252,7 +252,7 @@ func (c *comb) Rinse() error {
 	return nil
 }
 
-// GetTheQueenToHerThrown finishes it off
+// GetTheQueenToHerThrown re-writes the intermediate representation with the embedded tangled hairs
 func (s *Stylist) GetTheQueenToHerThrown() error {
 	fns := []func() error{}
 	for _, c := range s.Combs {
@@ -263,4 +263,16 @@ func (s *Stylist) GetTheQueenToHerThrown() error {
 		return err
 	}
 	return nil
+}
+
+// GetIDLiterals returns all IDs used by all combs in this Stylist
+func (s *Stylist) GetIDLiterals() []string {
+	lits := []string{}
+	for _, c := range s.Combs {
+		for _, d := range c.Defs {
+			_ = d
+			// lits = append(lits, d.ID)
+		}
+	}
+	return lits
 }

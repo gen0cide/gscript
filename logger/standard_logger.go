@@ -136,9 +136,15 @@ func (g *standardDefaultFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 
 func (w standardLogWriter) Write(p []byte) (int, error) {
 	output := fmt.Sprintf(
-		"%s%s%s%s%s %s",
+		"%s%s%s%s%s%s%s%s%s%s%s %s",
 		color.HiWhiteString("["),
-		color.HiRedString("GSCRIPT"),
+		color.HiRedString("G"),
+		color.HiRedString("S"),
+		color.HiRedString("C"),
+		color.HiRedString("R"),
+		color.HiRedString("I"),
+		color.HiRedString("P"),
+		color.HiRedString("T"),
 		color.HiWhiteString(":"),
 		color.HiYellowString(strings.ToLower(w.name)),
 		color.HiWhiteString("]"),

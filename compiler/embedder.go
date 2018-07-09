@@ -171,7 +171,6 @@ func (e *EmbeddedFile) Embed() {
 // Data retrieves the current EmbedData's buffer as a string
 func (e *EmbeddedFile) Data() string {
 	return e.EmbedData.String()
-
 }
 
 // GenerateEmbedData enumerates the compressed embed and creates a byte slice representation of it
