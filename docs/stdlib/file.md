@@ -3,20 +3,22 @@
 Handles file operations.
 
 ## Function Index
+WriteFileFromBytes(data []byte, filepath string) error
+WriteFileFromString(data string, filepath string) error
+ReadFileAsBytes(filepath string) ([]byte, error)
+ReadFileAsString(filepath string) (string, error)
 
 AppendBytesToFile(data []byte, filepath string) error
 AppendStringToFile(data string, filepath string) error // will not add line breaks, manage yourself
 CopyFile(srcpath string, dstpath string, perms string) (bytesWritten int, err error)
 
-WriteFileFromString(data string, filepath string) error
-WriteFileFromBytes(data []byte, filepath string) error
 SetPerms(filepath string, perms string) error
 
 ReplaceInFileWithString(match string, new string) error
 ReplaceInFileWithRegex(regexString string, replaceWith string) error
 
-ReadFileAsString(filepath string) (string, error)
-ReadFileAsBytes(filepath string) ([]byte, error)
+
+
 
 ## Details
 
@@ -156,6 +158,108 @@ ReadFileAsString(readPath string) (string, error)
 | `0`       | `string `    | contents of the file as a strin            |
 |-----------|--------------|--------------------------------------------|
 | `1`       | `error`      | (optional) function error                  |
+
+**Example Usage:**
+
+```
+
+```
+-
+
+### CopyFile
+
+**Author:** ahhh
+
+**Description:** Reads data from a file location and copies it to a new location with the original files perms.
+Returns the number of bytes copied as an int and an error
+
+**Method Signature:**
+
+```
+CopyFile(readPath, destPath string)  (int, error) 
+```
+
+**Arguments:**
+
+| Label     | Type         | Description                                |
+|-----------|--------------|--------------------------------------------|
+| `readPath`| `string`     | The location of the file to be read        |
+|-----------|--------------|--------------------------------------------|
+| `destPath`| `string`     | The location of the file to be written     |
+
+**Returns:**
+
+| Position  | Type         | Description                                |
+|-----------|--------------|--------------------------------------------|
+| `0`       | `int`        | Number of bytes copied                     |
+|-----------|--------------|--------------------------------------------|
+| `1`       | `error`      | (optional) function error                  |
+
+**Example Usage:**
+
+```
+
+```
+
+-
+### AppendFileBytes
+
+**Author:** ahhh
+
+**Description:** Adds data from a byte array to the end of a file, does not add new lines so handle these in your string.
+
+**Method Signature:**
+
+```
+AppendFileBytes(targetFile string, data []byte]) error
+```
+
+**Arguments:**
+
+| Label        | Type         | Description                                |
+|--------------|--------------|--------------------------------------------|
+| `targetFile` | `string`     | The location of the file to be written     |
+|--------------|--------------|--------------------------------------------|
+| `data`       | `[]byte`     | The data to be written                     |
+
+**Returns:**
+
+| Position  | Type         | Description                                |
+|-----------|--------------|--------------------------------------------|
+| `0`       | `error`      | (optional) function error                  |
+
+**Example Usage:**
+
+```
+
+```
+-
+
+### AppendFileString
+
+**Author:** ahhh
+
+**Description:** Adds data from a string to the end of a file, does not add new lines so handle these in your string.
+
+**Method Signature:**
+
+```
+AppendFileString(targetFile, data string) error
+```
+
+**Arguments:**
+
+| Label        | Type         | Description                                |
+|--------------|--------------|--------------------------------------------|
+| `targetFile` | `string`     | The location of the file to be written     |
+|--------------|--------------|--------------------------------------------|
+| `data`       | `string`     | The data to be written                     |
+
+**Returns:**
+
+| Position  | Type         | Description                                |
+|-----------|--------------|--------------------------------------------|
+| `0`       | `error`      | (optional) function error                  |
 
 **Example Usage:**
 

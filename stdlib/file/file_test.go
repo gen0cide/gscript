@@ -1,6 +1,7 @@
 package file
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -55,8 +56,40 @@ func TestReadFileAsString(t *testing.T) {
 func TestReadFileAsBytes(t *testing.T) {
 	bytes, err := ReadFileAsBytes("test_file.txt")
 	if err != nil {
-		assert.Nil(t, "Read file failed")
+		assert.Nil(t, err)
 	}
 	assert.NotNil(t, bytes)
 	assert.Equal(t, "this is a test", string(bytes), "they should be equal")
+}
+
+func TestCopyFile(t *testing.T) {
+	dataCopied, err := CopyFile("test_file.txt", "new_test_file.txt")
+	if err != nil {
+		assert.Nil(t, err)
+	}
+	assert.Equal(t, 14, dataCopied, "they should be equal")
+}
+
+func TestAppendFileBytes(t *testing.T) {
+	firstData, _ := ioutil.ReadFile("test_file.txt")
+	fmt.Println(string(firstData))
+	err := AppendFileBytes("test_file.txt", []byte("some new data"))
+	if err != nil {
+		assert.Nil(t, err)
+	}
+	secondData, _ := ioutil.ReadFile("test_file.txt")
+	fmt.Println(string(secondData))
+	assert.NotEqual(t, firstData, secondData, "Should not be equal")
+}
+
+func TestAppendFileString(t *testing.T) {
+	firstData, _ := ioutil.ReadFile("test_file.txt")
+	fmt.Println(string(firstData))
+	err := AppendFileString("test_file.txt", "\nsome new data\n")
+	if err != nil {
+		assert.Nil(t, err)
+	}
+	secondData, _ := ioutil.ReadFile("test_file.txt")
+	fmt.Println(string(secondData))
+	assert.NotEqual(t, firstData, secondData, "Should not be equal")
 }

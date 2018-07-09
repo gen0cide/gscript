@@ -1,6 +1,7 @@
 package file
 
 import (
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -64,4 +65,71 @@ func ReadFileAsBytes(readPath string) ([]byte, error) {
 		return nil, err
 	}
 	return contents, nil
+}
+
+// CopyFile copies a file from the src to the dest with the original files permissions
+func CopyFile(srcPath, destPath string) (int, error) {
+	srcInfo, err := os.Stat(srcPath)
+	if err != nil {
+		return 0, err
+	}
+	from, err := os.Open(srcPath)
+	if err != nil {
+		return 0, err
+	}
+	defer from.Close()
+
+	to, err := os.OpenFile(destPath, os.O_RDWR|os.O_CREATE, os.FileMode((srcInfo.Mode())))
+	if err != nil {
+		return 0, err
+	}
+	defer to.Close()
+
+	dataCopied, err := io.Copy(to, from)
+	if err != nil {
+		return 0, err
+	}
+	return int(dataCopied), nil
+}
+
+// AppendFileBytes takes a file and adds a byte array to the end of it
+func AppendFileBytes(targetPath string, addData []byte) error {
+	fileInfo, err := os.Stat(targetPath)
+	if err != nil {
+		return err
+	}
+	absPath, err := filepath.Abs(targetPath)
+	if err != nil {
+		return err
+	}
+	targetFile, err := os.OpenFile(absPath, os.O_APPEND|os.O_WRONLY, fileInfo.Mode())
+	if err != nil {
+		return err
+	}
+	if _, err = targetFile.Write(addData); err != nil {
+		return err
+	}
+	targetFile.Close()
+	return nil
+}
+
+// AppendFileString takes a file and adds a string to the end of it
+func AppendFileString(targetPath, addString string) error {
+	fileInfo, err := os.Stat(targetPath)
+	if err != nil {
+		return err
+	}
+	absPath, err := filepath.Abs(targetPath)
+	if err != nil {
+		return err
+	}
+	targetFile, err := os.OpenFile(absPath, os.O_APPEND|os.O_WRONLY, fileInfo.Mode())
+	if err != nil {
+		return err
+	}
+	if _, err = targetFile.WriteString(addString); err != nil {
+		return err
+	}
+	targetFile.Close()
+	return nil
 }
