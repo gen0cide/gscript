@@ -55,7 +55,7 @@ console.log(asset[0]);
 // => "Data in real.txt"
 console.log(asset[1]);
 // => null
-WriteFileFromBytes(asset[0], "new_real.txt")
+G.WriteFileFromBytes(asset[0], "new_real.txt")
 ```
 -
 
@@ -94,6 +94,72 @@ console.log(asset[0]);
 // => "Contents in real.txt"
 console.log(asset[1]);
 // => null
-WriteFileFromString("new_real.txt")
+G.WriteFileFromString("new_real.txt")
+```
+-
+
+### ReadFileAsBytes
+
+**Author:** ahhh
+
+**Description:** Reads data from a file and returns its contents as a byte array.
+
+**Method Signature:**
+
+```
+ReadFileAsBytes(readPath string) ([]byte, error)
+```
+
+**Arguments:**
+
+| Label     | Type         | Description                                |
+|-----------|--------------|--------------------------------------------|
+| `readPath`| `string`     | The location of the file to be written     |
+
+**Returns:**
+
+| Position  | Type         | Description                                |
+|-----------|--------------|--------------------------------------------|
+| `0`       | `[]bytes`    | contents of the file as a []byte           |
+|-----------|--------------|--------------------------------------------|
+| `1`       | `error`      | (optional) function error                  |
+
+**Example Usage:**
+
+```
+
+```
+-
+
+### ReadFileAsString
+
+**Author:** ahhh
+
+**Description:** Reads data from a file and returns its contents as a string.
+
+**Method Signature:**
+
+```
+ReadFileAsString(readPath string) (string, error)
+```
+
+**Arguments:**
+
+| Label     | Type         | Description                                |
+|-----------|--------------|--------------------------------------------|
+| `readPath`| `string`     | The location of the file to be written     |
+
+**Returns:**
+
+| Position  | Type         | Description                                |
+|-----------|--------------|--------------------------------------------|
+| `0`       | `string `    | contents of the file as a strin            |
+|-----------|--------------|--------------------------------------------|
+| `1`       | `error`      | (optional) function error                  |
+
+**Example Usage:**
+
+```
+
 ```
 -

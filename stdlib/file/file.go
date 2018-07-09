@@ -39,3 +39,29 @@ func WriteFileFromString(destPath string, fileData string) error {
 	}
 	return nil
 }
+
+//ReadFileAsString takes a file path and reads that files contents and returns a string representation of the contents
+func ReadFileAsString(readPath string) (string, error) {
+	absPath, err := filepath.Abs(readPath)
+	if err != nil {
+		return "", err
+	}
+	contents, err := ioutil.ReadFile(absPath)
+	if err != nil {
+		return "", err
+	}
+	return string(contents), nil
+}
+
+//ReadFileAsBytes takes a file path and reads that files contents and returns a byte array of the contents
+func ReadFileAsBytes(readPath string) ([]byte, error) {
+	absPath, err := filepath.Abs(readPath)
+	if err != nil {
+		return nil, err
+	}
+	contents, err := ioutil.ReadFile(absPath)
+	if err != nil {
+		return nil, err
+	}
+	return contents, nil
+}
