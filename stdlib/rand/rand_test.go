@@ -36,5 +36,5 @@ func TestGetAlphaNumericSpecialString(t *testing.T) {
 func TestGetBool(t *testing.T) {
 	rando := GetBool()
 	assert.NotNil(t, rando)
-	//assert.Equal(t, false, rando, "passes half the time")
+	assert.Equal(t, false, rando, "passes half the time")
 }

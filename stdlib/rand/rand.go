@@ -25,7 +25,7 @@ func GetAlphaNumericString(strlen int64) string {
 	return string(result)
 }
 
-//GetAlphaString Generates a random alpha string of a specified length
+//GetAlphaString generates a random alpha string of a specified length
 func GetAlphaString(strlen int64) string {
 	const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	result := make([]byte, strlen)
@@ -39,7 +39,7 @@ func GetAlphaString(strlen int64) string {
 	return string(result)
 }
 
-//GetAlphaNumericSpecialString Generates a random alpha numeric and special char string of a specified length
+//GetAlphaNumericSpecialString generates a random alpha numeric and special char string of a specified length
 func GetAlphaNumericSpecialString(strlen int64) string {
 	const chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()"
 	result := make([]byte, strlen)
