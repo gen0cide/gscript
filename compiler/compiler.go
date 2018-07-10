@@ -398,7 +398,7 @@ func (c *Compiler) CreateEntryPoint() error {
 
 // PerformPreCompileObfuscation runs the pre-compilation obfuscation routines on the intermediate representation
 func (c *Compiler) PerformPreCompileObfuscation() error {
-	if c.SkipCompilation || c.ObfuscationLevel > 2 {
+	if c.SkipCompilation || c.ObfuscationLevel > 1 {
 		return nil
 	}
 	stylist := obfuscator.NewStylist(c.BuildDir)
@@ -420,7 +420,7 @@ func (c *Compiler) PerformPreCompileObfuscation() error {
 
 // PerformPostCompileObfuscation runs the post-compilation obfuscation routines on compiled binary
 func (c *Compiler) PerformPostCompileObfuscation() error {
-	if c.SkipCompilation || c.ObfuscationLevel > 1 {
+	if c.SkipCompilation || c.ObfuscationLevel > 0 {
 		return nil
 	}
 	m := obfuscator.NewMordor(c.Logger)

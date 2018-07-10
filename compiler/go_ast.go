@@ -119,6 +119,10 @@ func NewGoParamDef(l *LinkedFunction, idx int) *GoParamDef {
 	return gpd
 }
 
+// import (
+//   rekt "net/url"
+// )
+// EXAMPLE: func Foo(a0 map[*rekt.URL][]*ast.Field)
 // 0 ""
 // 1 "map["
 // 2 "map[*"

@@ -3,3 +3,5 @@ gen0cide
 GSCRIPT
 OTTO
 main[[:word:]\.\\/ ]*?
+Engine[[:word:]\.\\/ ]*?
+NullLogger[[:word:]\.\\/ ]*?
