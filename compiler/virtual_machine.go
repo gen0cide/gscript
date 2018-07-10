@@ -12,6 +12,7 @@ import (
 	"sync"
 	"text/template"
 
+	"github.com/gen0cide/gscript/compiler/computil"
 	gast "github.com/robertkrimen/otto/ast"
 	gfile "github.com/robertkrimen/otto/file"
 	"github.com/tdewolff/minify"
@@ -122,7 +123,7 @@ type GenesisVM struct {
 // NewGenesisVM creates a new virtual machine object for the compiler
 func NewGenesisVM(name, path, os, arch string, data []byte, prog *gast.Program) *GenesisVM {
 	vm := &GenesisVM{
-		ID:                   RandUpperAlphaString(14),
+		ID:                   computil.RandUpperAlphaString(14),
 		SourceFile:           path,
 		Name:                 name,
 		FileSet:              &gfile.FileSet{},
@@ -135,8 +136,8 @@ func NewGenesisVM(name, path, os, arch string, data []byte, prog *gast.Program) 
 		GoPackageByImport:    map[string]*GoPackage{},
 		GoPackageByNamespace: map[string]*GoPackage{},
 		EntryPointMapping:    map[string]string{},
-		PreloadAlias:         RandUpperAlphaString(12),
-		DecryptionKey:        RandMixedAlphaNumericString(32),
+		PreloadAlias:         computil.RandUpperAlphaString(12),
+		DecryptionKey:        computil.RandMixedAlphaNumericString(32),
 	}
 	vm.Linker = NewLinker(vm)
 	return vm
@@ -234,13 +235,13 @@ func (g *GenesisVM) EncodeBundledAssets() error {
 	for _, e := range g.Embeds {
 		fns = append(fns, e.GenerateEmbedData)
 	}
-	return ExecuteFuncsInParallel(fns)
+	return computil.ExecuteFuncsInParallel(fns)
 }
 
 // WriteGenesisScript writes a genesis script to the asset directory and returns a reference to an embeddedfile
 // for use by the compiler
 func (g *GenesisVM) WriteGenesisScript(name string, src []byte) (*EmbeddedFile, error) {
-	scriptFileID := RandUpperAlphaNumericString(18)
+	scriptFileID := computil.RandUpperAlphaNumericString(18)
 	scriptName := fmt.Sprintf("%s.gs", scriptFileID)
 	scriptLocation := filepath.Join(g.Compiler.AssetDir(), scriptName)
 	m := minify.New()
@@ -427,7 +428,7 @@ func (g *GenesisVM) SanityCheckLinkedSymbols() error {
 // GenerateFunctionKeys creates random functions for the various parts of the VM's source file
 func (g *GenesisVM) GenerateFunctionKeys() {
 	for _, x := range requiredBuildTemplates {
-		g.EntryPointMapping[x] = RandUpperAlphaString(12)
+		g.EntryPointMapping[x] = computil.RandUpperAlphaString(12)
 	}
 }
 
@@ -458,7 +459,7 @@ func (g *GenesisVM) RenderVMBundle(templateFile string) error {
 // WriteVMBundle generates the VM bundle's intermediate representation using RenderVMBundle and then writes it
 // to the compilers build directory
 func (g *GenesisVM) WriteVMBundle() error {
-	t, err := Asset("vm_file.go.tmpl")
+	t, err := computil.Asset("vm_file.go.tmpl")
 	if err != nil {
 		return err
 	}
@@ -503,8 +504,37 @@ func (g *GenesisVM) Priority() int {
 	}
 	num, err := strconv.Atoi(val)
 	if err != nil {
-		g.Compiler.logger.Errorf("problem parsing priority value: %v", err)
+		g.Compiler.Logger.Errorf("problem parsing priority value: %v", err)
 		return defaultPriority
 	}
 	return num
+}
+
+// HasDebuggingEnabled is an convienience method for checking to see if the debugger should be included
+func (g *GenesisVM) HasDebuggingEnabled() bool {
+	return g.Compiler.DebuggerEnabled
+}
+
+// HasLoggingEnabled is an convienience method for checking to see if logging should be included
+func (g *GenesisVM) HasLoggingEnabled() bool {
+	return g.Compiler.LoggingEnabled
+}
+
+// GetIDLiterals returns all interesting IDs used by this GenesisVM
+func (g *GenesisVM) GetIDLiterals() []string {
+	lits := []string{g.Name, g.ID, g.PreloadAlias}
+	for _, v := range g.EntryPointMapping {
+		lits = append(lits, []string{v}...)
+	}
+	for k, e := range g.Embeds {
+		lits = append(lits, []string{k, e.ID, e.OrigName}...)
+	}
+	for k, gop := range g.GoPackageByImport {
+		lits = append(lits, []string{k, gop.ImportPath, gop.Dir}...)
+	}
+	for _, lf := range g.Linker.Funcs {
+		lits = append(lits, []string{lf.ID}...)
+	}
+
+	return lits
 }

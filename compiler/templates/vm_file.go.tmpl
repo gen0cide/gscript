@@ -11,6 +11,12 @@ import (
 
   "github.com/gen0cide/gscript/engine"
   "github.com/robertkrimen/otto"
+  {{ if $.HasDebuggingEnabled -}}
+  "github.com/gen0cide/gscript/debugger"
+  {{- end }}
+  {{ if $.HasLoggingEnabled -}}
+  "github.com/gen0cide/gscript/logger"
+  {{- end }}
 
   {{ range $ns, $pkg := $.GoPackageByNamespace }}
   // Importing dependency package {{ $pkg.Name }} for native dependency
@@ -18,10 +24,10 @@ import (
   {{ end }}
 )
 
-const (
+var (
 {{- range $_, $embed := $.Embeds }}
   // {{ $embed.ID }} holds the data for embedded file {{ $embed.OrigName }}
-  {{ $embed.ID }} = `{{ $embed.Data }}`
+  {{ $embed.ID }} = "{{ $embed.Data }}"
 
 {{- end }}
 )
@@ -30,13 +36,26 @@ const (
 type {{ $.ID }} struct {
   E *engine.Engine
   K []byte
+  {{ if $.HasDebuggingEnabled -}}
+  D *debugger.Debugger
+  {{- end }}
 }
 
 // New{{ $.ID }} creates the genesis runtime for script {{ $.Name }}
 func New{{ $.ID }}() *{{ $.ID }} {
   te := engine.New("{{ $.Name }}", "{{ $.ID }}", 30, "Execute")
+  {{ if $.HasLoggingEnabled -}}
+  al := logger.NewStandardLogrusLogger(nil, "{{ $.Name }}", false, false)
+  te.SetLogger(al)
+  {{- end }}
+  {{ if $.HasDebuggingEnabled }}
+  de := debugger.New(te)
+  {{ end }}
   o := &{{ $.ID }}{
     E: te,
+    {{ if $.HasDebuggingEnabled -}}
+    D: de,
+    {{- end }}
   }
   return o
 }
@@ -65,6 +84,9 @@ func (o *{{ $.ID }}) {{ $.FunctionKey "import_script" }}() error {
 
 // {{ $.FunctionKey "execute" }} executes the genesis VM at the entry point (defined by version, usually Deploy())
 func (o *{{ $.ID }}) {{ $.FunctionKey "execute" }}() error {
+  {{ if $.HasDebuggingEnabled -}}
+  o.D.InjectDebugConsole()
+  {{- end }}
   _, err := o.E.CallFunctionWithTimeout("Deploy")
   return err
 }

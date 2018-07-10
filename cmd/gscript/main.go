@@ -11,7 +11,8 @@ import (
 )
 
 var (
-	cliLogger = logger.NewStandardLogrusLogger(nil, "cli", false, true)
+	cliLogger     = logger.NewStandardLogrusLogger(nil, "cli", false, true)
+	displayBefore = true
 )
 
 func init() {
@@ -55,7 +56,9 @@ func main() {
 	}
 
 	app.Before = func(c *cli.Context) error {
-		fmt.Fprintf(c.App.Writer, "%s\n\n", logger.AsciiLogo())
+		if c.Args().Get(0) != "shell" {
+			fmt.Fprintf(c.App.Writer, "%s\n\n", logger.AsciiLogo())
+		}
 		return nil
 	}
 

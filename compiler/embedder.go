@@ -11,6 +11,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"github.com/gen0cide/gscript/compiler/computil"
 )
 
 const (
@@ -107,7 +109,7 @@ func NewEmbeddedFile(source string) (*EmbeddedFile, error) {
 	if err != nil {
 		return nil, err
 	}
-	id := RandUpperAlphaString(18)
+	id := computil.RandUpperAlphaString(18)
 	ef := &EmbeddedFile{
 		SourcePath: absPath,
 		OrigName:   filepath.Base(source),
@@ -169,7 +171,6 @@ func (e *EmbeddedFile) Embed() {
 // Data retrieves the current EmbedData's buffer as a string
 func (e *EmbeddedFile) Data() string {
 	return e.EmbedData.String()
-
 }
 
 // GenerateEmbedData enumerates the compressed embed and creates a byte slice representation of it

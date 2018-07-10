@@ -4,8 +4,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/gen0cide/gscript/logger"
-
 	"github.com/robertkrimen/otto"
 	"github.com/robertkrimen/otto/file"
 	"github.com/robertkrimen/otto/parser"
@@ -70,8 +68,8 @@ func New(name, id string, timeout int, entrypoint string) *Engine {
 		Packages:   map[string]*NativePackage{},
 	}
 	e.InitVM()
-	// e.SetLogger(&NullLogger{})
-	e.SetLogger(logger.NewStandardLogrusLogger(nil, name, false, false))
+	e.SetLogger(&NullLogger{})
+	//e.SetLogger(logger.NewStandardLogrusLogger(nil, name, false, false))
 	e.setGlobalRef()
 	return e
 }
