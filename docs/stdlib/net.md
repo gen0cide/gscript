@@ -2,8 +2,8 @@
 
 ## Function Index
 
-CheckForInUseTCP(port int) (bool, error)
-CheckForInUseUDP(port int) (bool, error)
+- CheckForInUseTCP(port int) (bool, error)
+- CheckForInUseUDP(port int) (bool, error)
 
 ## Details
 
@@ -38,7 +38,6 @@ CheckForInUseTCP(port int) (bool, error)
 ```
 
 ```
--
 
 ### CheckForInUseUDP
 
@@ -71,4 +70,3 @@ CheckForInUseUDP(port int) (bool, error)
 ```
 
 ```
--

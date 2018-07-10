@@ -2,10 +2,10 @@
 
 ## Function Index
 
-DecodeBase64(data string) (string, error)
-EncodeBase64(data string) string
-EncodeStringAsBytes(data string) []byte
-EncodeBytesAsString(data []byte) string
+- DecodeBase64(data string) (string, error)
+- EncodeBase64(data string) string
+- EncodeStringAsBytes(data string) []byte
+- EncodeBytesAsString(data []byte) string
 
 ## Details
 
@@ -41,7 +41,6 @@ DecodeBase64(data string) string
 
 ```
 
--
 ### EncodeBase64
 
 **Author:** ahhh
@@ -71,8 +70,6 @@ EncodeBase64(data string) string
 ```
 
 ```
-
--
 
 ### EncodeStringAsBytes
 
@@ -104,7 +101,6 @@ EncodeStringAsBytes(data string) []bytes
 
 ```
 
--
 ### EncodeBytesAsString
 
 **Author:** ahhh
@@ -134,5 +130,3 @@ EncodeBytesAsString(data []bytes) string
 ```
 
 ```
-
--

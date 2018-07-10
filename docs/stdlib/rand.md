@@ -2,11 +2,11 @@
 
 ## Function Index
 
-GetInt(min int, max int) int
-GetAlphaNumericString(len int) string
-GetAlphaString(len int) string
-GetAlphaNumericSpecialString(len int) string
-GetBool() bool
+- GetInt(min int, max int) int
+- GetAlphaNumericString(len int) string
+- GetAlphaString(len int) string
+- GetAlphaNumericSpecialString(len int) string
+- GetBool() bool
 
 ## Details
 
@@ -41,7 +41,6 @@ GetInt(min int, max int) int
 ```
 
 ```
--
 
 ### GetAlphaNumericString
 
@@ -72,7 +71,6 @@ GetAlphaNumericString(len int) string
 ```
 
 ```
--
 
 ### GetAlphaString
 
@@ -103,7 +101,6 @@ GetAlphaString(len int) string
 ```
 
 ```
--
 
 ### GetAlphaNumericSpecialString
 
@@ -134,7 +131,6 @@ GetAlphaNumericSpecialString(len int) string
 ```
 
 ```
--
 
 ### GetBool
 
@@ -164,4 +160,3 @@ GetBool() bool
 ```
 
 ```
--

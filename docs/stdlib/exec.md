@@ -2,8 +2,8 @@
 
 ## Function Index
 
-ExecuteCommand(progname string, args []string) (pid int, stdout string, stderr string, exitCode int, err error)
-ExecuteCommandAsync(progname string, args []string) (proc *exec.Cmd, err error)
+- ExecuteCommand(progname string, args []string) (pid int, stdout string, stderr string, exitCode int, err error)
+- ExecuteCommandAsync(progname string, args []string) (proc *exec.Cmd, err error)
 
 ## Details
 
@@ -46,7 +46,7 @@ ExecuteCommand(progname string, args []string) (pid int, stdout string, stderr s
 ```
 
 ```
--
+
 ### ExecuteCommandAsync
 
 **Author:** ahhh

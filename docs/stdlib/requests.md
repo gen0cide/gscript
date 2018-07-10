@@ -2,11 +2,11 @@
 
 ## Function Index
 
-PostURL(url string, data string, headers map[string]string, ignoresslerrors bool) (resp *http.Response, body string, err error)
-PostJSON(url string, jsondata string, headers map[string]string, ignoresslerrors bool) (resp *http.Response, body string, err error)
-PostFile(url string, filepath string, headers map[string]string, ignoresslerrors bool) (resp *http.Response, body string, err error)
-GetURLAsString(url string, headers map[string]string, ignoresslerrors bool) (resp *http.Response, body string, err error)
-GetURLAsBytes(url string, headers map[string]string, ignoresslerrors bool) (resp *http.Response, body string, err error)
+- PostURL(url string, data string, headers map[string]string, ignoresslerrors bool) (resp *http.Response, body string, err error)
+- PostJSON(url string, jsondata string, headers map[string]string, ignoresslerrors bool) (resp *http.Response, body string, err error)
+- PostFile(url string, filepath string, headers map[string]string, ignoresslerrors bool) (resp *http.Response, body string, err error)
+- GetURLAsString(url string, headers map[string]string, ignoresslerrors bool) (resp *http.Response, body string, err error)
+- GetURLAsBytes(url string, headers map[string]string, ignoresslerrors bool) (resp *http.Response, body string, err error)
 
 ## Details
 
@@ -49,7 +49,7 @@ PostURL(url string, data string, headers map[string]string, ignoresslerrors bool
 ```
 
 ```
--
+
 
 ### PostJSON
 
@@ -91,7 +91,7 @@ PostJSON(url string, jsondata string, headers map[string]string, ignoresslerrors
 ```
 
 ```
--
+
 ### PostFile
 
 **Author:** ahhh
@@ -131,7 +131,7 @@ PostURL(url string, data string, headers map[string]string, ignoresslerrors bool
 ```
 
 ```
--
+
 ### GetURLAsString
 
 **Author:** ahhh
@@ -169,7 +169,7 @@ GetURLAsString(url string, headers map[string]string, ignoresslerrors bool) (res
 ```
 
 ```
--
+
 ### GetURLAsBytes
 
 **Author:** ahhh
@@ -207,4 +207,3 @@ GetURLAsBytes(url string, headers map[string]string, ignoresslerrors bool) (resp
 ```
 
 ```
--

@@ -2,8 +2,8 @@
 
 ## Function Index
 
-TerminateSelf() error
-TerminateVM()
+- TerminateSelf() error
+- TerminateVM()
 
 ## Details
 
@@ -35,4 +35,3 @@ TerminateSelf() error
 ```
 
 ```
--

@@ -2,13 +2,13 @@
 
 ## Function Index
 
-GetMD5FromString(data string) string
-GetMD5FromBytes(data []byte) string
-GetSHA1FromString(data string) string
-GetSHA1FromBytes(data []byte) string
-GetSHA256FromString(data string) string
-GetSHA256FromBytes(data []byte) string
-GenerateRSASSHKeyPair(size int) (pubkey string, privkey string, error)
+- GetMD5FromString(data string) string
+- GetMD5FromBytes(data []byte) string
+- GetSHA1FromString(data string) string
+- GetSHA1FromBytes(data []byte) string
+- GetSHA256FromString(data string) string
+- GetSHA256FromBytes(data []byte) string
+- GenerateRSASSHKeyPair(size int) (pubkey string, privkey string, error)
 
 ## Details
 
@@ -42,7 +42,6 @@ GetMD5FromString(data string) string
 ```
 
 ```
--
 
 ### GetMD5FromBytes
 
@@ -74,7 +73,6 @@ GetMD5FromBytes(data []byte) string
 ```
 
 ```
--
 
 ### GetSHA1FromString
 
@@ -106,7 +104,6 @@ GetSHA1FromString(data string) string
 ```
 
 ```
--
 
 ### GetSHA1FromBytes
 
@@ -138,8 +135,6 @@ GetSHA1FromBytes(data []byte) string
 ```
 
 ```
--
-
 
 ### GetSHA256FromString
 
@@ -171,7 +166,6 @@ GetSHA256FromString(data string) string
 ```
 
 ```
--
 
 ### GetSHA256FromBytes
 
@@ -203,7 +197,6 @@ GetSHA256FromBytes(data []byte) string
 ```
 
 ```
--
 
 ### GenerateRSASSHKeyPair
 
@@ -238,4 +231,3 @@ GenerateRSASSHKeyPair(keySize int) (pubkey string, privkey string, error)
 ```
 
 ```
--

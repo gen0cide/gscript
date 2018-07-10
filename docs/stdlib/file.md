@@ -3,16 +3,16 @@
 Handles file operations.
 
 ## Function Index
-WriteFileFromBytes(data []byte, filepath string) error
-WriteFileFromString(data string, filepath string) error
-ReadFileAsBytes(filepath string) ([]byte, error)
-ReadFileAsString(filepath string) (string, error)
-AppendBytesToFile(data []byte, filepath string) error
-AppendStringToFile(data string, filepath string) error // will not add line breaks, manage yourself
-CopyFile(srcpath string, dstpath string, perms string) (bytesWritten int, err error)
-ReplaceInFileWithString(match string, new string) error
-ReplaceInFileWithRegex(regexString string, replaceWith string) error
-SetPerms(filepath string, perms string) error
+- WriteFileFromBytes(data []byte, filepath string) error
+- WriteFileFromString(data string, filepath string) error
+- ReadFileAsBytes(filepath string) ([]byte, error)
+- ReadFileAsString(filepath string) (string, error)
+- AppendBytesToFile(data []byte, filepath string) error
+- AppendStringToFile(data string, filepath string) error // will not add line breaks, manage yourself
+- CopyFile(srcpath string, dstpath string, perms string) (bytesWritten int, err error)
+- ReplaceInFileWithString(match string, new string) error
+- ReplaceInFileWithRegex(regexString string, replaceWith string) error
+- SetPerms(filepath string, perms string) error
 
 ## Details
 
@@ -53,7 +53,6 @@ console.log(asset[1]);
 // => null
 G.WriteFileFromBytes(asset[0], "new_real.txt")
 ```
--
 
 ### WriteFileFromString
 
@@ -92,7 +91,6 @@ console.log(asset[1]);
 // => null
 G.WriteFileFromString("new_real.txt")
 ```
--
 
 ### ReadFileAsBytes
 
@@ -125,7 +123,6 @@ ReadFileAsBytes(readPath string) ([]byte, error)
 ```
 
 ```
--
 
 ### ReadFileAsString
 
@@ -158,7 +155,6 @@ ReadFileAsString(readPath string) (string, error)
 ```
 
 ```
--
 
 ### CopyFile
 
@@ -195,7 +191,6 @@ CopyFile(readPath, destPath string)  (int, error)
 
 ```
 
--
 ### AppendFileBytes
 
 **Author:** ahhh
@@ -227,7 +222,6 @@ AppendFileBytes(targetFile string, data []byte]) error
 ```
 
 ```
--
 
 ### AppendFileString
 
@@ -260,7 +254,6 @@ AppendFileString(targetFile, data string) error
 ```
 
 ```
--
 
 ### ReplaceInFileWithString
 
@@ -297,7 +290,6 @@ ReplaceInFileWithString(file, match, replacement string) (int, error)
 ```
 
 ```
--
 
 ### ReplaceInFileWithRegex
 
@@ -334,7 +326,6 @@ ReplaceInFileWithRegex(file, match, replacement string) (int, error)
 ```
 
 ```
--
 
 ### SetPerms
 
@@ -367,4 +358,3 @@ SetPerms(file string, unixPerms int64) (error)
 ```
 
 ```
--
