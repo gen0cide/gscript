@@ -32,7 +32,6 @@ DecodeBase64(data string) string
 | Position  | Type         | Description                                |
 |-----------|--------------|--------------------------------------------|
 | `0`       | `string`     | the decoded string                         |
-|-----------|--------------|--------------------------------------------|
 | `1`       | `error`      | (optional) function error                  |
 
 **Example Usage:**

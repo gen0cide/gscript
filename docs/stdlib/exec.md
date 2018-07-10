@@ -32,13 +32,9 @@ ExecuteCommand(progname string, args []string) (pid int, stdout string, stderr s
 | Position  | Type         | Description                                |
 |-----------|--------------|--------------------------------------------|
 | `0`       | `int`        | the pid of the executed program            |
-|-----------|--------------|--------------------------------------------|
 | `1`       | `string`     | the stdout of the execute progam           |
-|-----------|--------------|--------------------------------------------|
 | `2`       | `string`     | the stderr of the execute progam           |
-|-----------|--------------|--------------------------------------------|
 | `3`       | `int`        | the exitcode of the executed program       |
-|-----------|--------------|--------------------------------------------|
 | `4`       | `error`      | (optional) function error                  |
 
 **Example Usage:**
@@ -64,7 +60,6 @@ ExecuteCommandAsync(progname string, args []string) (proc *exec.Cmd, err error)
 | Label     | Type         | Description                                |
 |-----------|--------------|--------------------------------------------|
 | `command` | `string`     | The target command to run                  |
-|-----------|--------------|--------------------------------------------|
 | `args`    | `[]string`   | The arguments to command                   |
 
 **Returns:**
@@ -72,7 +67,6 @@ ExecuteCommandAsync(progname string, args []string) (proc *exec.Cmd, err error)
 | Position  | Type             | Description                                |
 |-----------|------------------|--------------------------------------------|
 | `0`       | `proc *exec.Cmd` | an  exec/cmd object                        |
-|-----------|------------------|--------------------------------------------|
 | `1`       | `error`          | (optional) function error                  |
 
 **Example Usage:**

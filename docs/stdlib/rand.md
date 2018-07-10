@@ -27,7 +27,6 @@ GetInt(min int, max int) int
 | Label     | Type         | Description                                |
 |-----------|--------------|--------------------------------------------|
 | `min`     | `int`        | the min range of int to will return        |
-|-----------|--------------|--------------------------------------------|
 | `max`     | `int`        | the max range of int to will return        |
 
 **Returns:**

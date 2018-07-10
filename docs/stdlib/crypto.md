@@ -221,9 +221,7 @@ GenerateRSASSHKeyPair(keySize int) (pubkey string, privkey string, error)
 | Position  | Type         | Description                                |
 |-----------|--------------|--------------------------------------------|
 | `0`       | `string`     | the generated private key as a string      |
-|-----------|--------------|--------------------------------------------|
 | `1`       | `string`     | the generated public key as a string       |
-|-----------|--------------|--------------------------------------------|
 | `2`       | `error`      | (optional) function error                  |
 
 **Example Usage:**

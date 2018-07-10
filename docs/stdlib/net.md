@@ -30,7 +30,6 @@ CheckForInUseTCP(port int) (bool, error)
 | Position  | Type         | Description                                |
 |-----------|--------------|--------------------------------------------|
 | `0`       | `bool`       | is the port open or closed                 |
-|-----------|--------------|--------------------------------------------|
 | `1`       | `error`      | (optional) function error                  |
 
 **Example Usage:**
@@ -62,7 +61,6 @@ CheckForInUseUDP(port int) (bool, error)
 | Position  | Type         | Description                                |
 |-----------|--------------|--------------------------------------------|
 | `0`       | `bool`       | is the port open or closed                 |
-|-----------|--------------|--------------------------------------------|
 | `1`       | `error`      | (optional) function error                  |
 
 **Example Usage:**

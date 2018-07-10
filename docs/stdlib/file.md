@@ -33,7 +33,6 @@ WriteFileFromBytes(data []byte, filepath string) error
 | Label     | Type         | Description                                |
 |-----------|--------------|--------------------------------------------|
 | `destPath`| `string`     | The location of the file to be written     |
-|-----------|--------------|--------------------------------------------|
 | `fileData`| `[]byte`     | The data to be written                     |
 
 **Returns:**
@@ -71,7 +70,6 @@ WriteFileFromBytes(data string, filepath string) error
 | Label     | Type         | Description                                |
 |-----------|--------------|--------------------------------------------|
 | `destPath`| `string`     | The location of the file to be written     |
-|-----------|--------------|--------------------------------------------|
 | `fileData`| `string`     | The data to be written                     |
 
 **Returns:**
@@ -115,7 +113,6 @@ ReadFileAsBytes(readPath string) ([]byte, error)
 | Position  | Type         | Description                                |
 |-----------|--------------|--------------------------------------------|
 | `0`       | `[]bytes`    | contents of the file as a []byte           |
-|-----------|--------------|--------------------------------------------|
 | `1`       | `error`      | (optional) function error                  |
 
 **Example Usage:**
@@ -147,7 +144,6 @@ ReadFileAsString(readPath string) (string, error)
 | Position  | Type         | Description                                |
 |-----------|--------------|--------------------------------------------|
 | `0`       | `string `    | contents of the file as a strin            |
-|-----------|--------------|--------------------------------------------|
 | `1`       | `error`      | (optional) function error                  |
 
 **Example Usage:**
@@ -174,7 +170,6 @@ CopyFile(readPath, destPath string)  (int, error)
 | Label     | Type         | Description                                |
 |-----------|--------------|--------------------------------------------|
 | `readPath`| `string`     | The location of the file to be read        |
-|-----------|--------------|--------------------------------------------|
 | `destPath`| `string`     | The location of the file to be written     |
 
 **Returns:**
@@ -182,7 +177,6 @@ CopyFile(readPath, destPath string)  (int, error)
 | Position  | Type         | Description                                |
 |-----------|--------------|--------------------------------------------|
 | `0`       | `int`        | Number of bytes copied                     |
-|-----------|--------------|--------------------------------------------|
 | `1`       | `error`      | (optional) function error                  |
 
 **Example Usage:**
@@ -208,7 +202,6 @@ AppendFileBytes(targetFile string, data []byte]) error
 | Label        | Type         | Description                                |
 |--------------|--------------|--------------------------------------------|
 | `targetFile` | `string`     | The location of the file to be written     |
-|--------------|--------------|--------------------------------------------|
 | `data`       | `[]byte`     | The data to be written                     |
 
 **Returns:**
@@ -240,7 +233,6 @@ AppendFileString(targetFile, data string) error
 | Label        | Type         | Description                                |
 |--------------|--------------|--------------------------------------------|
 | `targetFile` | `string`     | The location of the file to be written     |
-|--------------|--------------|--------------------------------------------|
 | `data`       | `string`     | The data to be written                     |
 
 **Returns:**
@@ -272,9 +264,7 @@ ReplaceInFileWithString(file, match, replacement string) (int, error)
 | Label         | Type         | Description                                |
 |---------------|--------------|--------------------------------------------|
 | `file`        | `string`     | The location of the file to be replaced    |
-|---------------|--------------|--------------------------------------------|
 | `match`       | `string`     | The strigns to search and replace          |
-|---------------|--------------|--------------------------------------------|
 | `replacement` | `string`     | The string to replace it with              |
 
 **Returns:**
@@ -282,7 +272,6 @@ ReplaceInFileWithString(file, match, replacement string) (int, error)
 | Position  | Type         | Description                                |
 |-----------|--------------|--------------------------------------------|
 | `0`       | `int`        | Number of strings replaced                 |
-|-----------|--------------|--------------------------------------------|
 | `1`       | `error`      | (optional) function error                  |
 
 **Example Usage:**
@@ -308,9 +297,7 @@ ReplaceInFileWithRegex(file, match, replacement string) (int, error)
 | Label         | Type         | Description                                |
 |---------------|--------------|--------------------------------------------|
 | `file`        | `string`     | The location of the file to be replaced    |
-|---------------|--------------|--------------------------------------------|
 | `match`       | `string`     | the regex to match on strings on           |
-|---------------|--------------|--------------------------------------------|
 | `replacement` | `string`     | The string to replace it with              |
 
 **Returns:**
@@ -318,7 +305,6 @@ ReplaceInFileWithRegex(file, match, replacement string) (int, error)
 | Position  | Type         | Description                                |
 |-----------|--------------|--------------------------------------------|
 | `0`       | `int`        | Number of strings replaced                 |
-|-----------|--------------|--------------------------------------------|
 | `1`       | `error`      | (optional) function error                  |
 
 **Example Usage:**
@@ -344,7 +330,6 @@ SetPerms(file string, unixPerms int64) (error)
 | Label         | Type         | Description                                |
 |---------------|--------------|--------------------------------------------|
 | `file`        | `string`     | The location of the file to be replaced    |
-|---------------|--------------|--------------------------------------------|
 | `unixPerms`   | `int64`      | The file perms to set, unix / chmod style  |
 
 **Returns:**

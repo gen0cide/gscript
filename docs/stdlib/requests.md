@@ -27,11 +27,8 @@ PostURL(url string, data string, headers map[string]string, ignoresslerrors bool
 | Label             | Type                | Description                                |
 |-------------------|---------------------|--------------------------------------------|
 | `url`             | `string`            | The url to query                           |
-|-------------------|---------------------|--------------------------------------------|
 | `data`            | `string`            | the data to post to target                 |
-|-------------------|---------------------|--------------------------------------------|
 | `headers`         | `map[string]string` | the headers to be sent to the target       |
-|-------------------|---------------------|--------------------------------------------|
 | `ignoresslerrors` | `bool`              | bool to ignore invalid ssl certificates    |
 
 **Returns:**
@@ -39,9 +36,7 @@ PostURL(url string, data string, headers map[string]string, ignoresslerrors bool
 | Position  | Type             | Description                                |
 |-----------|------------------|--------------------------------------------|
 | `0`       | `*http.Response` | is the port open or closed                 |
-|-----------|------------------|--------------------------------------------|
 | `1`       | `string`         | the body of the response as a string       |
-|-----------|------------------|--------------------------------------------|
 | `2`       | `error`          | (optional) function error                  |
 
 **Example Usage:**
@@ -68,11 +63,8 @@ PostJSON(url string, jsondata string, headers map[string]string, ignoresslerrors
 | Label             | Type                | Description                                |
 |-------------------|---------------------|--------------------------------------------|
 | `url`             | `string`            | The url to query                           |
-|-------------------|---------------------|--------------------------------------------|
 | `json`            | `string`            | The JSON string to send to the target      |
-|-------------------|---------------------|--------------------------------------------|
 | `headers`         | `map[string]string` | the headers to be sent to the target       |
-|-------------------|---------------------|--------------------------------------------|
 | `ignoresslerrors` | `bool`              | bool to ignore invalid ssl certificates    |
 
 
@@ -81,9 +73,7 @@ PostJSON(url string, jsondata string, headers map[string]string, ignoresslerrors
 | Position  | Type             | Description                                |
 |-----------|------------------|--------------------------------------------|
 | `0`       | `*http.Response` | is the port open or closed                 |
-|-----------|------------------|--------------------------------------------|
 | `1`       | `string`         | the body of the response as a string       |
-|-----------|------------------|--------------------------------------------|
 | `2`       | `error`          | (optional) function error                  |
 
 **Example Usage:**
@@ -109,11 +99,8 @@ PostURL(url string, data string, headers map[string]string, ignoresslerrors bool
 | Label             | Type                | Description                                |
 |-------------------|---------------------|--------------------------------------------|
 | `url`             | `string`            | The url to query                           |
-|-------------------|---------------------|--------------------------------------------|
 | `filepath`        | `string`            | path to the binary to post                 |
-|-------------------|---------------------|--------------------------------------------|
 | `headers`         | `map[string]string` | the headers to be sent to the target       |
-|-------------------|---------------------|--------------------------------------------|
 | `ignoresslerrors` | `bool`              | bool to ignore invalid ssl certificates    |
 
 **Returns:**
@@ -121,9 +108,7 @@ PostURL(url string, data string, headers map[string]string, ignoresslerrors bool
 | Position  | Type             | Description                                |
 |-----------|------------------|--------------------------------------------|
 | `0`       | `*http.Response` | is the port open or closed                 |
-|-----------|------------------|--------------------------------------------|
 | `1`       | `string`         | the body of the response as a string       |
-|-----------|------------------|--------------------------------------------|
 | `2`       | `error`          | (optional) function error                  |
 
 **Example Usage:**
@@ -149,9 +134,7 @@ GetURLAsString(url string, headers map[string]string, ignoresslerrors bool) (res
 | Label             | Type                | Description                                |
 |-------------------|---------------------|--------------------------------------------|
 | `url`             | `string`            | The url to query                           |
-|-------------------|---------------------|--------------------------------------------|
 | `headers`         | `map[string]string` | the headers to be sent to the target       |
-|-------------------|---------------------|--------------------------------------------|
 | `ignoresslerrors` | `bool`              | bool to ignore invalid ssl certificates    |
 
 **Returns:**
@@ -159,9 +142,7 @@ GetURLAsString(url string, headers map[string]string, ignoresslerrors bool) (res
 | Position  | Type             | Description                                |
 |-----------|------------------|--------------------------------------------|
 | `0`       | `*http.Response` | is the port open or closed                 |
-|-----------|------------------|--------------------------------------------|
 | `1`       | `string`         | the body of the response as a string       |
-|-----------|------------------|--------------------------------------------|
 | `2`       | `error`          | (optional) function error                  |
 
 **Example Usage:**
@@ -187,9 +168,7 @@ GetURLAsBytes(url string, headers map[string]string, ignoresslerrors bool) (resp
 | Label             | Type                | Description                                |
 |-------------------|---------------------|--------------------------------------------|
 | `url`             | `string`            | The url to query                           |
-|-------------------|---------------------|--------------------------------------------|
 | `headers`         | `map[string]string` | the headers to be sent to the target       |
-|-------------------|---------------------|--------------------------------------------|
 | `ignoresslerrors` | `bool`              | bool to ignore invalid ssl certificates    |
 
 **Returns:**
@@ -197,9 +176,7 @@ GetURLAsBytes(url string, headers map[string]string, ignoresslerrors bool) (resp
 | Position  | Type             | Description                                |
 |-----------|------------------|--------------------------------------------|
 | `0`       | `*http.Response` | is the port open or closed                 |
-|-----------|------------------|--------------------------------------------|
 | `1`       | `[]byte`         | the body of the response as a []byte       |
-|-----------|------------------|--------------------------------------------|
 | `2`       | `error`          | (optional) function error                  |
 
 **Example Usage:**
