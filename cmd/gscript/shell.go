@@ -46,7 +46,7 @@ func interactiveShellCommand(c *cli.Context) error {
 	scriptPath := filepath.Join(tmpDir, "debugger")
 	os.MkdirAll(tmpDir, 0755)
 	opts := computil.DefaultOptions()
-	opts.ObfuscationLevel = 2
+	opts.ObfuscationLevel = 3
 	opts.ImportAllNativeFuncs = true
 	opts.UseHumanReadableNames = true
 	opts.DebuggerEnabled = true

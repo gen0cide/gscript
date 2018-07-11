@@ -18,9 +18,9 @@ import (
   "github.com/gen0cide/gscript/logger/standard"
   {{- end }}
 
-  {{ range $ns, $pkg := $.GoPackageByNamespace }}
-  // Importing dependency package {{ $pkg.Name }} for native dependency
-  "{{ $pkg.ImportPath }}"
+  // Importing masks
+  {{ range $ip, $mi := $.Linker.MaskedImports }}
+  {{ $mi.NewAlias }} "{{ $ip }}"
   {{ end }}
 )
 
@@ -99,22 +99,22 @@ func (o *{{ $.ID }}) {{ $.FunctionKey "import_native" }}() error {
 
   // -- BEGIN NATIVE PACKAGE IMPORTS
   {{ range $ns, $pkg := $.GoPackageByNamespace -}}
-  // Importing {{ $pkg.ImportPath }} under namespace {{ $ns }}
-  _np{{ $ns }} := &engine.NativePackage{
+  // Importing {{ $pkg.ImportPath }} under namespace {{ $pkg.MaskedName }} (originally was {{ $ns }})
+  _np{{ $pkg.MaskedName }} := &engine.NativePackage{
     ImportPath: "{{ $pkg.ImportPath }}",
     Name: "{{ $pkg.Name }}",
     SymbolTable: map[string]*engine.NativeFunc{},
   }
-  {{ range $fidx, $f := $pkg.LinkedFuncs -}}
+  {{ range $fidx, $f := $pkg.SuccessfullyLinkedFuncs -}}
   // Adding function pointer for native function {{ $pkg.Name }}.{{ $f.Function }} to symbol table
-  _nf{{ $ns }}{{ $fidx }} := &engine.NativeFunc{
+  _nf{{ $pkg.MaskedName }}{{ $fidx }} := &engine.NativeFunc{
     Name: "{{ $f.Function }}",
     Func: o.{{ $.ID }}{{ $f.ID }},
   }
-  _np{{ $ns }}.SymbolTable["{{ $f.Function }}"] = _nf{{ $ns}}{{ $fidx }}
+  _np{{ $pkg.MaskedName }}.SymbolTable["{{ $f.Function }}"] = _nf{{ $pkg.MaskedName }}{{ $fidx }}
   {{ end -}}
   // Injecting native package into the genesis VM
-  err = o.E.ImportNativePackage("{{ $ns }}", _np{{ $ns }})
+  err = o.E.ImportNativePackage("{{ $ns }}", _np{{ $pkg.MaskedName }})
   if err != nil {
     return err
   }
@@ -132,22 +132,22 @@ func (o *{{ $.ID }}) {{ $.FunctionKey "import_standard_library" }}() error {
   // -- BEGIN NATIVE PACKAGE IMPORTS
   {{ range $ns, $pkg := $.EnabledStandardLibs -}}
   // Importing Standard Library Package: {{ $ns }}
-  _np{{ $ns }} := &engine.NativePackage{
+  _np{{ $pkg.MaskedName }} := &engine.NativePackage{
     ImportPath: "{{ $pkg.ImportPath }}",
     Name: "{{ $ns }}",
     SymbolTable: map[string]*engine.NativeFunc{},
   }
 
-  {{ range $fidx, $f := $pkg.LinkedFuncs -}}
+  {{ range $fidx, $f := $pkg.SuccessfullyLinkedFuncs -}}
   // Adding function pointer for native function {{ $pkg.Name }}.{{ $f.Function }} to symbol table
-  _nf{{ $ns }}{{ $fidx }} := &engine.NativeFunc{
+  _nf{{ $pkg.MaskedName }}{{ $fidx }} := &engine.NativeFunc{
     Name: "{{ $f.Function }}",
     Func: o.{{ $.ID }}{{ $f.ID }},
   }
-  _np{{ $ns }}.SymbolTable["{{ $f.Function }}"] = _nf{{ $ns}}{{ $fidx }}
+  _np{{ $pkg.MaskedName }}.SymbolTable["{{ $f.Function }}"] = _nf{{ $pkg.MaskedName }}{{ $fidx }}
 
   {{ end -}}
-  ntp = append(ntp, _np{{ $ns }})
+  ntp = append(ntp, _np{{ $pkg.MaskedName }})
   {{ end -}}
 
   // Injecting standard library into the genesis VM
@@ -202,7 +202,7 @@ func {{ $.ID }}D(s string) []byte {
 }
 
 // Declaring Dynamically Linked Function Wrappers
-{{ range $_, $f := $.Linker.TypeAFuncs }}
+{{ range $_, $f := $.Linker.SuccessfullyLinkedFuncs }}
 // {{ $.ID }}{{ $f.ID }} is the linker function for {{ $f.GoPackage.Name }}.{{ $f.Function }}
 func (o *{{ $.ID }}) {{ $.ID }}{{ $f.ID }}(call otto.FunctionCall) otto.Value {
   // Argument Sanity Checks
@@ -234,7 +234,7 @@ func (o *{{ $.ID }}) {{ $.ID }}{{ $f.ID }}(call otto.FunctionCall) otto.Value {
   {{ $retLen := len $f.GoReturns }}
   {{ if gt $retLen 0 }}
   // Call the native function
-  {{ $f.GenerateReturnString "r" }} = {{ $f.GoPackage.Name }}.{{ $f.Function }}({{ $f.GenerateArgString "a" }})
+  {{ $f.GenerateReturnString "r" }} = {{ $f.GoPackage.MaskedName }}.{{ $f.Function }}({{ $f.GenerateArgString "a" }})
   {{ if eq $retLen 1 }}
   // Single return context - attempt to return that to VM
   retVal, err := call.Otto.ToValue(r0)
@@ -261,7 +261,7 @@ func (o *{{ $.ID }}) {{ $.ID }}{{ $f.ID }}(call otto.FunctionCall) otto.Value {
   {{ end -}}
   {{ else }}
   // This function has no returns, call the function and return undefined.
-  {{ $f.GoPackage.Name }}.{{ $f.Function }}({{ $f.GenerateArgString "a" }})
+  {{ $f.GoPackage.MaskedName }}.{{ $f.Function }}({{ $f.GenerateArgString "a" }})
   return otto.UndefinedValue()
   {{ end -}}
 }

@@ -3,9 +3,11 @@ package compiler
 import (
 	"bytes"
 	"fmt"
+	"go/build"
 	"go/parser"
 	"go/token"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strconv"
 	"sync"
@@ -317,6 +319,11 @@ func (g *GenesisVM) InitializeGoImports() error {
 		gop := NewGoPackage(g, m.Params["namespace"], m.Params["gopkg"], false)
 		g.GoPackageByImport[m.Params["gopkg"]] = gop
 		g.GoPackageByNamespace[m.Params["namespace"]] = gop
+		g.Linker.MaskedImports[m.Params["gopkg"]] = &MaskedImport{
+			ImportPath: m.Params["gopkg"],
+			OldAlias:   gop.Name,
+			NewAlias:   gop.MaskedName,
+		}
 	}
 	for l := range computil.GenesisLibs {
 		pkg, err := computil.ResolveStandardLibraryDir(l)
@@ -327,6 +334,9 @@ func (g *GenesisVM) InitializeGoImports() error {
 		gop.Dir = pkg.Dir
 		gop.Name = pkg.Name
 		g.StandardLibs[l] = gop
+		if g.DebuggerEnabled {
+			g.EnableStandardLibrary(l)
+		}
 	}
 	return nil
 }
@@ -371,15 +381,31 @@ func (g *GenesisVM) UnresolvedGoPackages() []string {
 	return unresolved
 }
 
-// func (g *GenesisVM) GolangSourceFileSeeker(fi os.FileInfo) bool {
-
-// }
-
 // WalkGoPackageAST parses the GoPackage directory for all AST files and concurrently walks each child file's AST
 // looking for functions that should be included by the linker
 func (g *GenesisVM) WalkGoPackageAST(gop *GoPackage, wg *sync.WaitGroup, errChan chan error) {
+	ctxt := build.Default
+	ctxt.GOOS = g.OS
+	ctxt.GOARCH = g.Arch
+	pkg, err := ctxt.Import(gop.ImportKey, gop.Dir, build.ImportComment)
+	if err != nil {
+		errChan <- err
+		wg.Done()
+		return
+	}
+	// NOTE: maybe we want to include pkg.CgoFiles?
+	validSrcFiles := map[string]bool{}
+
+	for _, f := range pkg.GoFiles {
+		validSrcFiles[f] = true
+	}
+
+	pkgFilter := func(fi os.FileInfo) bool {
+		return validSrcFiles[fi.Name()]
+	}
+
 	fs := token.NewFileSet()
-	pkgs, err := parser.ParseDir(fs, gop.Dir, nil, parser.ParseComments)
+	pkgs, err := parser.ParseDir(fs, gop.Dir, pkgFilter, parser.ParseComments)
 	if err != nil {
 		errChan <- err
 		return
@@ -393,11 +419,10 @@ func (g *GenesisVM) WalkGoPackageAST(gop *GoPackage, wg *sync.WaitGroup, errChan
 	fileFinChan := make(chan bool, 1)
 
 	for filename, file := range pkgs[gop.Name].Files {
-		if computil.SourceFileIsTest(file.Name.Name) {
+		if computil.SourceFileIsTest(filename) {
 			continue
 		}
 		filewg.Add(1)
-		_ = filename
 		go gop.WalkGoFileAST(file, &filewg, fileErrChan)
 	}
 
@@ -464,18 +489,31 @@ func (g *GenesisVM) BuildGolangAST() error {
 // structured mappings of both arguments (left swizzle) and returns (right swizzle) so the compiler
 // can map the function's shim in the intermediate representation
 func (g *GenesisVM) SwizzleNativeFunctionCalls() error {
-	for _, lf := range g.Linker.Funcs {
+	for id, lf := range g.Linker.Funcs {
 		if lf.GoDecl.Recv != nil {
 			return fmt.Errorf("golang function %s in package %s declares a method receiver which is unsupported by genesis at this time", lf.Function, lf.GoPackage.ImportPath)
 		}
 		err := lf.SwizzleToTheLeft()
 		if err != nil {
-			return err
+			lf.SwizzleError = err
+			lf.SwizzleSuccessful = false
+			g.Logger.Errorf("Could not swizzle native function %s: %v", id, err)
+			if lf.Caller != nil {
+				return fmt.Errorf("script %s calls %s which is not linkable", g.Name, id)
+			}
+			continue
 		}
 		err = lf.SwizzleToTheRight()
 		if err != nil {
-			return err
+			lf.SwizzleError = err
+			lf.SwizzleSuccessful = false
+			g.Logger.Errorf("Could not swizzle native function %s: %v", id, err)
+			if lf.Caller != nil {
+				return fmt.Errorf("script %s calls %s which is not linkable", g.Name, id)
+			}
+			continue
 		}
+		lf.SwizzleSuccessful = true
 	}
 	return nil
 }
@@ -612,6 +650,11 @@ func (g *GenesisVM) GetIDLiterals() []string {
 func (g *GenesisVM) EnableStandardLibrary(name string) (*GoPackage, error) {
 	if pkg, ok := g.StandardLibs[name]; ok {
 		g.EnabledStandardLibs[name] = pkg
+		g.Linker.MaskedImports[pkg.ImportPath] = &MaskedImport{
+			ImportPath: pkg.ImportPath,
+			OldAlias:   pkg.Name,
+			NewAlias:   pkg.MaskedName,
+		}
 		return pkg, nil
 	}
 	return nil, fmt.Errorf("invalid standard library detected: %s", name)
@@ -624,4 +667,13 @@ func (g *GenesisVM) ShouldIncludeAssetPackage() bool {
 		return false
 	}
 	return true
+}
+
+// GetMaskedImports is a helper function to gather the masked imports during rendering of the vm bundle
+func (g *GenesisVM) GetMaskedImports() []*MaskedImport {
+	mi := []*MaskedImport{}
+	for _, mi2 := range g.Linker.MaskedImports {
+		mi = append(mi, mi2)
+	}
+	return mi
 }

@@ -111,27 +111,27 @@ func (e *Engine) ImportNativePackage(namespace string, pkg *NativePackage) error
 
 // ImportStandardLibrary injects all provided native packages into the standard libraries namespace within the engine
 func (e *Engine) ImportStandardLibrary(pkgs []*NativePackage) error {
-	ns, err := e.DeclareNamespace("G")
+	_, err := e.DeclareNamespace("G")
 	if err != nil {
 		return err
 	}
 	for _, p := range pkgs {
 		pkgName := p.Name
-		pkgNs, err := e.DeclareNamespace(fmt.Sprintf("__std_lib_%s", pkgName))
+		nsObj, err := e.VM.Object(fmt.Sprintf("G.%s = {}", pkgName))
 		if err != nil {
 			return err
 		}
 		for n, f := range p.SymbolTable {
-			err = pkgNs.Set(n, f.Func)
+			err = nsObj.Set(n, f.Func)
 			if err != nil {
 				spew.Dump(f)
 				return err
 			}
 		}
-		err = ns.Set(pkgName, pkgNs.Value())
-		if err != nil {
-			return err
-		}
+		// err = ns.Set(pkgName, pkgNs)
+		// if err != nil {
+		// 	return err
+		// }
 	}
 	return nil
 }

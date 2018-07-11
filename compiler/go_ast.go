@@ -6,6 +6,8 @@ import (
 	"go/ast"
 	"reflect"
 	"sync"
+
+	"github.com/gen0cide/gscript/compiler/computil"
 )
 
 var (
@@ -33,12 +35,27 @@ var (
 	}
 )
 
+// MaskedImport is used to separate import namespaces within the intermediate representation
+type MaskedImport struct {
+	// ImportPath of the masked Import
+	ImportPath string
+
+	// OldAlias represents the alias in the target package source
+	OldAlias string
+
+	// NewAlias represents the aliased package name in the intermediate representation
+	NewAlias string
+}
+
 // GoPackage holds all the information about a Golang package that is being resolved to a given script
 type GoPackage struct {
 	sync.RWMutex
 
 	// Dir is the local path where this package is found
 	Dir string
+
+	// MaskedName is the masked import representation of this gopackage
+	MaskedName string
 
 	// ImportPath is the golang import path used for this package
 	ImportPath string
@@ -120,6 +137,7 @@ func NewGoPackage(v *GenesisVM, ns, ikey string, stdlib bool) *GoPackage {
 		VM:             v,
 		Namespace:      ns,
 		ImportKey:      ikey,
+		ImportPath:     ikey,
 		ScriptCallers:  map[string]*FunctionCall{},
 		ImportsByFile:  map[string][]*ast.ImportSpec{},
 		ImportsByAlias: map[string]*ast.ImportSpec{},
@@ -127,6 +145,7 @@ func NewGoPackage(v *GenesisVM, ns, ikey string, stdlib bool) *GoPackage {
 		FuncTable:      map[string]*ast.FuncDecl{},
 		LinkedFuncs:    []*LinkedFunction{},
 		IsStandardLib:  stdlib,
+		MaskedName:     computil.RandLowerAlphaString(6),
 	}
 }
 
@@ -139,6 +158,15 @@ func NewGoParamDef(l *LinkedFunction, idx int) *GoParamDef {
 	}
 	gpd.NameBuffer.WriteString("_")
 	return gpd
+}
+
+// NewMaskedImport creates a new import mask based on an import path and old alias
+func NewMaskedImport(ip, oa string) *MaskedImport {
+	return &MaskedImport{
+		ImportPath: ip,
+		OldAlias:   oa,
+		NewAlias:   computil.RandLowerAlphaString(6),
+	}
 }
 
 // import (
@@ -215,15 +243,12 @@ func (p *GoParamDef) ParseSelectorExpr(a *ast.SelectorExpr) error {
 	if !ok {
 		return fmt.Errorf("could not parse selector namespace in func %s", p.LinkedFunction.Function)
 	}
-	canResolve, err := p.LinkedFunction.CanResolveImportDep(x.Name)
+	resolved, err := p.LinkedFunction.CanResolveImportDep(x.Name)
 	if err != nil {
 		return err
 	}
-	if canResolve != true {
-		return fmt.Errorf("the package %s was not found in the import map", x.Name)
-	}
-	p.SigBuffer.WriteString(x.Name)
-	p.NameBuffer.WriteString(x.Name)
+	p.SigBuffer.WriteString(resolved)
+	p.NameBuffer.WriteString(resolved)
 	p.SigBuffer.WriteString(".")
 	p.NameBuffer.WriteString("_")
 	p.SigBuffer.WriteString(a.Sel.Name)
@@ -241,9 +266,9 @@ func (p *GoParamDef) ParseStarExpr(a *ast.StarExpr) error {
 // ParseIdent interprets a golang identifier into the appropriate GoParamDef structure
 func (p *GoParamDef) ParseIdent(a *ast.Ident) error {
 	if ok := builtInGoTypes[a.Name]; !ok {
-		p.SigBuffer.WriteString(p.LinkedFunction.GoPackage.Name)
+		p.SigBuffer.WriteString(p.LinkedFunction.GoPackage.MaskedName)
 		p.SigBuffer.WriteString(".")
-		p.NameBuffer.WriteString(p.LinkedFunction.GoPackage.Name)
+		p.NameBuffer.WriteString(p.LinkedFunction.GoPackage.MaskedName)
 		p.NameBuffer.WriteString("_")
 	}
 	p.SigBuffer.WriteString(a.Name)
@@ -265,14 +290,15 @@ func IsBuiltInGoType(s string) bool {
 // OR
 // VM Script calls this function explicitly
 func (gop *GoPackage) WalkGoFileAST(goast *ast.File, wg *sync.WaitGroup, errChan chan error) {
-	importAll := gop.VM.ImportAllNativeFuncs
 	ast.Inspect(goast, func(n ast.Node) bool {
 		fn, ok := n.(*ast.FuncDecl)
 		if ok {
 			funcName := fn.Name.Name
 			if fn.Name.IsExported() && fn.Recv == nil {
+				gop.Lock()
 				caller := gop.ScriptCallers[funcName]
-				if caller == nil && (!gop.IsStandardLib || !importAll) {
+				if caller == nil && gop.IsStandardLib == false && gop.VM.Options.ImportAllNativeFuncs == false {
+					gop.Unlock()
 					return true
 				}
 				lf, err := gop.VM.Linker.NewLinkedFunction(
@@ -284,11 +310,11 @@ func (gop *GoPackage) WalkGoFileAST(goast *ast.File, wg *sync.WaitGroup, errChan
 					gop,
 				)
 				if err != nil {
+					gop.Unlock()
 					errChan <- err
 					wg.Done()
 					return false
 				}
-				gop.Lock()
 				if len(gop.ImportsByFile[goast.Name.Name]) == 0 {
 					gop.ImportsByFile[goast.Name.Name] = goast.Imports
 				}
@@ -313,4 +339,17 @@ func (gop *GoPackage) SanityCheckScriptCallers() error {
 		}
 	}
 	return nil
+}
+
+// SuccessfullyLinkedFuncs is used during rendering to make sure that only linked functions that successfully
+// swizzled are going to be built into the source
+func (gop *GoPackage) SuccessfullyLinkedFuncs() []*LinkedFunction {
+	lf := []*LinkedFunction{}
+	for _, l := range gop.LinkedFuncs {
+		if l.SwizzleSuccessful {
+			lf = append(lf, l)
+		}
+	}
+
+	return lf
 }

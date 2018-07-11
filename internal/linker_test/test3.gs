@@ -13,7 +13,7 @@ function Deploy() {
 
   console.log("Starting Delete File");
   var errors = os.Remove("test_file.txt");
-  console.log("errors: " + errors);
+  console.log("errors: " + errors.Error());
 
   return true;
 }

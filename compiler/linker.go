@@ -49,6 +49,15 @@ type LinkedFunction struct {
 
 	// a reference to the parent genesis VM
 	GenesisVM *GenesisVM
+
+	// reference back to the parent linker
+	Linker *Linker
+
+	// A check to make sure this swizzle was successful
+	SwizzleSuccessful bool
+
+	// Any errors from the swizzling of this function
+	SwizzleError error
 }
 
 // Linker holds the maps between functions called from the genesis script and
@@ -62,37 +71,44 @@ type Linker struct {
 	VM *GenesisVM
 
 	// mapping of function name to the linked function object used during generation
-	Funcs map[*ast.FuncDecl]*LinkedFunction
+	Funcs map[string]*LinkedFunction
+
+	// MaskedImports map a golang dependency by import path into a translated path
+	MaskedImports map[string]*MaskedImport
 }
 
 // NewLinker creates a new linker for the given genesis VM
 func NewLinker(vm *GenesisVM) *Linker {
 	return &Linker{
-		VM:    vm,
-		Funcs: map[*ast.FuncDecl]*LinkedFunction{},
+		VM:            vm,
+		Funcs:         map[string]*LinkedFunction{},
+		MaskedImports: map[string]*MaskedImport{},
 	}
 }
 
 // NewLinkedFunction creates a function mapping in the VMs linker between golang AST function declearations and genesis AST function calls
 // so the compiler can build the function interfaces between the virtual machine and the native golang package
 func (l *Linker) NewLinkedFunction(fnName string, caller *FunctionCall, file *ast.File, godecl *ast.FuncDecl, imports []*ast.ImportSpec, gopkg *GoPackage) (*LinkedFunction, error) {
-	if l.Funcs[godecl] != nil {
-		return nil, fmt.Errorf("vm %s already has a linker for go func %s under package %s - new function is in package %s", l.VM.Name, fnName, l.Funcs[godecl].GoPackage.ImportPath, gopkg.ImportPath)
+	realFn := fmt.Sprintf("%s.%s", gopkg.Name, fnName)
+	l.Lock()
+	if l.Funcs[realFn] != nil {
+		l.Unlock()
+		return nil, fmt.Errorf("vm %s already has a linker for go func %s under package %s - new function is in package %s", l.VM.Name, fnName, l.Funcs[realFn].GoPackage.ImportPath, gopkg.ImportPath)
 	}
 	lf := &LinkedFunction{
 		ID:        computil.RandLowerAlphaString(16),
-		Function:  caller.FuncName,
 		Caller:    caller,
 		File:      file,
+		Function:  fnName,
 		GoDecl:    godecl,
 		Imports:   imports,
 		GoPackage: gopkg,
 		GenesisVM: l.VM,
+		Linker:    l,
 		GoArgs:    []*GoParamDef{},
 		GoReturns: []*GoParamDef{},
 	}
-	l.Lock()
-	l.Funcs[godecl] = lf
+	l.Funcs[realFn] = lf
 	l.Unlock()
 	return lf, nil
 }
@@ -128,6 +144,10 @@ func (l *LinkedFunction) SwizzleToTheLeft() error {
 // to allow multiple return values to be returned in single value context (required by javascript)
 func (l *LinkedFunction) SwizzleToTheRight() error {
 	aOff := 0
+	if l.GoDecl.Type.Results == nil {
+		// this function has no returns
+		return nil
+	}
 	for idx, p := range l.GoDecl.Type.Results.List {
 		masterP := NewGoParamDef(l, idx)
 		err := masterP.Interpret(p.Type)
@@ -155,25 +175,42 @@ func (l *LinkedFunction) SwizzleToTheRight() error {
 
 // CanResolveImportDep takes a package string and compares it against the linked functions known import
 // table to determine if the referenced namespace is declared in the golang AST as a referenced sub-type
-func (l *LinkedFunction) CanResolveImportDep(pkg string) (bool, error) {
+func (l *LinkedFunction) CanResolveImportDep(pkg string) (string, error) {
 	if pkg == "." {
-		return false, fmt.Errorf("should not attempt to import anonymously in package %s", l.File.Name.Name)
+		return "", fmt.Errorf("should not attempt to import anonymously in package %s", l.File.Name.Name)
 	}
 	for _, i := range l.Imports {
+		normalName := strings.Replace(i.Path.Value, `"`, ``, -1)
 		if i.Name != nil {
 			if i.Name.Name == pkg {
-				return true, nil
+				l.Linker.Lock()
+				mi := l.Linker.MaskedImports[normalName]
+				if mi == nil {
+					mask := NewMaskedImport(normalName, i.Name.Name)
+					l.Linker.MaskedImports[normalName] = mask
+					mi = mask
+				}
+				l.Linker.Unlock()
+				return mi.NewAlias, nil
 			}
 		} else {
 			pkgParts := strings.Split(i.Path.Value, "/")
 			packageAlias := pkgParts[len(pkgParts)-1]
 			newAlias := strings.Replace(packageAlias, `"`, ``, -1)
 			if newAlias == pkg {
-				return true, nil
+				l.Linker.Lock()
+				mi := l.Linker.MaskedImports[normalName]
+				if mi == nil {
+					mask := NewMaskedImport(normalName, newAlias)
+					l.Linker.MaskedImports[normalName] = mask
+					mi = mask
+				}
+				l.Linker.Unlock()
+				return mi.NewAlias, nil
 			}
 		}
 	}
-	return false, fmt.Errorf("could not resolve package %s used in function %s inside package %s", pkg, l.Function, l.GoPackage.ImportPath)
+	return "", fmt.Errorf("could not resolve package %s used in function %s inside package %s", pkg, l.Function, l.GoPackage.ImportPath)
 }
 
 // GenerateReturnString generates a golang return signature to use in the interface code
@@ -195,11 +232,11 @@ func (l *LinkedFunction) GenerateArgString(prefix string) string {
 	return strings.Join(args, ", ")
 }
 
-// TypeAFuncs is a helper method for the linker for any edge case packages to the standard library (asset for example)
-func (l *Linker) TypeAFuncs() []*LinkedFunction {
+// SuccessfullyLinkedFuncs is a helper method for the linker for any edge case packages to the standard library (asset for example)
+func (l *Linker) SuccessfullyLinkedFuncs() []*LinkedFunction {
 	ret := []*LinkedFunction{}
 	for _, f := range l.Funcs {
-		if typeBFuncPkgs[f.GoPackage.Name] == false {
+		if f.SwizzleSuccessful {
 			ret = append(ret, f)
 		}
 	}
