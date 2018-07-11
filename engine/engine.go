@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/gen0cide/gscript/logger"
+	"github.com/gen0cide/gscript/logger/null"
 	"github.com/robertkrimen/otto"
 	"github.com/robertkrimen/otto/file"
 	"github.com/robertkrimen/otto/parser"
@@ -15,7 +17,7 @@ type Engine struct {
 	VM *otto.Otto
 
 	// logger interface for any output
-	Logger Logger
+	Logger logger.Logger
 
 	// maps the asset names to the functions that return their bytes
 	Imports map[string]func() []byte
@@ -68,7 +70,7 @@ func New(name, id string, timeout int, entrypoint string) *Engine {
 		Packages:   map[string]*NativePackage{},
 	}
 	e.InitVM()
-	e.SetLogger(&NullLogger{})
+	e.SetLogger(&null.Logger{})
 	//e.SetLogger(logger.NewStandardLogrusLogger(nil, name, false, false))
 	e.setGlobalRef()
 	return e
@@ -167,7 +169,7 @@ func (e *Engine) Exec(fn string) (otto.Value, error) {
 }
 
 // SetLogger overrides the logging interface for this virtual machine.
-func (e *Engine) SetLogger(l Logger) error {
+func (e *Engine) SetLogger(l logger.Logger) error {
 	e.Logger = l
 	return HijackConsoleLogging(e)
 }

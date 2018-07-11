@@ -15,7 +15,7 @@ func (e *Engine) SetEntryPoint(fnName string) {
 	e.EntryPoint = fnName
 }
 
-// RunWithTimeout evaluates an expression in the VM that honors the VMs timeout setting
+// LoadScriptWithTimeout evaluates an expression in the VM that honors the VMs timeout setting
 func (e *Engine) LoadScriptWithTimeout(script *ast.Program) (otto.Value, error) {
 	start := time.Now()
 	defer e.recoveryHandler(start)
@@ -39,10 +39,9 @@ func (e *Engine) recoveryHandler(begin time.Time) {
 		if caught == errTimeout {
 			e.Logger.Errorf("VM hit timeout after %v seconds", duration)
 			return
-		} else {
-			e.Logger.Errorf("VM encountered unexpected error: %v", caught)
-			return
 		}
+		e.Logger.Errorf("VM encountered unexpected error: %v", caught)
+		return
 	}
 	return
 }

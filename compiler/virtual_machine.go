@@ -74,8 +74,8 @@ type GenesisVM struct {
 	// FileSet for parsing the genesis ASTs
 	FileSet *gfile.FileSet
 
-	// represents script as an AST
-	AST *gast.Program
+	// represents script as an GenesisAST
+	GenesisAST *gast.Program
 
 	// holds the value of parsed macros
 	Macros []*Macro
@@ -130,7 +130,7 @@ func NewGenesisVM(name, path, os, arch string, data []byte, prog *gast.Program) 
 		Data:                 data,
 		RequiredArch:         arch,
 		RequiredOS:           os,
-		AST:                  prog,
+		GenesisAST:           prog,
 		Embeds:               map[string]*EmbeddedFile{},
 		Macros:               []*Macro{},
 		GoPackageByImport:    map[string]*GoPackage{},
@@ -145,23 +145,23 @@ func NewGenesisVM(name, path, os, arch string, data []byte, prog *gast.Program) 
 
 // scan for macros
 // initialize go imports
-// walk genesis AST for golang calls
+// walk genesis GenesisAST for golang calls
 // locate golang dependencies
-// walk golang AST for func declarations
-// link golang AST with genesis AST
+// walk golang GenesisAST for func declarations
+// link golang GenesisAST with genesis GenesisAST
 
 // ProcessMacros runs the preprocessor to locate and extract genesis macro's
 // out of the script to be used during compilation
 func (g *GenesisVM) ProcessMacros() error {
-	g.Macros = ScanForMacros(g.AST.Comments)
+	g.Macros = ScanForMacros(g.GenesisAST.Comments)
 	return nil
 }
 
-// DetectTargetEngineVersion examines the genesis script's AST to determine whether required top level functions exist,
+// DetectTargetEngineVersion examines the genesis script's GenesisAST to determine whether required top level functions exist,
 // and if so, for what version of the engine they target. This mapping can be found in CallablesByEngineVersion
 func (g *GenesisVM) DetectTargetEngineVersion() error {
 	cFuncs := map[string]bool{}
-	for _, s := range g.AST.Body {
+	for _, s := range g.GenesisAST.Body {
 		fnStmt, ok := s.(*gast.FunctionStatement)
 		if !ok {
 			continue
@@ -324,7 +324,7 @@ func (g *GenesisVM) WalkGenesisAST() error {
 		script: g,
 		source: string(g.Data),
 	}
-	gast.Walk(walker, g.AST)
+	gast.Walk(walker, g.GenesisAST)
 	return nil
 }
 

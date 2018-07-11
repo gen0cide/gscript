@@ -6,6 +6,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/gen0cide/gscript/engine"
 	"github.com/gen0cide/gscript/logger"
+	"github.com/gen0cide/gscript/logger/standard"
 	"github.com/robertkrimen/otto"
 	readline "gopkg.in/readline.v1"
 )
@@ -13,13 +14,13 @@ import (
 // Debugger is a wrapper type for handling interactive debug consoles in the genesis engine
 type Debugger struct {
 	VM        *engine.Engine
-	Logger    engine.Logger
-	OldLogger engine.Logger
+	Logger    logger.Logger
+	OldLogger logger.Logger
 }
 
 // New returns a new debugger object wrapping the provided engine
 func New(e *engine.Engine) *Debugger {
-	dbgLogger := logger.NewStandardLogrusLogger(nil, "debugger", false, true)
+	dbgLogger := standard.NewStandardLogger(nil, "debugger", false, true)
 	dbg := &Debugger{
 		VM:        e,
 		Logger:    dbgLogger,
@@ -50,7 +51,7 @@ func (d *Debugger) runDebugger() error {
 	if err != nil {
 		return err
 	}
-	logger.PrintLogo()
+	standard.PrintLogo()
 	title := fmt.Sprintf(
 		"%s %s %s %s",
 		color.HiWhiteString("***"),

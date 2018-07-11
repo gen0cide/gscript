@@ -14,10 +14,11 @@ import (
 	"sync"
 
 	"github.com/gen0cide/gscript/compiler/computil"
-	"github.com/gen0cide/gscript/engine"
+	"github.com/gen0cide/gscript/logger"
 )
 
 const (
+	// GENERICMATCH is a string literal for generic regex matching strings in the executable
 	GENERICMATCH = `[[:word:]\.\/\(\)\*\[\]\&\%\{\}\$ ]*`
 )
 
@@ -58,20 +59,23 @@ var (
 	hardDefaults = strings.Split(string(computil.MustAsset("hard_reserved")), "\n")
 )
 
+// Mordor is a post compilation obfuscator type that replaces ascii strings out of binary files
 type Mordor struct {
 	sync.RWMutex
 	Horde  map[string]*Orc
 	Dead   map[string]bool
-	Logger engine.Logger
+	Logger logger.Logger
 }
 
+// Orc is a type to represent a single string match that should be replaced in a binary
 type Orc struct {
 	Name   string
 	Hits   int
 	Filter *regexp.Regexp
 }
 
-func NewMordor(l engine.Logger) *Mordor {
+// NewMordor returns a new mordor object with some sane defaults added specifically for genesis
+func NewMordor(l logger.Logger) *Mordor {
 	m := &Mordor{
 		Horde:  map[string]*Orc{},
 		Dead:   map[string]bool{},
@@ -80,9 +84,9 @@ func NewMordor(l engine.Logger) *Mordor {
 	for _, im := range importantMatches {
 		m.AddSingleGhostLiteral(im)
 	}
-	libDir, err := computil.ResolveEngineLibrary()
+	libDir, err := computil.ResolveEngineDir()
 	if err == nil {
-		ghosts, err := WalkEngineLibForGhosts(libDir, "engine")
+		ghosts, err := WalkGoPackageForGhosts(libDir, "engine")
 		if err == nil {
 			m.AddGhosts(ghosts)
 		}
@@ -98,7 +102,8 @@ func buildFilter(s string) string {
 	return strings.Join([]string{s, GENERICMATCH}, "")
 }
 
-func WalkEngineLibForGhosts(dirpath string, pkgName string) ([]string, error) {
+// WalkGoPackageForGhosts gathers all ghosts from a specified gopackage's directory and package name
+func WalkGoPackageForGhosts(dirpath string, pkgName string) ([]string, error) {
 	ghosts := []string{}
 	fs := token.NewFileSet()
 	pkgGlob, err := parser.ParseDir(fs, dirpath, nil, parser.ParseComments)
@@ -129,6 +134,7 @@ func WalkEngineLibForGhosts(dirpath string, pkgName string) ([]string, error) {
 	return ghosts, nil
 }
 
+// AddGhosts bulk adds a list of ghosts to this mordor object's Horde
 func (m *Mordor) AddGhosts(g []string) {
 	for _, e := range g {
 		if m.Dead[e] == true || m.Horde[e] != nil {
@@ -147,6 +153,7 @@ func (m *Mordor) AddGhosts(g []string) {
 	}
 }
 
+// AddSingleGhostLiteral adds a ghost without building a generic regular expression filter
 func (m *Mordor) AddSingleGhostLiteral(g string) error {
 	if reservedWords[g] == true {
 		m.Lock()
@@ -172,6 +179,7 @@ func (m *Mordor) AddSingleGhostLiteral(g string) error {
 	return nil
 }
 
+// AddSingleGhost adds a ghost with a filter appended to the end of the regular expression
 func (m *Mordor) AddSingleGhost(g string) error {
 	if reservedWords[g] == true {
 		m.Lock()
@@ -198,6 +206,8 @@ func (m *Mordor) AddSingleGhost(g string) error {
 	return nil
 }
 
+// PrintStats is a debug function that uses the Mordor object's logger and prints stats about
+// which Orcs matched and how many times
 func (m *Mordor) PrintStats() {
 	for n, o := range m.Horde {
 		if o.Hits == 0 {
@@ -207,6 +217,7 @@ func (m *Mordor) PrintStats() {
 	}
 }
 
+// Assault runs processes the given binary file by enumaerating each orc's filter on it to obfuscate strings out of the file
 func (m *Mordor) Assault(srcFile string) error {
 	data, err := ioutil.ReadFile(srcFile)
 	if err != nil {

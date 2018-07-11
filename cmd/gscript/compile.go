@@ -10,8 +10,7 @@ import (
 )
 
 var (
-	defaultCompilerOptions = compiler.DefaultOptions()
-	compileCommand         = cli.Command{
+	compileCommand = cli.Command{
 		Name:      "compile",
 		Usage:     "compiles the provided scripts using the genesis compiler",
 		UsageText: "gscript compile [OPTIONS] SCRIPT [SCRIPT SCRIPT ...]",
@@ -19,71 +18,107 @@ var (
 			cli.StringFlag{
 				Name:        "os",
 				Usage:       "operating system to target for native compilation",
-				Value:       defaultCompilerOptions.OS,
-				Destination: &defaultCompilerOptions.OS,
+				Value:       defaultCompileOptions.OS,
+				Destination: &defaultCompileOptions.OS,
 			},
 			cli.StringFlag{
 				Name:        "arch",
 				Usage:       "architecture to target for native compilation",
-				Value:       defaultCompilerOptions.Arch,
-				Destination: &defaultCompilerOptions.Arch,
+				Value:       defaultCompileOptions.Arch,
+				Destination: &defaultCompileOptions.Arch,
 			},
 			cli.StringFlag{
 				Name:        "output-file, o",
 				Usage:       "location to write final compiled binary",
-				Value:       defaultCompilerOptions.OutputFile,
-				Destination: &defaultCompilerOptions.OutputFile,
+				Value:       defaultCompileOptions.OutputFile,
+				Destination: &defaultCompileOptions.OutputFile,
 			},
 			cli.BoolFlag{
 				Name:        "keep-build-dir",
 				Usage:       "keep the build directory of the genesis intermediate representation (default: false)",
-				Destination: &defaultCompilerOptions.SaveBuildDir,
+				Destination: &defaultCompileOptions.SaveBuildDir,
 			},
 			cli.BoolFlag{
 				Name:        "enable-upx-compression",
 				Usage:       "compress the final binary using UPX (default: false)",
-				Destination: &defaultCompilerOptions.UPXEnabled,
+				Destination: &defaultCompileOptions.UPXEnabled,
 			},
 			cli.BoolFlag{
 				Name:        "enable-logging",
 				Usage:       "enable logging in the final binary for debugging (default: false)",
-				Destination: &defaultCompilerOptions.LoggingEnabled,
+				Destination: &defaultCompileOptions.LoggingEnabled,
 			},
 			cli.BoolFlag{
 				Name:        "enable-debugging",
 				Usage:       "enable the interactive debugger in the final binary (default: false)",
-				Destination: &defaultCompilerOptions.DebuggerEnabled,
+				Destination: &defaultCompileOptions.DebuggerEnabled,
 			},
 			cli.BoolFlag{
 				Name:        "enable-human-readable-names",
 				Usage:       "use human readable names in the genesis intermediate representation (default: false)",
-				Destination: &defaultCompilerOptions.UseHumanReadableNames,
+				Destination: &defaultCompileOptions.UseHumanReadableNames,
 			},
 			cli.BoolFlag{
 				Name:        "enable-import-all-native-funcs",
 				Usage:       "link all possible native functions into the runtime, not just those called by the scripts (default: false)",
-				Destination: &defaultCompilerOptions.ImportAllNativeFuncs,
+				Destination: &defaultCompileOptions.ImportAllNativeFuncs,
 			},
 			cli.BoolFlag{
 				Name:        "disable-native-compilation",
 				Usage:       "do not compile the intermediate representation to a native binary (default: false)",
-				Destination: &defaultCompilerOptions.SkipCompilation,
+				Destination: &defaultCompileOptions.SkipCompilation,
+			},
+			cli.BoolFlag{
+				Name:        "enable-test-build",
+				Usage:       "enable the test harness in the build - for testing only! (default: false)",
+				Destination: &defaultCompileOptions.EnableTestBuild,
 			},
 			cli.IntFlag{
 				Name:        "obfuscation-level",
 				Usage:       "override the default obfuscation level, where argument can be 0-4 with 0 being full and 4 being none",
-				Destination: &defaultCompilerOptions.ObfuscationLevel,
+				Destination: &defaultCompileOptions.ObfuscationLevel,
 			},
 		},
 		Action: compileScriptCommand,
 	}
+
+	boolText = map[bool]string{
+		true:  color.New(color.FgHiCyan, color.Bold).Sprintf("%-72s", `[ENABLED]`),
+		false: color.New(color.FgRed).Sprintf("%-72s", `[DISABLED]`),
+	}
 )
+
+func obfText(lvl int) string {
+	switch lvl {
+	case 0:
+		return color.New(color.FgRed).Sprintf("%-72s", `ALL OBFUSCATION ENABLED`)
+	case 1:
+		return color.New(color.FgHiMagenta, color.Bold).Sprintf("%-72s", `POST COMPILATION DISABLED`)
+	case 2:
+		return color.New(color.FgHiYellow, color.Bold).Sprintf("%-72s", `PRE & POST COMPILATION DISABLED`)
+	default:
+		return color.New(color.FgHiCyan, color.Bold, color.BlinkRapid).Sprintf("%-72s", `ALL OBFUSCATION DISABLED`)
+	}
+}
 
 func copt(label string, val interface{}) string {
 	prefix := color.HiWhiteString("%25s", label)
-	middle := color.HiWhiteString(":")
-	ending := color.HiGreenString("%-72v", val)
-	return fmt.Sprintf("%s %s %s", prefix, middle, ending)
+	middle := color.YellowString(":")
+	ending := bopt(val)
+	return fmt.Sprintf("%s%s %s", prefix, middle, ending)
+}
+
+func bopt(val interface{}) string {
+	switch v := val.(type) {
+	case string:
+		return color.HiGreenString("%-72s", v)
+	case int:
+		return obfText(v)
+	case bool:
+		return boolText[v]
+	default:
+		return fmt.Sprintf("%-72v", val)
+	}
 }
 
 func cinc(label string, val interface{}) string {
@@ -99,17 +134,17 @@ func compileScriptCommand(c *cli.Context) error {
 	}
 	cliLogger.Info(color.HiRedString("*** COMPILER OPTIONS ***"))
 	cliLogger.Info("")
-	cliLogger.Info(copt("OS", defaultCompilerOptions.OS))
-	cliLogger.Info(copt("Arch", defaultCompilerOptions.Arch))
-	cliLogger.Info(copt("Output File", defaultCompilerOptions.OutputFile))
-	cliLogger.Info(copt("Keep Build Directory", defaultCompilerOptions.SaveBuildDir))
-	cliLogger.Info(copt("UPX Compression Enabled", defaultCompilerOptions.UPXEnabled))
-	cliLogger.Info(copt("Logging Enabled", defaultCompilerOptions.LoggingEnabled))
-	cliLogger.Info(copt("Debugger Enabled", defaultCompilerOptions.DebuggerEnabled))
-	cliLogger.Info(copt("Human Redable Names", defaultCompilerOptions.UseHumanReadableNames))
-	cliLogger.Info(copt("Import All Native Funcs", defaultCompilerOptions.ImportAllNativeFuncs))
-	cliLogger.Info(copt("Skip Compilation", defaultCompilerOptions.SkipCompilation))
-	cliLogger.Info(copt("Obfuscation Level", defaultCompilerOptions.ObfuscationLevel))
+	cliLogger.Info(copt("OS", defaultCompileOptions.OS))
+	cliLogger.Info(copt("Arch", defaultCompileOptions.Arch))
+	cliLogger.Info(copt("Output File", defaultCompileOptions.OutputFile))
+	cliLogger.Info(copt("Keep Build Directory", defaultCompileOptions.SaveBuildDir))
+	cliLogger.Info(copt("UPX Compression", defaultCompileOptions.UPXEnabled))
+	cliLogger.Info(copt("Logging Support", defaultCompileOptions.LoggingEnabled))
+	cliLogger.Info(copt("Debugger Support", defaultCompileOptions.DebuggerEnabled))
+	cliLogger.Info(copt("Human Redable Names", defaultCompileOptions.UseHumanReadableNames))
+	cliLogger.Info(copt("Import All Native Funcs", defaultCompileOptions.ImportAllNativeFuncs))
+	cliLogger.Info(copt("Skip Compilation", defaultCompileOptions.SkipCompilation))
+	cliLogger.Info(copt("Obfuscation Level", defaultCompileOptions.ObfuscationLevel))
 	cliLogger.Info("")
 	cliLogger.Info(color.HiRedString("***  SOURCE SCRIPTS  ***"))
 	cliLogger.Info("")
@@ -119,7 +154,7 @@ func compileScriptCommand(c *cli.Context) error {
 	cliLogger.Info("")
 	cliLogger.Info(color.HiRedString("************************"))
 	cliLogger.Info("")
-	gc := compiler.NewWithOptions(defaultCompilerOptions)
+	gc := compiler.NewWithOptions(defaultCompileOptions)
 	gc.SetLogger(cliLogger)
 	for _, a := range c.Args() {
 		gc.AddScript(a)
@@ -129,7 +164,7 @@ func compileScriptCommand(c *cli.Context) error {
 		return err
 	}
 	cliLogger.Infof("Compiled binary located at:\n\n%s\n", gc.OutputFile)
-	if defaultCompilerOptions.SaveBuildDir {
+	if defaultCompileOptions.SaveBuildDir {
 		cliLogger.Infof("Build Dir Located At: %s", gc.BuildDir)
 	}
 	return nil

@@ -6,13 +6,15 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/gen0cide/gscript"
-	"github.com/gen0cide/gscript/logger"
+	"github.com/gen0cide/gscript/compiler/computil"
+	"github.com/gen0cide/gscript/logger/standard"
 	"github.com/urfave/cli"
 )
 
 var (
-	cliLogger     = logger.NewStandardLogrusLogger(nil, "cli", false, true)
-	displayBefore = true
+	defaultCompileOptions = computil.DefaultOptions()
+	cliLogger             = standard.NewStandardLogger(nil, "cli", false, true)
+	displayBefore         = true
 )
 
 func init() {
@@ -57,7 +59,7 @@ func main() {
 
 	app.Before = func(c *cli.Context) error {
 		if c.Args().Get(0) != "shell" {
-			fmt.Fprintf(c.App.Writer, "%s\n\n", logger.AsciiLogo())
+			fmt.Fprintf(c.App.Writer, "%s\n\n", standard.ASCIILogo())
 		}
 		return nil
 	}

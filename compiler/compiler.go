@@ -14,7 +14,8 @@ import (
 
 	"github.com/gen0cide/gscript/compiler/computil"
 	"github.com/gen0cide/gscript/compiler/obfuscator"
-	"github.com/gen0cide/gscript/engine"
+	"github.com/gen0cide/gscript/logger"
+	"github.com/gen0cide/gscript/logger/null"
 	gparser "github.com/robertkrimen/otto/parser"
 	"github.com/uudashr/gopkgs"
 	"golang.org/x/tools/imports"
@@ -36,7 +37,7 @@ type Compiler struct {
 	SortedVMs map[int][]*GenesisVM
 
 	// logging object to be used
-	Logger engine.Logger
+	Logger logger.Logger
 
 	// source buffer used by the pre-compilation obfuscator
 	sourceBuffer bytes.Buffer
@@ -45,7 +46,7 @@ type Compiler struct {
 	UniqPriorities []int
 
 	// configuration object for the compiler
-	Options
+	computil.Options
 
 	stringCache []string
 }
@@ -53,8 +54,8 @@ type Compiler struct {
 // NewWithDefault returns a new compiler object with default options
 func NewWithDefault() *Compiler {
 	return &Compiler{
-		Logger:         &engine.NullLogger{},
-		Options:        DefaultOptions(),
+		Logger:         &null.Logger{},
+		Options:        computil.DefaultOptions(),
 		SortedVMs:      map[int][]*GenesisVM{},
 		vms:            []*GenesisVM{},
 		UniqPriorities: []int{},
@@ -63,9 +64,9 @@ func NewWithDefault() *Compiler {
 }
 
 // NewWithOptions returns a new compiler object with custom options
-func NewWithOptions(o Options) *Compiler {
+func NewWithOptions(o computil.Options) *Compiler {
 	return &Compiler{
-		Logger:         &engine.NullLogger{},
+		Logger:         &null.Logger{},
 		Options:        o,
 		SortedVMs:      map[int][]*GenesisVM{},
 		vms:            []*GenesisVM{},
@@ -75,7 +76,7 @@ func NewWithOptions(o Options) *Compiler {
 }
 
 // SetLogger overrides the logger for the compiler (defaults to an engine.NullLogger)
-func (c *Compiler) SetLogger(l engine.Logger) {
+func (c *Compiler) SetLogger(l logger.Logger) {
 	c.Logger = l
 }
 
@@ -105,7 +106,11 @@ func (c *Compiler) AddScript(scriptPath string) error {
 
 // Do runs all compiler functions once scripts are added to it
 func (c *Compiler) Do() error {
-	err := c.CreateBuildDir()
+	err := c.Options.CheckForConfigErrors()
+	if err != nil {
+		return err
+	}
+	err = c.CreateBuildDir()
 	if err != nil {
 		return err
 	}

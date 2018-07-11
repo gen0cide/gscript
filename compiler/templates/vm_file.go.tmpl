@@ -15,7 +15,7 @@ import (
   "github.com/gen0cide/gscript/debugger"
   {{- end }}
   {{ if $.HasLoggingEnabled -}}
-  "github.com/gen0cide/gscript/logger"
+  "github.com/gen0cide/gscript/logger/standard"
   {{- end }}
 
   {{ range $ns, $pkg := $.GoPackageByNamespace }}
@@ -45,7 +45,7 @@ type {{ $.ID }} struct {
 func New{{ $.ID }}() *{{ $.ID }} {
   te := engine.New("{{ $.Name }}", "{{ $.ID }}", 30, "Execute")
   {{ if $.HasLoggingEnabled -}}
-  al := logger.NewStandardLogrusLogger(nil, "{{ $.Name }}", false, false)
+  al := standard.NewStandardLogger(nil, "{{ $.Name }}", false, false)
   te.SetLogger(al)
   {{- end }}
   {{ if $.HasDebuggingEnabled }}
