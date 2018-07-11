@@ -4,9 +4,6 @@
 version: 2
 jobs:
   build:
-    branches:
-      ignore:
-        - master
     docker:
       # specify the version
       - image: circleci/golang:1.10
@@ -27,3 +24,5 @@ jobs:
       # specify any bash command here prefixed with `run: `
       - run: go get -v -t -d ./...
       - run: go test -v ./...
+      - run: cd cmd/gscript
+      - run: go build -x -v
