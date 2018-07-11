@@ -6,7 +6,7 @@ jobs:
   build:
     branches:
       only:
-        - v1
+        - /v1*/
     docker:
       # specify the version
       - image: circleci/golang:1.10
