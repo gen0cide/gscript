@@ -4,6 +4,10 @@
 version: 2
 jobs:
   build:
+    branches:
+      only:
+        - alex-dev-v1
+        - circleci-20-test
     docker:
       # specify the version
       - image: circleci/golang:1.10
