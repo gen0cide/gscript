@@ -6,8 +6,7 @@ jobs:
   build:
     branches:
       only:
-        - alex-dev-v1
-        - circleci-20-test
+        - v1
     docker:
       # specify the version
       - image: circleci/golang:1.10
@@ -21,10 +20,11 @@ jobs:
     #### expecting it in the form of
     ####   /go/src/github.com/circleci/go-tool
     ####   /go/src/bitbucket.org/circleci/go-tool
-    working_directory: /usr/local/go/src/github.com/{{ORG_NAME}}/{{REPO_NAME}}
+    working_directory: /go/src/github.com/{{ORG_NAME}}/{{REPO_NAME}}
     steps:
       - checkout
 
       # specify any bash command here prefixed with `run: `
+      - run: go get -v -t -d gopkg.in/gen0cide/gscript.v1
       - run: go get -v -t -d ./...
       - run: go test -v ./...
