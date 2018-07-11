@@ -3,7 +3,6 @@ package compiler
 import (
 	"bytes"
 	"fmt"
-	"go/ast"
 	"go/parser"
 	"go/token"
 	"io/ioutil"
@@ -13,6 +12,7 @@ import (
 	"text/template"
 
 	"github.com/gen0cide/gscript/compiler/computil"
+	"github.com/gen0cide/gscript/logger"
 	gast "github.com/robertkrimen/otto/ast"
 	gfile "github.com/robertkrimen/otto/file"
 	"github.com/tdewolff/minify"
@@ -27,6 +27,7 @@ var (
 		"init",
 		"preload",
 		"import_assets",
+		"import_standard_library",
 		"import_script",
 		"import_native",
 		"execute",
@@ -91,6 +92,10 @@ type GenesisVM struct {
 	// value = reference to a go package object
 	GoPackageByNamespace map[string]*GoPackage
 
+	// StandardLibraries holds all references to used genesis standard library
+	// packages that will be included in the build
+	EnabledStandardLibs map[string]*GoPackage
+
 	// required operating system for this script (GOOS)
 	RequiredOS string
 
@@ -110,27 +115,36 @@ type GenesisVM struct {
 	// usually either single element (Deploy) or the legacy compatible BeforeDeploy, Deploy, AfterDeploy
 	EngineVersion int
 
-	// reference to the parent compiler
-	Compiler *Compiler
+	// reference to compiler options
+	computil.Options
 
 	// GenesisFile holds the intermediate representation of this VM's bundle code
 	GenesisFile *bytes.Buffer
 
 	// DecryptionKey is the key used to decrypt the embedded assets
 	DecryptionKey string
+
+	// Logger to publish output from
+	Logger logger.Logger
+
+	// EnginePackage is the go package this engine should use
+	EnginePackage *GoPackage
+
+	// StandardLibs holds references to all possible standard libs
+	StandardLibs map[string]*GoPackage
 }
 
 // NewGenesisVM creates a new virtual machine object for the compiler
-func NewGenesisVM(name, path, os, arch string, data []byte, prog *gast.Program) *GenesisVM {
+func NewGenesisVM(name, path string, data []byte, prog *gast.Program, opts computil.Options, logger logger.Logger) *GenesisVM {
 	vm := &GenesisVM{
 		ID:                   computil.RandUpperAlphaString(14),
 		SourceFile:           path,
 		Name:                 name,
 		FileSet:              &gfile.FileSet{},
 		Data:                 data,
-		RequiredArch:         arch,
-		RequiredOS:           os,
 		GenesisAST:           prog,
+		Options:              opts,
+		Logger:               logger,
 		Embeds:               map[string]*EmbeddedFile{},
 		Macros:               []*Macro{},
 		GoPackageByImport:    map[string]*GoPackage{},
@@ -138,6 +152,8 @@ func NewGenesisVM(name, path, os, arch string, data []byte, prog *gast.Program) 
 		EntryPointMapping:    map[string]string{},
 		PreloadAlias:         computil.RandUpperAlphaString(12),
 		DecryptionKey:        computil.RandMixedAlphaNumericString(32),
+		EnabledStandardLibs:  map[string]*GoPackage{},
+		StandardLibs:         map[string]*GoPackage{},
 	}
 	vm.Linker = NewLinker(vm)
 	return vm
@@ -210,11 +226,11 @@ func (g *GenesisVM) CacheAssets() error {
 
 // RetrieveAsset attempts to copy the asset into the build directory
 func (g *GenesisVM) RetrieveAsset(m *Macro) error {
-	ef, err := NewEmbeddedFile(m.Params["value"])
+	ef, err := NewEmbeddedFile(m.Params["value"], []byte(g.DecryptionKey))
 	if err != nil {
 		return err
 	}
-	err = ef.CacheFile(g.Compiler.AssetDir())
+	err = ef.CacheFile(g.Options.AssetDir())
 	if err != nil {
 		return err
 	}
@@ -243,7 +259,7 @@ func (g *GenesisVM) EncodeBundledAssets() error {
 func (g *GenesisVM) WriteGenesisScript(name string, src []byte) (*EmbeddedFile, error) {
 	scriptFileID := computil.RandUpperAlphaNumericString(18)
 	scriptName := fmt.Sprintf("%s.gs", scriptFileID)
-	scriptLocation := filepath.Join(g.Compiler.AssetDir(), scriptName)
+	scriptLocation := filepath.Join(g.AssetDir(), scriptName)
 	m := minify.New()
 	m.AddFunc("text/javascript", js.Minify)
 	miniVersion := new(bytes.Buffer)
@@ -281,7 +297,7 @@ func (g *GenesisVM) WriteScript() error {
 // WritePreload writes the preload library to the asset directory and tags
 // it in the embed table as the preload library for the virtual machine
 func (g *GenesisVM) WritePreload() error {
-	scriptEmbed, err := g.WriteGenesisScript("preload.gs", []byte(Preload))
+	scriptEmbed, err := g.WriteGenesisScript("preload.gs", computil.MustAsset("preload.gs"))
 	if err != nil {
 		return err
 	}
@@ -298,19 +314,32 @@ func (g *GenesisVM) InitializeGoImports() error {
 		if m.Key != "go_import" {
 			continue
 		}
-		gop := &GoPackage{
-			Script:         g,
-			Namespace:      m.Params["namespace"],
-			ImportKey:      m.Params["gopkg"],
-			ScriptCallers:  map[string]*FunctionCall{},
-			ImportsByFile:  map[string][]*ast.ImportSpec{},
-			ImportsByAlias: map[string]*ast.ImportSpec{},
-			FuncToFileMap:  map[string]string{},
-			FuncTable:      map[string]*ast.FuncDecl{},
-			LinkedFuncs:    []*LinkedFunction{},
-		}
+		gop := NewGoPackage(g, m.Params["namespace"], m.Params["gopkg"], false)
 		g.GoPackageByImport[m.Params["gopkg"]] = gop
 		g.GoPackageByNamespace[m.Params["namespace"]] = gop
+	}
+	for l := range computil.GenesisLibs {
+		pkg, err := computil.ResolveStandardLibraryDir(l)
+		if err != nil {
+			return err
+		}
+		gop := NewGoPackage(g, pkg.Name, pkg.ImportPath, true)
+		gop.Dir = pkg.Dir
+		gop.Name = pkg.Name
+		g.StandardLibs[l] = gop
+	}
+	return nil
+}
+
+// LocateGoPackages enumerates the installed go packages on the current system and appends
+// directory and namespace information to golang packages being declared by this script
+func (g *GenesisVM) LocateGoPackages() error {
+	for _, gpkg := range computil.InstalledGoPackages {
+		if gop, ok := g.GoPackageByImport[gpkg.ImportPath]; ok {
+			gop.Dir = gpkg.Dir
+			gop.ImportPath = gpkg.ImportPath
+			gop.Name = gpkg.Name
+		}
 	}
 	return nil
 }
@@ -321,11 +350,11 @@ func (g *GenesisVM) InitializeGoImports() error {
 // inside genesis_ast.go
 func (g *GenesisVM) WalkGenesisAST() error {
 	walker := &genesisWalker{
-		script: g,
+		vm:     g,
 		source: string(g.Data),
 	}
 	gast.Walk(walker, g.GenesisAST)
-	return nil
+	return walker.err
 }
 
 // UnresolvedGoPackages enumerates the import table to determine if any packages
@@ -342,65 +371,102 @@ func (g *GenesisVM) UnresolvedGoPackages() []string {
 	return unresolved
 }
 
+// func (g *GenesisVM) GolangSourceFileSeeker(fi os.FileInfo) bool {
+
+// }
+
+// WalkGoPackageAST parses the GoPackage directory for all AST files and concurrently walks each child file's AST
+// looking for functions that should be included by the linker
+func (g *GenesisVM) WalkGoPackageAST(gop *GoPackage, wg *sync.WaitGroup, errChan chan error) {
+	fs := token.NewFileSet()
+	pkgs, err := parser.ParseDir(fs, gop.Dir, nil, parser.ParseComments)
+	if err != nil {
+		errChan <- err
+		return
+	}
+	if _, ok := pkgs[gop.Name]; !ok {
+		errChan <- fmt.Errorf("should have found golang package %s but didnt", gop.ImportPath)
+		return
+	}
+	var filewg sync.WaitGroup
+	fileErrChan := make(chan error, 1)
+	fileFinChan := make(chan bool, 1)
+
+	for filename, file := range pkgs[gop.Name].Files {
+		if computil.SourceFileIsTest(file.Name.Name) {
+			continue
+		}
+		filewg.Add(1)
+		_ = filename
+		go gop.WalkGoFileAST(file, &filewg, fileErrChan)
+	}
+
+	go func() {
+		filewg.Wait()
+		close(fileFinChan)
+	}()
+
+	select {
+	case <-fileFinChan:
+		wg.Done()
+		return
+	case err := <-fileErrChan:
+		errChan <- err
+		wg.Done()
+		return
+	}
+}
+
+// SanityCheckNativeFunctionCalls enumerates the VMs go packages ensuring that there are no script
+// callers who do not exist within the GoPackage symbol table
+func (g *GenesisVM) SanityCheckNativeFunctionCalls() error {
+	for _, gop := range g.EnabledStandardLibs {
+		err := gop.SanityCheckScriptCallers()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // BuildGolangAST walks the golang packages imported into the script to build a mapping
 // of functions, the files they're in, imports to each file (for aliases), and locations
 // in the genesis script where these are referenced
 func (g *GenesisVM) BuildGolangAST() error {
+	var wg sync.WaitGroup
+	numOfPackages := len(g.GoPackageByImport) + len(g.EnabledStandardLibs)
+	errChan := make(chan error, 1)
+	finChan := make(chan bool, 1)
+
+	wg.Add(numOfPackages)
+
 	for _, gop := range g.GoPackageByImport {
-		fs := token.NewFileSet()
-		pkgs, err := parser.ParseDir(fs, gop.Dir, nil, parser.ParseComments)
-		if err != nil {
-			return err
-		}
-		if _, ok := pkgs[gop.Name]; !ok {
-			return fmt.Errorf("should have found golang package %s but didnt", gop.ImportPath)
-		}
-		for _, file := range pkgs[gop.Name].Files {
-			var walkError error
-			ast.Inspect(file, func(n ast.Node) bool {
-				fn, ok := n.(*ast.FuncDecl)
-				if ok {
-					funcName := fn.Name.Name
-					// TODO: swizzle all exported functions so go functions can be
-					// resolved at runtime (aka in the debugger)
-					// if fn.Name.IsExported() {
-					// 	gop.FuncTable[fn.Name.Name] = fn
-					// }
-					if fn.Name.IsExported() && gop.ScriptCallers[funcName] != nil {
-						if len(gop.ImportsByFile[file.Name.Name]) == 0 {
-							gop.ImportsByFile[file.Name.Name] = file.Imports
-						}
-						gop.FuncTable[funcName] = fn
-						gop.FuncToFileMap[funcName] = file.Name.Name
-						_, err := g.Linker.NewLinkedFunction(
-							gop.ScriptCallers[funcName],
-							file,
-							fn,
-							file.Imports,
-							gop,
-						)
-						if err != nil {
-							walkError = err
-						}
-					}
-				}
-				return true
-			})
-			if walkError != nil {
-				return walkError
-			}
-		}
+		go g.WalkGoPackageAST(gop, &wg, errChan)
 	}
-	return nil
+	for _, gop := range g.EnabledStandardLibs {
+		go g.WalkGoPackageAST(gop, &wg, errChan)
+	}
+
+	go func() {
+		wg.Wait()
+		close(finChan)
+	}()
+
+	select {
+	case <-finChan:
+		return nil
+	case err := <-errChan:
+		return err
+	}
 }
 
 // SwizzleNativeFunctionCalls enumerates all LinkedFunctions held by the linker and generates
 // structured mappings of both arguments (left swizzle) and returns (right swizzle) so the compiler
 // can map the function's shim in the intermediate representation
 func (g *GenesisVM) SwizzleNativeFunctionCalls() error {
-	for fnName, lf := range g.Linker.Funcs {
+	for _, lf := range g.Linker.Funcs {
 		if lf.GoDecl.Recv != nil {
-			return fmt.Errorf("golang function %s in package %s declares a method receiver which is unsupported by genesis at this time", fnName, lf.GoPackage.ImportPath)
+			return fmt.Errorf("golang function %s in package %s declares a method receiver which is unsupported by genesis at this time", lf.Function, lf.GoPackage.ImportPath)
 		}
 		err := lf.SwizzleToTheLeft()
 		if err != nil {
@@ -418,6 +484,9 @@ func (g *GenesisVM) SwizzleNativeFunctionCalls() error {
 // caller conventions between the javascript and golang method signatures.
 func (g *GenesisVM) SanityCheckLinkedSymbols() error {
 	for _, lf := range g.Linker.Funcs {
+		if lf.Caller == nil {
+			continue
+		}
 		if len(lf.GoArgs) != len(lf.Caller.ArgumentList) {
 			return fmt.Errorf("function call %s.%s in script %s does not match golang method signature (argument mismatch)", lf.Caller.Namespace, lf.Caller.FuncName, g.Name)
 		}
@@ -464,7 +533,7 @@ func (g *GenesisVM) WriteVMBundle() error {
 		return err
 	}
 	filename := fmt.Sprintf("%s.go", g.ID)
-	fileLocation := filepath.Join(g.Compiler.BuildDir, filename)
+	fileLocation := filepath.Join(g.BuildDir, filename)
 	err = g.RenderVMBundle(string(t))
 	if err != nil {
 		return err
@@ -504,7 +573,7 @@ func (g *GenesisVM) Priority() int {
 	}
 	num, err := strconv.Atoi(val)
 	if err != nil {
-		g.Compiler.Logger.Errorf("problem parsing priority value: %v", err)
+		g.Logger.Errorf("problem parsing priority value: %v", err)
 		return defaultPriority
 	}
 	return num
@@ -512,12 +581,12 @@ func (g *GenesisVM) Priority() int {
 
 // HasDebuggingEnabled is an convienience method for checking to see if the debugger should be included
 func (g *GenesisVM) HasDebuggingEnabled() bool {
-	return g.Compiler.DebuggerEnabled
+	return g.DebuggerEnabled
 }
 
 // HasLoggingEnabled is an convienience method for checking to see if logging should be included
 func (g *GenesisVM) HasLoggingEnabled() bool {
-	return g.Compiler.LoggingEnabled
+	return g.LoggingEnabled
 }
 
 // GetIDLiterals returns all interesting IDs used by this GenesisVM
@@ -537,4 +606,22 @@ func (g *GenesisVM) GetIDLiterals() []string {
 	}
 
 	return lits
+}
+
+// EnableStandardLibrary attempts to resolve a discovered standard library and returns either the package or an error
+func (g *GenesisVM) EnableStandardLibrary(name string) (*GoPackage, error) {
+	if pkg, ok := g.StandardLibs[name]; ok {
+		g.EnabledStandardLibs[name] = pkg
+		return pkg, nil
+	}
+	return nil, fmt.Errorf("invalid standard library detected: %s", name)
+}
+
+// ShouldIncludeAssetPackage is a helper function for VM bundle rendering to asset whether it needs to create
+// asset functions in the intermediate representation
+func (g *GenesisVM) ShouldIncludeAssetPackage() bool {
+	if g.EnabledStandardLibs["asset"] == nil {
+		return false
+	}
+	return true
 }

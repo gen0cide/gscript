@@ -146,7 +146,7 @@ func ReplaceInFileWithString(file, match, replacement string) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	var count int = 0
+	var count int
 	lines := strings.Split(string(contents), "\n")
 	for index, line := range lines {
 		if strings.Contains(line, match) {
@@ -169,7 +169,7 @@ func ReplaceInFileWithRegex(file string, regexString string, replaceWith string)
 	if err != nil {
 		return 0, err
 	}
-	var count int = 0
+	var count int
 	lines := strings.Split(string(contents), "\n")
 	for index, line := range lines {
 		if re.MatchString(line) {

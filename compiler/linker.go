@@ -4,8 +4,15 @@ import (
 	"fmt"
 	"go/ast"
 	"strings"
+	"sync"
 
 	"github.com/gen0cide/gscript/compiler/computil"
+)
+
+var (
+	typeBFuncPkgs = map[string]bool{
+		"asset": true,
+	}
 )
 
 // LinkedFunction is the type that represents the gscript <=> golang native binding
@@ -49,26 +56,28 @@ type LinkedFunction struct {
 // will use this mapping to generate import shims for each golang public golang
 // function called.
 type Linker struct {
+	sync.RWMutex
+
 	// a reference to the parent genesis VM
 	VM *GenesisVM
 
 	// mapping of function name to the linked function object used during generation
-	Funcs map[string]*LinkedFunction
+	Funcs map[*ast.FuncDecl]*LinkedFunction
 }
 
 // NewLinker creates a new linker for the given genesis VM
 func NewLinker(vm *GenesisVM) *Linker {
 	return &Linker{
 		VM:    vm,
-		Funcs: map[string]*LinkedFunction{},
+		Funcs: map[*ast.FuncDecl]*LinkedFunction{},
 	}
 }
 
 // NewLinkedFunction creates a function mapping in the VMs linker between golang AST function declearations and genesis AST function calls
 // so the compiler can build the function interfaces between the virtual machine and the native golang package
-func (l *Linker) NewLinkedFunction(caller *FunctionCall, file *ast.File, godecl *ast.FuncDecl, imports []*ast.ImportSpec, gopkg *GoPackage) (*LinkedFunction, error) {
-	if l.Funcs[caller.FuncName] != nil {
-		return nil, fmt.Errorf("vm %s already has a linker for go func %s under package %s - new function is in package %s", l.VM.Name, caller.FuncName, l.Funcs[caller.FuncName].GoPackage.ImportPath, gopkg.ImportPath)
+func (l *Linker) NewLinkedFunction(fnName string, caller *FunctionCall, file *ast.File, godecl *ast.FuncDecl, imports []*ast.ImportSpec, gopkg *GoPackage) (*LinkedFunction, error) {
+	if l.Funcs[godecl] != nil {
+		return nil, fmt.Errorf("vm %s already has a linker for go func %s under package %s - new function is in package %s", l.VM.Name, fnName, l.Funcs[godecl].GoPackage.ImportPath, gopkg.ImportPath)
 	}
 	lf := &LinkedFunction{
 		ID:        computil.RandLowerAlphaString(16),
@@ -82,8 +91,9 @@ func (l *Linker) NewLinkedFunction(caller *FunctionCall, file *ast.File, godecl 
 		GoArgs:    []*GoParamDef{},
 		GoReturns: []*GoParamDef{},
 	}
-	l.Funcs[caller.FuncName] = lf
-	gopkg.LinkedFuncs = append(gopkg.LinkedFuncs, lf)
+	l.Lock()
+	l.Funcs[godecl] = lf
+	l.Unlock()
 	return lf, nil
 }
 
@@ -183,4 +193,15 @@ func (l *LinkedFunction) GenerateArgString(prefix string) string {
 		args = append(args, fmt.Sprintf("%s%d", prefix, idx))
 	}
 	return strings.Join(args, ", ")
+}
+
+// TypeAFuncs is a helper method for the linker for any edge case packages to the standard library (asset for example)
+func (l *Linker) TypeAFuncs() []*LinkedFunction {
+	ret := []*LinkedFunction{}
+	for _, f := range l.Funcs {
+		if typeBFuncPkgs[f.GoPackage.Name] == false {
+			ret = append(ret, f)
+		}
+	}
+	return ret
 }

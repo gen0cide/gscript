@@ -87,6 +87,7 @@ func (o *{{ $.ID }}) {{ $.FunctionKey "execute" }}() error {
   {{ if $.HasDebuggingEnabled -}}
   o.D.InjectDebugConsole()
   {{- end }}
+  o.E.EnableAssets()
   _, err := o.E.CallFunctionWithTimeout("Deploy")
   return err
 }
@@ -106,11 +107,11 @@ func (o *{{ $.ID }}) {{ $.FunctionKey "import_native" }}() error {
   }
   {{ range $fidx, $f := $pkg.LinkedFuncs -}}
   // Adding function pointer for native function {{ $pkg.Name }}.{{ $f.Function }} to symbol table
-  _nf_{{ $ns }}{{ $fidx }} := &engine.NativeFunc{
+  _nf{{ $ns }}{{ $fidx }} := &engine.NativeFunc{
     Name: "{{ $f.Function }}",
     Func: o.{{ $.ID }}{{ $f.ID }},
   }
-  _np{{ $ns }}.SymbolTable["{{ $f.Function }}"] = _nf_{{ $ns}}{{ $fidx }}
+  _np{{ $ns }}.SymbolTable["{{ $f.Function }}"] = _nf{{ $ns}}{{ $fidx }}
   {{ end -}}
   // Injecting native package into the genesis VM
   err = o.E.ImportNativePackage("{{ $ns }}", _np{{ $ns }})
@@ -120,6 +121,41 @@ func (o *{{ $.ID }}) {{ $.FunctionKey "import_native" }}() error {
   {{ end -}}
   // -- END NATIVE PACKAGE IMPORTS
   return err
+}
+
+// {{ $.FunctionKey "import_standard_library" }} injects the dynamically linked standard library functions into the genesis VM for script {{ $.Name }}
+func (o *{{ $.ID }}) {{ $.FunctionKey "import_standard_library" }}() error {
+  var err error
+  err = nil
+  ntp := []*engine.NativePackage{}
+
+  // -- BEGIN NATIVE PACKAGE IMPORTS
+  {{ range $ns, $pkg := $.EnabledStandardLibs -}}
+  // Importing Standard Library Package: {{ $ns }}
+  _np{{ $ns }} := &engine.NativePackage{
+    ImportPath: "{{ $pkg.ImportPath }}",
+    Name: "{{ $ns }}",
+    SymbolTable: map[string]*engine.NativeFunc{},
+  }
+
+  {{ range $fidx, $f := $pkg.LinkedFuncs -}}
+  // Adding function pointer for native function {{ $pkg.Name }}.{{ $f.Function }} to symbol table
+  _nf{{ $ns }}{{ $fidx }} := &engine.NativeFunc{
+    Name: "{{ $f.Function }}",
+    Func: o.{{ $.ID }}{{ $f.ID }},
+  }
+  _np{{ $ns }}.SymbolTable["{{ $f.Function }}"] = _nf{{ $ns}}{{ $fidx }}
+
+  {{ end -}}
+  ntp = append(ntp, _np{{ $ns }})
+  {{ end -}}
+
+  // Injecting standard library into the genesis VM
+  err = o.E.ImportStandardLibrary(ntp)
+  if err != nil {
+    return err
+  }
+  return nil
 }
 
 // {{ $.ID }}ODK returns the decryption key for the genesis VM assets
@@ -166,17 +202,15 @@ func {{ $.ID }}D(s string) []byte {
 }
 
 // Declaring Dynamically Linked Function Wrappers
-{{ range $_, $f := $.Linker.Funcs }}
+{{ range $_, $f := $.Linker.TypeAFuncs }}
 // {{ $.ID }}{{ $f.ID }} is the linker function for {{ $f.GoPackage.Name }}.{{ $f.Function }}
 func (o *{{ $.ID }}) {{ $.ID }}{{ $f.ID }}(call otto.FunctionCall) otto.Value {
   // Argument Sanity Checks
   if len(call.ArgumentList) > {{ len $f.GoArgs }} {
-    o.E.Logger.Errorf("too many arguments passed to function %s at %s", "{{ $f.Function }}", call.CallerLocation())
-    return call.Otto.MakeCustomError("function error", "too many arguments passed into function")
+    return o.E.Raise("argument", "too many arguments passed to function %s", "{{ $f.Function }}")
   }
   if len(call.ArgumentList) < {{ len $f.GoArgs }} {
-    o.E.Logger.Errorf("too few arguments passed to function %s at %s", "{{ $f.Function }}", call.CallerLocation())
-    return call.Otto.MakeCustomError("function error", "too few arguments passed into function")
+    return o.E.Raise("argument", "too few arguments passed to function %s", "{{ $f.Function }}")
   }
 
   {{ range $aidx, $a := $f.GoArgs -}}
@@ -184,17 +218,13 @@ func (o *{{ $.ID }}) {{ $.ID }}{{ $f.ID }}(call otto.FunctionCall) otto.Value {
   var a{{ $aidx }} {{ $a.ExtSig }}
   ra{{ $aidx }}, err := call.Argument({{ $aidx }}).Export()
   if err != nil {
-    o.E.Logger.Errorf("could not export argument %d of function %s at %s", {{ $aidx }}, "{{ $f.Function }}", call.CallerLocation())
-    o.E.Logger.Error(err)
-    return call.Otto.MakeCustomError("function error", fmt.Sprintf("could not translate argument %d into go value", {{ $aidx }}))
+    return o.E.Raise("jsexport", "could not export argument %d of function %s", {{ $aidx }}, "{{ $f.Function }}")
   }
   switch v := ra{{ $aidx }}.(type) {
   case {{ $a.ExtSig }}:
     a{{ $aidx }} = ra{{ $aidx }}.({{ $a.ExtSig }})
   default:
-    errMsg := fmt.Sprintf("Argument type mismatch: expected %s, got %T", "{{ $a.ExtSig }}", v)
-    o.E.Logger.Errorf("argument type conversion error: %s", errMsg)
-    return call.Otto.MakeCustomError("function error", errMsg)
+    return o.E.Raise("type conversion", "argument type mismatch - expected %s, got %T", "{{ $a.ExtSig }}", v)
   }
   {{ end }}
   {{ range $ridx , $r := $f.GoReturns -}}
@@ -209,27 +239,21 @@ func (o *{{ $.ID }}) {{ $.ID }}{{ $f.ID }}(call otto.FunctionCall) otto.Value {
   // Single return context - attempt to return that to VM
   retVal, err := call.Otto.ToValue(r0)
   if err != nil {
-    errMsg := fmt.Sprintf("return value conversion failure: %s", err.Error())
-    o.E.Logger.Errorf(errMsg)
-    return call.Otto.MakeCustomError("conversion error", errMsg)
+    return o.E.Raise("return", "conversion failed for return 0 (type=%T) - %v", r0, err)
   }
   return retVal
   {{ else }}
   // This function has multiple returns - injecting into a JS array for single return context compatibility
   jsObj, err := call.Otto.Object(`[]`)
 	if err != nil {
-    errMsg := fmt.Sprintf("could not make an array object for multiple assignment return")
-    o.E.Logger.Errorf(errMsg)
-    return call.Otto.MakeCustomError("runtime error", errMsg)
+    return o.E.Raise("runtime", "could not create multiple assignment structure - %v", err)
   }
 
   {{ range $ridx, $_ := $f.GoReturns -}}
   // Return Value #{{ $ridx }}
   err = jsObj.Set("{{ $ridx }}", r{{ $ridx }})
   if err != nil {
-    errMsg := fmt.Sprintf("could not add element %d of type %T to js return (err: %s)", {{ $ridx }}, r{{ $ridx }}, err.Error())
-    o.E.Logger.Errorf(errMsg)
-    return call.Otto.MakeCustomError("runtime error", errMsg)
+    return o.E.Raise("return", "conversion failed for return %d (type=%T) - %v", {{ $ridx }}, r{{ $ridx }}, err)
   }
   {{ end }}
   // Return the generated object

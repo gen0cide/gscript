@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/gen0cide/gscript/logger"
 	"github.com/gen0cide/gscript/logger/null"
 	"github.com/robertkrimen/otto"
@@ -108,6 +109,33 @@ func (e *Engine) ImportNativePackage(namespace string, pkg *NativePackage) error
 	return nil
 }
 
+// ImportStandardLibrary injects all provided native packages into the standard libraries namespace within the engine
+func (e *Engine) ImportStandardLibrary(pkgs []*NativePackage) error {
+	ns, err := e.DeclareNamespace("G")
+	if err != nil {
+		return err
+	}
+	for _, p := range pkgs {
+		pkgName := p.Name
+		pkgNs, err := e.DeclareNamespace(fmt.Sprintf("__std_lib_%s", pkgName))
+		if err != nil {
+			return err
+		}
+		for n, f := range p.SymbolTable {
+			err = pkgNs.Set(n, f.Func)
+			if err != nil {
+				spew.Dump(f)
+				return err
+			}
+		}
+		err = ns.Set(pkgName, pkgNs.Value())
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // SetConst defines a const value within the virtual machine
 func (e *Engine) SetConst(name string, value interface{}) error {
 	val, err := e.VM.ToValue(value)
@@ -175,5 +203,15 @@ func (e *Engine) SetLogger(l logger.Logger) error {
 }
 
 func (e *Engine) setGlobalRef() error {
-	return e.SetConst("_VM", e)
+	return e.SetConst("_ENGINE", e)
+}
+
+// EnableAssets injects the core asset handling functions into the engine's runtime
+func (e *Engine) EnableAssets() error {
+	err := e.VM.Set("GetAssetAsString", e.retrieveAssetAsString)
+	if err != nil {
+		return err
+	}
+	err = e.VM.Set("GetAssetAsBytes", e.retrieveAssetAsBytes)
+	return err
 }

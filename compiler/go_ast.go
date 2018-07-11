@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go/ast"
 	"reflect"
+	"sync"
 )
 
 var (
@@ -34,6 +35,8 @@ var (
 
 // GoPackage holds all the information about a Golang package that is being resolved to a given script
 type GoPackage struct {
+	sync.RWMutex
+
 	// Dir is the local path where this package is found
 	Dir string
 
@@ -43,8 +46,8 @@ type GoPackage struct {
 	// Name defines the go package's name
 	Name string
 
-	// Script references the script that is importing this package
-	Script *GenesisVM
+	// VM references the script that is importing this package
+	VM *GenesisVM
 
 	// Namespace is the namespace aliased in the parent script
 	Namespace string
@@ -69,6 +72,9 @@ type GoPackage struct {
 
 	// LinkedFuncs defines references to the dynamically linked functions for this go package
 	LinkedFuncs []*LinkedFunction
+
+	// Reference to know if this go package is part of the standard library
+	IsStandardLib bool
 }
 
 // GoParamDef defines a type to represent parameters found in a Golang function declaration (arguments or return types)
@@ -106,6 +112,22 @@ type GoParamDef struct {
 
 	// LinkedFUnction is used to reference the parent LinkedFunction object
 	LinkedFunction *LinkedFunction
+}
+
+// NewGoPackage is a constructor for a gopackage that will be used in dynamically linking native code
+func NewGoPackage(v *GenesisVM, ns, ikey string, stdlib bool) *GoPackage {
+	return &GoPackage{
+		VM:             v,
+		Namespace:      ns,
+		ImportKey:      ikey,
+		ScriptCallers:  map[string]*FunctionCall{},
+		ImportsByFile:  map[string][]*ast.ImportSpec{},
+		ImportsByAlias: map[string]*ast.ImportSpec{},
+		FuncToFileMap:  map[string]string{},
+		FuncTable:      map[string]*ast.FuncDecl{},
+		LinkedFuncs:    []*LinkedFunction{},
+		IsStandardLib:  stdlib,
+	}
 }
 
 // NewGoParamDef creates a new definition object for a go parameter (either return or argument) and returns a pointer to itself.
@@ -233,4 +255,62 @@ func (p *GoParamDef) ParseIdent(a *ast.Ident) error {
 // in golang
 func IsBuiltInGoType(s string) bool {
 	return builtInGoTypes[s]
+}
+
+// WalkGoFileAST walks the AST of a golang file and determines if it should be included as a linked
+// function based on one of the following statements being true:
+// Parent GoPackage is a member of the standard library
+// OR
+// Compiler option ImportAllNativeFunc is set to true
+// OR
+// VM Script calls this function explicitly
+func (gop *GoPackage) WalkGoFileAST(goast *ast.File, wg *sync.WaitGroup, errChan chan error) {
+	importAll := gop.VM.ImportAllNativeFuncs
+	ast.Inspect(goast, func(n ast.Node) bool {
+		fn, ok := n.(*ast.FuncDecl)
+		if ok {
+			funcName := fn.Name.Name
+			if fn.Name.IsExported() && fn.Recv == nil {
+				caller := gop.ScriptCallers[funcName]
+				if caller == nil && (!gop.IsStandardLib || !importAll) {
+					return true
+				}
+				lf, err := gop.VM.Linker.NewLinkedFunction(
+					funcName,
+					caller,
+					goast,
+					fn,
+					goast.Imports,
+					gop,
+				)
+				if err != nil {
+					errChan <- err
+					wg.Done()
+					return false
+				}
+				gop.Lock()
+				if len(gop.ImportsByFile[goast.Name.Name]) == 0 {
+					gop.ImportsByFile[goast.Name.Name] = goast.Imports
+				}
+				gop.FuncTable[funcName] = fn
+				gop.FuncToFileMap[funcName] = goast.Name.Name
+				gop.LinkedFuncs = append(gop.LinkedFuncs, lf)
+				gop.Unlock()
+			}
+		}
+		return true
+	})
+	wg.Done()
+	return
+}
+
+// SanityCheckScriptCallers enumerates all of the parent gopackage's script callers looking for any
+// callers who do not have an entry in this go package's symbol table
+func (gop *GoPackage) SanityCheckScriptCallers() error {
+	for fnName := range gop.ScriptCallers {
+		if gop.FuncTable[fnName] == nil {
+			return fmt.Errorf("function %s is not a valid function in package %s", fnName, gop.Name)
+		}
+	}
+	return nil
 }

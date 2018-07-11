@@ -15,29 +15,41 @@ var (
 	baseImportPath = `github.com/gen0cide/gscript`
 	baseRegexpStr  = `github\.com/gen0cide/gscript`
 	baseRegexp     = regexp.MustCompile(baseRegexpStr)
+	testFileRegexp = regexp.MustCompile(`.*_test\.go$`)
 
 	// GenesisLibs is the name of the packages within the genesis standard library
-	GenesisLibs = []string{
-		"asset",
-		"crypto",
-		"encoding",
-		"exec",
-		"file",
-		"net",
-		"os",
-		"rand",
-		"requests",
-		"time",
+	GenesisLibs = map[string]bool{
+		"crypto":   true,
+		"encoding": true,
+		"exec":     true,
+		"file":     true,
+		"net":      true,
+		"os":       true,
+		"rand":     true,
+		"requests": true,
+		"time":     true,
 	}
+
+	// InstalledGoPackages holds a cache of all currently installed golang libraries
+	InstalledGoPackages = GatherInstalledGoPackages()
 )
 
 func regexpForModule(mod ...string) *regexp.Regexp {
 	return regexp.MustCompile(filepath.Join(append([]string{baseRegexpStr}, mod...)...))
 }
 
-// InstalledGoPackages retrieves a list of all installed go packages in the context of current GOPATH and GOROOT
-func InstalledGoPackages() (map[string]gopkgs.Pkg, error) {
-	return gopkgs.Packages(gopkgs.Options{NoVendor: true})
+// GatherInstalledGoPackages retrieves a list of all installed go packages in the context of current GOPATH and GOROOT
+func GatherInstalledGoPackages() map[string]gopkgs.Pkg {
+	goPackages, err := gopkgs.Packages(gopkgs.Options{NoVendor: true})
+	if err != nil {
+		panic(err)
+	}
+	return goPackages
+}
+
+// SourceFileIsTest determines if the given source file is named after the test convention
+func SourceFileIsTest(src string) bool {
+	return testFileRegexp.MatchString(src)
 }
 
 // ResolveGoPath attempts to resolve the current user's GOPATH
@@ -60,11 +72,7 @@ func ResolveGenesisPackageDir() (targetDir string, err error) {
 	if _, ok := os.Stat(guess); ok == nil {
 		return guess, nil
 	}
-	gpkgs, err := InstalledGoPackages()
-	if err != nil {
-		return targetDir, err
-	}
-	for name, pkg := range gpkgs {
+	for name, pkg := range InstalledGoPackages {
 		if !baseRegexp.MatchString(name) {
 			continue
 		}
@@ -78,12 +86,8 @@ func ResolveGenesisPackageDir() (targetDir string, err error) {
 
 // ResolveEngineDir attempts to resolve the absolute path of the genesis engine directory
 func ResolveEngineDir() (targetDir string, err error) {
-	gpkgs, err := InstalledGoPackages()
-	if err != nil {
-		return targetDir, err
-	}
 	dirMatch := regexpForModule("engine")
-	for name, pkg := range gpkgs {
+	for name, pkg := range InstalledGoPackages {
 		if !dirMatch.MatchString(name) {
 			continue
 		}
@@ -96,21 +100,13 @@ func ResolveEngineDir() (targetDir string, err error) {
 }
 
 // ResolveStandardLibraryDir attempts to resolve the absolute path of the specified standard library package
-func ResolveStandardLibraryDir(pkg string) (string, error) {
-	targetDir := ""
+func ResolveStandardLibraryDir(pkg string) (*gopkgs.Pkg, error) {
 	dirMatch := regexpForModule("stdlib", pkg)
-	gpkgs, err := gopkgs.Packages(gopkgs.Options{NoVendor: true})
-	if err != nil {
-		return targetDir, err
-	}
-	for name, pkg := range gpkgs {
+	for name, gpkg := range InstalledGoPackages {
 		if !dirMatch.MatchString(name) {
 			continue
 		}
-		targetDir = pkg.Dir
+		return &gpkg, nil
 	}
-	if targetDir == "" {
-		return targetDir, fmt.Errorf("coult not locate standard library package %s", pkg)
-	}
-	return targetDir, nil
+	return nil, fmt.Errorf("could not locate standard library package %s", pkg)
 }

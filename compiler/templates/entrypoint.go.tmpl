@@ -16,6 +16,11 @@ func main() {
       a{{ $vm.ID }}.E.Logger.Errorf("Error importing assets for VM %s: %v", "{{ $vm.ID }}", err)
       return
     }
+    err = a{{ $vm.ID }}.{{ $vm.FunctionKey "import_standard_library" }}()
+    if err != nil {
+      a{{ $vm.ID }}.E.Logger.Errorf("Error injecting standard library for VM %s: %v", "{{ $vm.ID }}", err)
+      return
+    }
     err = a{{ $vm.ID }}.{{ $vm.FunctionKey "preload" }}()
     if err != nil {
       a{{ $vm.ID }}.E.Logger.Errorf("Error for preloading %s: %v", "{{ $vm.ID }}", err)

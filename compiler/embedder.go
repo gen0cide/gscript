@@ -15,56 +15,6 @@ import (
 	"github.com/gen0cide/gscript/compiler/computil"
 )
 
-const (
-	// Preload is the static preload that is injected into the runtime before execution
-	Preload = `
-		function StringToByteArray(s) {
-			var data = [];
-			for (var i = 0; i < s.length; i++) {
-				data.push(s.charCodeAt(i));
-			}
-			return data;
-		}
-
-		function ByteArrayToString(a) {
-			return String.fromCharCode.apply(String, a);
-		}
-
-		function Dump(obj) {
-			return "\n" + JSON.stringify(obj, null, 2);
-		}
-
-		function BeforeDeploy() {
-			return true;
-		}
-
-		function Deploy() {
-			return false;
-		}
-
-		function AfterDeploy() {
-			return true;
-		}
-
-		function OnError() {
-			return false;
-		}
-
-		function Sleep(seconds) {
-			var start = new Date().getTime();
-			for (var i = 0; i < 1e7; i++) {
-				if ((new Date().getTime() - start) > (seconds * 1000)) {
-					break;
-				}
-			}
-		}
-
-		function DebugConsole() {
-			return true;
-		}
-	`
-)
-
 // EmbeddedFile is an object that manages the lifecycle of resolving and translating
 // embedded assets referenced in the Genesis VM into callable values that are
 // embedded by the compiler
@@ -101,7 +51,7 @@ type EmbeddedFile struct {
 }
 
 // NewEmbeddedFile takes a path on the local file system and returns an EmbeddedFile object reference
-func NewEmbeddedFile(source string) (*EmbeddedFile, error) {
+func NewEmbeddedFile(source string, key []byte) (*EmbeddedFile, error) {
 	if _, err := os.Stat(source); os.IsNotExist(err) {
 		return nil, err
 	}
@@ -111,10 +61,11 @@ func NewEmbeddedFile(source string) (*EmbeddedFile, error) {
 	}
 	id := computil.RandUpperAlphaString(18)
 	ef := &EmbeddedFile{
-		SourcePath: absPath,
-		OrigName:   filepath.Base(source),
-		Filename:   fmt.Sprintf("%s_%s", id, filepath.Base(source)),
-		ID:         id,
+		SourcePath:    absPath,
+		OrigName:      filepath.Base(source),
+		Filename:      fmt.Sprintf("%s_%s", id, filepath.Base(source)),
+		ID:            id,
+		EncryptionKey: key,
 	}
 	return ef, nil
 }
@@ -133,39 +84,6 @@ func (e *EmbeddedFile) CacheFile(cacheDir string) error {
 	}
 	e.CachedPath = dstAbsPath
 	return nil
-}
-
-// // Compress is used to gzip the embedded file's uncompressed data
-// func (e *EmbeddedFile) Compress() {
-// 	if len(e.Uncompressed) > 0 {
-// 		e.Compressed = BytesToCompressed(e.Uncompressed)
-// 	}
-// }
-
-// // ResolveData is used to load the file's contents into the compiler
-// func (e *EmbeddedFile) ResolveData() {
-// 	d, _ := ioutil.ReadFile(e.SourcePath)
-// 	e.Uncompressed = d
-// }
-
-// // ResolveFilename gathers the base name of the file for pointer reference
-// // in the VM bundle's import map
-// func (e *EmbeddedFile) ResolveFilename() {
-// 	e.Filename = filepath.Base(e.SourcePath)
-// }
-
-// // ResolveVariableName generates a unique identifier for this embed used by the compiler
-// func (e *EmbeddedFile) ResolveVariableName() {
-// 	e.NameHash = RandLowerAlphaString(18)
-// }
-
-// Embed performs all of the embed functions required to resolve and generate a compressed EmbeddedFile
-func (e *EmbeddedFile) Embed() {
-	// e.ResolveFilename()
-	// e.ResolveVariableName()
-	// e.ResolveData()
-	// e.Compress()
-	// e.GenerateEmbedData()
 }
 
 // Data retrieves the current EmbedData's buffer as a string
@@ -205,40 +123,6 @@ func (e *EmbeddedFile) GenerateEmbedData() error {
 	encoder.Close()
 	return nil
 }
-
-// func (e *EmbeddedFile) GenerateEmbedData() error {
-// 	ioReader, ioWriter := io.Pipe()
-// 	ioReader, err := os.Open(e.CachedPath)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	w := gzip.NewWriterLevel(e.EmbedData, gzip.BestCompression)
-// 	_, err := io.Copy(w, ioReader)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	for _, b := range e.Compressed {
-// 		e.EmbedData.WriteString(fmt.Sprintf("0x%02x, ", b))
-// 	}
-// 	e.Compressed = []byte{}
-// 	e.Uncompressed = []
-// }
-
-// // BytesToCompressed compresses a byte array into a gzip compressed byte array
-// func BytesToCompressed(b []byte) []byte {
-// 	buf := new(bytes.Buffer)
-// 	w, _ := gzip.NewWriterLevel(buf, gzip.BestCompression)
-// 	w.Write(b)
-// 	w.Close()
-// 	return buf.Bytes()
-// }
-
-// // CompressedToBytes uncompresses a byte array using gzip and returns it's original data
-// func CompressedToBytes(b []byte) []byte {
-// 	r, _ := gzip.NewReader(bytes.NewBuffer(b))
-// 	buf, _ := ioutil.ReadAll(r)
-// 	return buf
-// }
 
 // ExampleDecodeEmbed is a reference implementation of how embedded assets should be unpacked
 // inside of a genesis engine

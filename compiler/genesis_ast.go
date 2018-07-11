@@ -87,55 +87,75 @@ type LegacyRetDef struct {
 }
 
 // FunctionCall contains information relating to a Golang native function call
-// that is being used within a genesis script
+// that is being used within a genesis vm
 type FunctionCall struct {
-	// genesis script namespace the function call corrasponds to
+	// genesis vm namespace the function call corrasponds to
 	Namespace string
 
-	// name of the function call as used in the genesis script
+	// name of the function call as used in the genesis vm
 	FuncName string
 
-	// list of arguments passed to the genesis script function caller
+	// list of arguments passed to the genesis vm function caller
 	ArgumentList []gast.Expression
 }
 
-// genesisWalker is a type used to recursively walk the genesis script AST
+// genesisWalker is a type used to recursively walk the genesis vm AST
 type genesisWalker struct {
 	// reference to the parent genesis VM object
-	script *GenesisVM
+	vm *GenesisVM
 
 	// source as represented as text
 	source string
 
 	// offset record used during the AST talk
 	shift file.Idx
-}
 
-// testlib.
+	err error
+}
 
 func (g *genesisWalker) Enter(n gast.Node) gast.Visitor {
 	switch a := n.(type) {
 	case *gast.CallExpression:
 		switch b := a.Callee.(type) {
 		case *gast.DotExpression:
-			namespace, ok := b.Left.(*gast.Identifier)
-			if !ok {
+			fnName := b.Identifier.Name
+			switch c := b.Left.(type) {
+			case *gast.Identifier:
+				if _, ok := g.vm.GoPackageByNamespace[c.Name]; !ok {
+					return g
+				}
+				// we got em :) adding to the gopackge vm caller table
+				gop := g.vm.GoPackageByNamespace[c.Name]
+				gop.ScriptCallers[fnName] = &FunctionCall{
+					Namespace:    c.Name,
+					FuncName:     fnName,
+					ArgumentList: a.ArgumentList,
+				}
+			case *gast.DotExpression:
+				switch pp := c.Left.(type) {
+				case *gast.Identifier:
+					if pp.Name != "G" {
+						return g
+					}
+					// found a call to the standard library
+					fnName := b.Identifier.Name
+					pkgName := c.Identifier.Name
+					gop, err := g.vm.EnableStandardLibrary(pkgName)
+					if err == nil {
+						gop.ScriptCallers[fnName] = &FunctionCall{
+							Namespace:    pkgName,
+							FuncName:     fnName,
+							ArgumentList: a.ArgumentList,
+						}
+						return g
+					}
+					g.err = err
+					return nil
+				}
+			default:
 				// caller's left side was not an identifier (probably a function)
 				// move on
 				return g
-			}
-			if _, ok := g.script.GoPackageByNamespace[namespace.Name]; !ok {
-				// given caller was not a known golang namespace
-				// move on
-				return g
-			}
-			// we got em :) adding to the gopackge script caller table
-			fnName := b.Identifier.Name
-			gop := g.script.GoPackageByNamespace[namespace.Name]
-			gop.ScriptCallers[fnName] = &FunctionCall{
-				Namespace:    namespace.Name,
-				FuncName:     fnName,
-				ArgumentList: a.ArgumentList,
 			}
 		}
 	}

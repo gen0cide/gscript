@@ -17,7 +17,6 @@ import (
 	"github.com/gen0cide/gscript/logger"
 	"github.com/gen0cide/gscript/logger/null"
 	gparser "github.com/robertkrimen/otto/parser"
-	"github.com/uudashr/gopkgs"
 	"golang.org/x/tools/imports"
 )
 
@@ -31,7 +30,7 @@ type Compiler struct {
 	sync.RWMutex
 
 	// array of VMs that will be bundled into this build
-	vms []*GenesisVM
+	VMs []*GenesisVM
 
 	// a map that places subsets of VMs into buckets according to their priority
 	SortedVMs map[int][]*GenesisVM
@@ -57,7 +56,7 @@ func NewWithDefault() *Compiler {
 		Logger:         &null.Logger{},
 		Options:        computil.DefaultOptions(),
 		SortedVMs:      map[int][]*GenesisVM{},
-		vms:            []*GenesisVM{},
+		VMs:            []*GenesisVM{},
 		UniqPriorities: []int{},
 		stringCache:    []string{},
 	}
@@ -69,7 +68,7 @@ func NewWithOptions(o computil.Options) *Compiler {
 		Logger:         &null.Logger{},
 		Options:        o,
 		SortedVMs:      map[int][]*GenesisVM{},
-		vms:            []*GenesisVM{},
+		VMs:            []*GenesisVM{},
 		UniqPriorities: []int{},
 		stringCache:    []string{},
 	}
@@ -98,9 +97,8 @@ func (c *Compiler) AddScript(scriptPath string) error {
 	if err != nil {
 		return err
 	}
-	newVM := NewGenesisVM(fileName, absPath, c.OS, c.Arch, srcBytes, prog)
-	newVM.Compiler = c
-	c.vms = append(c.vms, newVM)
+	newVM := NewGenesisVM(fileName, absPath, srcBytes, prog, c.Options, c.Logger)
+	c.VMs = append(c.VMs, newVM)
 	return nil
 }
 
@@ -139,6 +137,10 @@ func (c *Compiler) Do() error {
 		return err
 	}
 	err = c.BuildGolangASTs()
+	if err != nil {
+		return err
+	}
+	err = c.SanityCheckScriptToNativeMapping()
 	if err != nil {
 		return err
 	}
@@ -201,11 +203,11 @@ func (c *Compiler) CreateBuildDir() error {
 // ProcessMacros enumerates the compilers virtual machines with the pre-processor to extract
 // compiler macros for each virtual machine
 func (c *Compiler) ProcessMacros() error {
-	if len(c.vms) == 0 {
+	if len(c.VMs) == 0 {
 		return errNoVM
 	}
 	var wg sync.WaitGroup
-	for _, vm := range c.vms {
+	for _, vm := range c.VMs {
 		wg.Add(1)
 		go func(vm *GenesisVM) {
 			vm.ProcessMacros()
@@ -216,11 +218,21 @@ func (c *Compiler) ProcessMacros() error {
 	return nil
 }
 
+// SanityCheckScriptToNativeMapping enumerates all VMs ensuring that the script calls to native functions
+// actually exist within that native go package and were resolved by the linker
+func (c *Compiler) SanityCheckScriptToNativeMapping() error {
+	fns := []func() error{}
+	for _, vm := range c.VMs {
+		fns = append(fns, vm.SanityCheckNativeFunctionCalls)
+	}
+	return computil.ExecuteFuncsInParallel(fns)
+}
+
 // DetectVersions enumerates all VMs to determine the engine version based on the entrypoint.
 // For more information on this, look at GenesisVM.DetectTargetEngineVersion()
 func (c *Compiler) DetectVersions() error {
 	fns := []func() error{}
-	for _, vm := range c.vms {
+	for _, vm := range c.VMs {
 		fns = append(fns, vm.DetectTargetEngineVersion)
 	}
 	return computil.ExecuteFuncsInParallel(fns)
@@ -230,7 +242,7 @@ func (c *Compiler) DetectVersions() error {
 // into the build directory's asset cache
 func (c *Compiler) GatherAssets() error {
 	fns := []func() error{}
-	for _, vm := range c.vms {
+	for _, vm := range c.VMs {
 		fns = append(fns, vm.CacheAssets)
 	}
 	return computil.ExecuteFuncsInParallel(fns)
@@ -240,7 +252,7 @@ func (c *Compiler) GatherAssets() error {
 // genesis source to the asset directory to prevent race condiditons with script filesystem locations
 func (c *Compiler) WriteScripts() error {
 	fns := []func() error{}
-	for _, vm := range c.vms {
+	for _, vm := range c.VMs {
 		fns = append(fns, vm.WriteScript)
 	}
 	return computil.ExecuteFuncsInParallel(fns)
@@ -250,7 +262,7 @@ func (c *Compiler) WriteScripts() error {
 // genesis source to the asset directory to prevent race condiditons with script filesystem locations
 func (c *Compiler) InitializeImports() error {
 	fns := []func() error{}
-	for _, vm := range c.vms {
+	for _, vm := range c.VMs {
 		fns = append(fns, vm.InitializeGoImports)
 	}
 	return computil.ExecuteFuncsInParallel(fns)
@@ -260,7 +272,7 @@ func (c *Compiler) InitializeImports() error {
 // called from inside the script using the namespace identifier from the compiler macros
 func (c *Compiler) WalkGenesisASTs() error {
 	fns := []func() error{}
-	for _, vm := range c.vms {
+	for _, vm := range c.VMs {
 		fns = append(fns, vm.WalkGenesisAST)
 	}
 	return computil.ExecuteFuncsInParallel(fns)
@@ -269,26 +281,16 @@ func (c *Compiler) WalkGenesisASTs() error {
 // LocateGoDependencies gathers a list of all installed golang packages, hands a copy to each VM,
 // then has every VM resolve it's own golang dependencies from that package list
 func (c *Compiler) LocateGoDependencies() error {
-	// grab a list of currently installed golang packages
-	gopks, err := gopkgs.Packages(gopkgs.Options{NoVendor: true})
-	if err != nil {
-		return err
+	fns := []func() error{}
+	for _, vm := range c.VMs {
+		fns = append(fns, vm.LocateGoPackages)
 	}
 
-	// enumerate the packages, identifying all VMs that use them
-	for _, gopkg := range gopks {
-		for _, vm := range c.vms {
-			if gop, ok := vm.GoPackageByImport[gopkg.ImportPath]; ok {
-				gop.Dir = gopkg.Dir
-				gop.ImportPath = gopkg.ImportPath
-				gop.Name = gopkg.Name
-			}
-		}
-	}
+	computil.ExecuteFuncsInParallel(fns)
 
 	// now to check for any unmet dependencies
 	packages := map[string]bool{}
-	for _, vm := range c.vms {
+	for _, vm := range c.VMs {
 		for _, p := range vm.UnresolvedGoPackages() {
 			packages[p] = true
 		}
@@ -311,7 +313,7 @@ func (c *Compiler) LocateGoDependencies() error {
 // the underlying golang packages.
 func (c *Compiler) BuildGolangASTs() error {
 	fns := []func() error{}
-	for _, vm := range c.vms {
+	for _, vm := range c.VMs {
 		fns = append(fns, vm.BuildGolangAST)
 	}
 	return computil.ExecuteFuncsInParallel(fns)
@@ -321,7 +323,7 @@ func (c *Compiler) BuildGolangASTs() error {
 // function calls and generates the type declarations for both arguments and return values.
 func (c *Compiler) SwizzleNativeCalls() error {
 	fns := []func() error{}
-	for _, vm := range c.vms {
+	for _, vm := range c.VMs {
 		fns = append(fns, vm.SwizzleNativeFunctionCalls)
 	}
 	return computil.ExecuteFuncsInParallel(fns)
@@ -331,7 +333,7 @@ func (c *Compiler) SwizzleNativeCalls() error {
 // are being called correctly by the corrasponding javascript callers
 func (c *Compiler) SanityCheckSwizzles() error {
 	fns := []func() error{}
-	for _, vm := range c.vms {
+	for _, vm := range c.VMs {
 		fns = append(fns, vm.SanityCheckLinkedSymbols)
 	}
 	return computil.ExecuteFuncsInParallel(fns)
@@ -340,7 +342,7 @@ func (c *Compiler) SanityCheckSwizzles() error {
 // WritePreloads renders preload libraries for every virtual machine in the compilers asset directory
 func (c *Compiler) WritePreloads() error {
 	fns := []func() error{}
-	for _, vm := range c.vms {
+	for _, vm := range c.VMs {
 		fns = append(fns, vm.WritePreload)
 	}
 	return computil.ExecuteFuncsInParallel(fns)
@@ -349,7 +351,7 @@ func (c *Compiler) WritePreloads() error {
 // EncodeAssets renders all embedded assets into intermediate representation
 func (c *Compiler) EncodeAssets() error {
 	fns := []func() error{}
-	for _, vm := range c.vms {
+	for _, vm := range c.VMs {
 		fns = append(fns, vm.EncodeBundledAssets)
 	}
 	return computil.ExecuteFuncsInParallel(fns)
@@ -359,7 +361,7 @@ func (c *Compiler) EncodeAssets() error {
 // vm bundle file within the build directory
 func (c *Compiler) WriteVMBundles() error {
 	fns := []func() error{}
-	for _, vm := range c.vms {
+	for _, vm := range c.VMs {
 		fns = append(fns, vm.WriteVMBundle)
 	}
 	return computil.ExecuteFuncsInParallel(fns)
@@ -431,7 +433,7 @@ func (c *Compiler) PerformPostCompileObfuscation() error {
 	m := obfuscator.NewMordor(c.Logger)
 	m.AddGhosts(c.GetIDLiterals())
 	m.AddGhosts(c.stringCache)
-	for _, vm := range c.vms {
+	for _, vm := range c.VMs {
 		m.AddGhosts(vm.GetIDLiterals())
 	}
 	c.Logger.Infof("Mordorifying %d strings...", len(m.Horde))
@@ -462,7 +464,7 @@ func (c *Compiler) BuildNativeBinary() error {
 
 // MapVMsByPriority creates a pointer mapping of each VM by it's unique priority
 func (c *Compiler) MapVMsByPriority() error {
-	for _, vm := range c.vms {
+	for _, vm := range c.VMs {
 		if c.SortedVMs[vm.Priority()] == nil {
 			c.SortedVMs[vm.Priority()] = []*GenesisVM{}
 			c.UniqPriorities = append(c.UniqPriorities, vm.Priority())
