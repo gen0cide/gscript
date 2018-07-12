@@ -3,6 +3,7 @@ package engine
 import (
 	"errors"
 	"fmt"
+	"runtime"
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/gen0cide/gscript/logger"
@@ -111,10 +112,6 @@ func (e *Engine) ImportNativePackage(namespace string, pkg *NativePackage) error
 
 // ImportStandardLibrary injects all provided native packages into the standard libraries namespace within the engine
 func (e *Engine) ImportStandardLibrary(pkgs []*NativePackage) error {
-	_, err := e.DeclareNamespace("G")
-	if err != nil {
-		return err
-	}
 	for _, p := range pkgs {
 		pkgName := p.Name
 		nsObj, err := e.VM.Object(fmt.Sprintf("G.%s = {}", pkgName))
@@ -203,7 +200,25 @@ func (e *Engine) SetLogger(l logger.Logger) error {
 }
 
 func (e *Engine) setGlobalRef() error {
-	return e.SetConst("_ENGINE", e)
+	_, err := e.DeclareNamespace("G")
+	if err != nil {
+		return err
+	}
+	err = e.SetConst("G.ENGINE", e)
+	if err != nil {
+		return err
+	}
+	err = e.SetConst("G.OS", runtime.GOOS)
+	if err != nil {
+		return err
+	}
+	err = e.SetConst("G.ARCH", runtime.GOARCH)
+	if err != nil {
+		return err
+	}
+
+	return nil
+	//return e.VM.Set("GoType", e.vmTypeChecker)
 }
 
 // EnableAssets injects the core asset handling functions into the engine's runtime

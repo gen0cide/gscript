@@ -5,3 +5,7 @@ OTTO
 main[[:word:]\.\\/ ]*?
 Engine[[:word:]\.\\/ ]*?
 NullLogger[[:word:]\.\\/ ]*?
+engine
+Engine
+new
+\.go:

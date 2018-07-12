@@ -87,7 +87,7 @@ func debuggerGs() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "debugger.gs", size: 39, mode: os.FileMode(420), modTime: time.Unix(1531344070, 0)}
+	info := bindataFileInfo{name: "debugger.gs", size: 39, mode: os.FileMode(420), modTime: time.Unix(1531353062, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -107,12 +107,12 @@ func entrypointGoTmpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "entrypoint.go.tmpl", size: 1711, mode: os.FileMode(420), modTime: time.Unix(1531344070, 0)}
+	info := bindataFileInfo{name: "entrypoint.go.tmpl", size: 1711, mode: os.FileMode(420), modTime: time.Unix(1531353062, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
 
-var _hard_reserved = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x4a\x2f\x4e\x2e\xca\x2c\x28\xe1\x4a\x4f\xcd\x33\x48\xce\x4c\x49\xe5\x72\x0f\x76\x0e\xf2\x0c\x08\xe1\xf2\x0f\x09\xf1\xe7\xca\x4d\xcc\xcc\x8b\x8e\xb6\x2a\xcf\x2f\x4a\xb1\x8a\x8d\xd1\x8b\x89\xd1\x57\x88\xd5\xb2\xe7\x72\xcd\x4b\xcf\xcc\x4b\xc5\x22\xe1\x57\x9a\x93\xe3\x93\x9f\x9e\x9e\x5a\x84\x29\x09\x08\x00\x00\xff\xff\x6d\x3e\x4c\x6b\x6a\x00\x00\x00")
+var _hard_reserved = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x4a\x2f\x4e\x2e\xca\x2c\x28\xe1\x4a\x4f\xcd\x33\x48\xce\x4c\x49\xe5\x72\x0f\x76\x0e\xf2\x0c\x08\xe1\xf2\x0f\x09\xf1\xe7\xca\x4d\xcc\xcc\x8b\x8e\xb6\x2a\xcf\x2f\x4a\xb1\x8a\x8d\xd1\x8b\x89\xd1\x57\x88\xd5\xb2\xe7\x72\xcd\x4b\xcf\xcc\x4b\xc5\x22\xe1\x57\x9a\x93\xe3\x93\x9f\x9e\x9e\x5a\x84\x45\x32\x15\xac\x0b\xaa\x99\x2b\x2f\xb5\x9c\x2b\x46\x2f\x3d\xdf\x0a\x10\x00\x00\xff\xff\xce\x8b\x78\x8c\x82\x00\x00\x00")
 
 func hard_reservedBytes() ([]byte, error) {
 	return bindataRead(
@@ -127,7 +127,7 @@ func hard_reserved() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "hard_reserved", size: 106, mode: os.FileMode(420), modTime: time.Unix(1531344070, 0)}
+	info := bindataFileInfo{name: "hard_reserved", size: 130, mode: os.FileMode(420), modTime: time.Unix(1531366263, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -147,7 +147,7 @@ func obfstringGoTmpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "obfstring.go.tmpl", size: 240, mode: os.FileMode(420), modTime: time.Unix(1531344070, 0)}
+	info := bindataFileInfo{name: "obfstring.go.tmpl", size: 240, mode: os.FileMode(420), modTime: time.Unix(1531353062, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -167,7 +167,7 @@ func preloadGs() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "preload.gs", size: 685, mode: os.FileMode(420), modTime: time.Unix(1531344070, 0)}
+	info := bindataFileInfo{name: "preload.gs", size: 685, mode: os.FileMode(420), modTime: time.Unix(1531353062, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -187,7 +187,7 @@ func soft_reserved() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "soft_reserved", size: 58, mode: os.FileMode(420), modTime: time.Unix(1531344070, 0)}
+	info := bindataFileInfo{name: "soft_reserved", size: 58, mode: os.FileMode(420), modTime: time.Unix(1531353062, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -207,7 +207,7 @@ func vm_fileGoTmpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "vm_file.go.tmpl", size: 8681, mode: os.FileMode(420), modTime: time.Unix(1531352447, 0)}
+	info := bindataFileInfo{name: "vm_file.go.tmpl", size: 8681, mode: os.FileMode(420), modTime: time.Unix(1531353062, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }

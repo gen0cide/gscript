@@ -2,6 +2,8 @@ package debugger
 
 import (
 	"fmt"
+	"os/user"
+	"path/filepath"
 
 	"github.com/fatih/color"
 	"github.com/gen0cide/gscript/engine"
@@ -45,6 +47,10 @@ func (d *Debugger) runDebugger() error {
 	prompt := fmt.Sprintf("%s%s", color.HiRedString("gscript"), color.HiWhiteString("> "))
 	c := &readline.Config{
 		Prompt: prompt,
+	}
+	cu, err := user.Current()
+	if err == nil {
+		c.HistoryFile = filepath.Join(cu.HomeDir, ".gscript_history")
 	}
 
 	rl, err := readline.NewEx(c)

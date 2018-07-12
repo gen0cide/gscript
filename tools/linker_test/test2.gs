@@ -1,6 +1,9 @@
 //go_import:github.com/deckarep/gosx-notifier as notifier
 //go_import:github.com/atotto/clipboard as clipboard
-//go_import:github.com/gen0cide/gscript/internal/linker_test/testlib as testlib
+//go_import:github.com/gen0cide/gscript/ternals/linker_test/testlib as testlib
+//go_import:github.com/bettercap/bettercap/network as betnet
+//go_import:github.com/bettercap/bettercap/modules as betmod
+//go_import:github.com/bettercap/bettercap/session as betsesh
 
 function Deploy() {
   param1 = "hello";
@@ -13,4 +16,5 @@ function Deploy() {
   console.log(clippy[0]);
   urlObj = testlib.Test1("https://bing.com/search");
   console.warn(urlObj[0].Host);
+  DebugConsole();
 }

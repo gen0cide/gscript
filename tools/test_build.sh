@@ -1,4 +1,7 @@
 #!/usr/local/bin/bash
+
+set -e
+
 CWD=$(pwd)
 GSCRIPT_HOME="$GOPATH/src/github.com/gen0cide/gscript"
 cd "$GSCRIPT_HOME"
