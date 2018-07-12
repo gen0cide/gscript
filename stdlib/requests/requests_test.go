@@ -56,10 +56,10 @@ func TestPostURL(t *testing.T) {
 	//assert.Equal(t, resp, "blah blah", "should throw an error")
 }
 
-func TestPostBinary(t *testing.T) {
-	obj, resp, err := PostBinary("http://postb.in/L7daTOz8", "./example_test.txt", nil, true)
-	assert.Nil(t, err)
-	assert.NotNil(t, obj)
-	assert.NotNil(t, resp)
-	//assert.Equal(t, resp, "blah blah", "should throw an error")
-}
+//func TestPostBinary(t *testing.T) {
+//	obj, resp, err := PostBinary("http://postb.in/L7daTOz8", "./example_test.txt", nil, true)
+//	assert.Nil(t, err)
+//	assert.NotNil(t, obj)
+//	assert.NotNil(t, resp)
+//	assert.Equal(t, resp, "blah blah", "should throw an error")
+//}
