@@ -7,7 +7,7 @@ import (
 )
 
 func TestRandomInt(t *testing.T) {
-	rando := RandomInt(1, 10)
+	rando := RandomInt(1, 2147483640)
 	assert.NotZero(t, rando)
 	//assert.EqualValues(t, rando, 0, "testing")
 }

@@ -2,7 +2,7 @@
 
 ## Function Index
 
-- GetUnix() int64
+- GetUnix() int
 
 ## Details
 
@@ -28,7 +28,7 @@ GetUnix() int64
 
 | Position  | Type         | Description                                |
 |-----------|--------------|--------------------------------------------|
-| `0`       | `int64`      | the current unix timestamp                 |
+| `0`       | `int`      | the current unix timestamp                 |
 
 **Example Usage:**
 

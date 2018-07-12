@@ -5,6 +5,6 @@ import (
 )
 
 //GetUnix fetches the current unixtime
-func GetUnix() int64 {
-	return gotime.Now().Unix()
+func GetUnix() int {
+	return int(gotime.Now().Unix())
 }
