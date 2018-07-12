@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"runtime"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/gen0cide/gscript/logger"
 	"github.com/gen0cide/gscript/logger/null"
 	"github.com/robertkrimen/otto"
@@ -73,7 +72,6 @@ func New(name, id string, timeout int, entrypoint string) *Engine {
 	}
 	e.InitVM()
 	e.SetLogger(&null.Logger{})
-	//e.SetLogger(logger.NewStandardLogrusLogger(nil, name, false, false))
 	e.setGlobalRef()
 	return e
 }
@@ -121,10 +119,10 @@ func (e *Engine) ImportStandardLibrary(pkgs []*NativePackage) error {
 		for n, f := range p.SymbolTable {
 			err = nsObj.Set(n, f.Func)
 			if err != nil {
-				spew.Dump(f)
 				return err
 			}
 		}
+		e.Packages[fmt.Sprintf("G.%s", pkgName)] = p
 		// err = ns.Set(pkgName, pkgNs)
 		// if err != nil {
 		// 	return err
@@ -216,9 +214,7 @@ func (e *Engine) setGlobalRef() error {
 	if err != nil {
 		return err
 	}
-
 	return nil
-	//return e.VM.Set("GoType", e.vmTypeChecker)
 }
 
 // EnableAssets injects the core asset handling functions into the engine's runtime

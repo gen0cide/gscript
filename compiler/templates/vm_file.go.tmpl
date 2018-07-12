@@ -109,6 +109,7 @@ func (o *{{ $.ID }}) {{ $.FunctionKey "import_native" }}() error {
   // Adding function pointer for native function {{ $pkg.Name }}.{{ $f.Function }} to symbol table
   _nf{{ $pkg.MaskedName }}{{ $fidx }} := &engine.NativeFunc{
     Name: "{{ $f.Function }}",
+    Signature: "{{ $f.Signature }}",
     Func: o.{{ $.ID }}{{ $f.ID }},
   }
   _np{{ $pkg.MaskedName }}.SymbolTable["{{ $f.Function }}"] = _nf{{ $pkg.MaskedName }}{{ $fidx }}
@@ -142,6 +143,7 @@ func (o *{{ $.ID }}) {{ $.FunctionKey "import_standard_library" }}() error {
   // Adding function pointer for native function {{ $pkg.Name }}.{{ $f.Function }} to symbol table
   _nf{{ $pkg.MaskedName }}{{ $fidx }} := &engine.NativeFunc{
     Name: "{{ $f.Function }}",
+    Signature: "{{ $f.Signature }}",
     Func: o.{{ $.ID }}{{ $f.ID }},
   }
   _np{{ $pkg.MaskedName }}.SymbolTable["{{ $f.Function }}"] = _nf{{ $pkg.MaskedName }}{{ $fidx }}

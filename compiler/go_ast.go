@@ -4,7 +4,10 @@ import (
 	"bytes"
 	"fmt"
 	"go/ast"
+	"go/printer"
+	"go/token"
 	"reflect"
+	"regexp"
 	"sync"
 
 	"github.com/gen0cide/gscript/compiler/computil"
@@ -33,6 +36,17 @@ var (
 		"uint64":     true,
 		"uintptr":    true,
 	}
+
+	invalidGoTypes = map[string]bool{
+		"complex128": true,
+		"complex64":  true,
+		"float32":    true,
+		"float64":    true,
+		"uintptr":    true,
+	}
+
+	funcRegexp  = regexp.MustCompile(`^func\({1}(?P<args>.*?)?\){1}\s*\(?(?P<rets>.*?)\)??$`)
+	multipleRet = regexp.MustCompile(`,`)
 )
 
 // MaskedImport is used to separate import namespaces within the intermediate representation
@@ -92,6 +106,9 @@ type GoPackage struct {
 
 	// Reference to know if this go package is part of the standard library
 	IsStandardLib bool
+
+	// FileSet is used by the parser to interpret the current golang's file tokens
+	FileSet *token.FileSet
 }
 
 // GoParamDef defines a type to represent parameters found in a Golang function declaration (arguments or return types)
@@ -291,6 +308,24 @@ func IsBuiltInGoType(s string) bool {
 // VM Script calls this function explicitly
 func (gop *GoPackage) WalkGoFileAST(goast *ast.File, wg *sync.WaitGroup, errChan chan error) {
 	ast.Inspect(goast, func(n ast.Node) bool {
+		// TODO: Started work on trying to grab CONST declarations, but fuck no. That gets wacky fast.
+		// Revisit when more time have I will.
+		// decl, ok := n.(*ast.GenDecl)
+		// if ok {
+		// 	if decl.Tok == token.CONST {
+		// 		for _, cdecl := range decl.Specs {
+		// 			if valdecl, ok := cdecl.(*ast.ValueSpec); ok {
+		// 				if len(valdecl.Names) > 0 && valdecl.Names[0].IsExported() {
+		// 					gop.VM.Logger.Infof("Discovered CONST: %s", spew.Sdump(valdecl))
+		// 				}
+		// 				// for
+		// 				// if valdecl.Name[0].IsExported() {
+		// 				// 	gop.VM.Logger.Infof("Discovered CONST: %s.%s = %s", gop.Name, valdecl.Name.Name, valdecl.)
+		// 				// }
+		// 			}
+		// 		}
+		// 	}
+		// }
 		fn, ok := n.(*ast.FuncDecl)
 		if ok {
 			funcName := fn.Name.Name
@@ -301,6 +336,8 @@ func (gop *GoPackage) WalkGoFileAST(goast *ast.File, wg *sync.WaitGroup, errChan
 					gop.Unlock()
 					return true
 				}
+				sig := new(bytes.Buffer)
+				printer.Fprint(sig, gop.FileSet, fn.Type)
 				lf, err := gop.VM.Linker.NewLinkedFunction(
 					funcName,
 					caller,
@@ -315,6 +352,37 @@ func (gop *GoPackage) WalkGoFileAST(goast *ast.File, wg *sync.WaitGroup, errChan
 					wg.Done()
 					return false
 				}
+				match := funcRegexp.FindStringSubmatch(sig.String())
+				result := make(map[string]string)
+				for i, name := range funcRegexp.SubexpNames() {
+					if i != 0 && name != "" {
+						result[name] = match[i]
+					}
+				}
+
+				newSigBuf := new(bytes.Buffer)
+				if result["rets"] != "" {
+					if multipleRet.MatchString(result["rets"]) {
+						newSigBuf.WriteString("[")
+					}
+					newSigBuf.WriteString(result["rets"])
+					if multipleRet.MatchString(result["rets"]) {
+						newSigBuf.WriteString("]")
+					}
+					newSigBuf.WriteString(" = ")
+				}
+				if gop.IsStandardLib {
+					newSigBuf.WriteString("G.")
+					newSigBuf.WriteString(gop.Name)
+				} else {
+					newSigBuf.WriteString(gop.Namespace)
+				}
+				newSigBuf.WriteString(".")
+				newSigBuf.WriteString(funcName)
+				newSigBuf.WriteString("(")
+				newSigBuf.WriteString(result["args"])
+				newSigBuf.WriteString(")")
+				lf.Signature = newSigBuf.String()
 				if len(gop.ImportsByFile[goast.Name.Name]) == 0 {
 					gop.ImportsByFile[goast.Name.Name] = goast.Imports
 				}

@@ -404,8 +404,8 @@ func (g *GenesisVM) WalkGoPackageAST(gop *GoPackage, wg *sync.WaitGroup, errChan
 		return validSrcFiles[fi.Name()]
 	}
 
-	fs := token.NewFileSet()
-	pkgs, err := parser.ParseDir(fs, gop.Dir, pkgFilter, parser.ParseComments)
+	gop.FileSet = token.NewFileSet()
+	pkgs, err := parser.ParseDir(gop.FileSet, gop.Dir, pkgFilter, parser.ParseComments)
 	if err != nil {
 		errChan <- err
 		return

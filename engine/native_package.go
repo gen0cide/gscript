@@ -14,8 +14,6 @@ type NativeFunc struct {
 	Name      string
 	Signature string
 	Func      func(call otto.FunctionCall) otto.Value
-	Args      map[int]*ParamDef
-	Returns   map[int]*ParamDef
 }
 
 // ParamDef defines basic information about either an argument or return value for NativeFunc

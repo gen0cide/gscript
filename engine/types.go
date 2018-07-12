@@ -1,60 +1,34 @@
 package engine
 
-// import (
-// 	"bytes"
-// 	"reflect"
+import (
+	"bytes"
+	"fmt"
+	"reflect"
+)
 
-// 	"github.com/robertkrimen/otto"
-// )
+type typeBuffer struct {
+	Input  interface{}
+	Orig   reflect.Value
+	Copy   reflect.Value
+	Buf    *bytes.Buffer
+	Engine *Engine
+}
 
-// type TypeBuffer struct {
-// 	Input interface{}
-// 	Orig  reflect.Value
-// 	Copy  reflect.Value
-// 	Buf   *bytes.Buffer
-// }
-
-// func NewTypeBuffer(i interface{}) *TypeBuffer {
-// 	orig := reflect.ValueOf(i)
-// 	copy := reflect.New(orig.Type()).Elem()
-// 	t := &TypeBuffer{
-// 		Input: i,
-// 		Buf:   new(bytes.Buffer),
-// 		Orig:  orig,
-// 		Copy:  copy,
-// 	}
-// }
-
-// func (e *Engine) vmTypeChecker(call otto.FunctionCall) otto.Value {
-// 	if len(call.ArgumentList) == 0 {
-// 		return otto.UndefinedValue()
-// 	} else if len(call.ArgumentList) == 1 {
-// 		val, err := call.Argument(0).Export()
-// 		if err != nil {
-// 			return e.Raise("jsexport", "could not convert argument number 0")
-// 		}
-// 		decType := reflect.TypeOf(val)
-// 		retObj, err := e.VM.ToValue(parseComplexType(decType))
-// 		if err != nil {
-// 			return e.Raise("jsimport", "could not convert return value")
-// 		}
-// 		return retObj
-// 	}
-// 	typeArray := []string{}
-// 	for idx, a := range call.ArgumentList {
-// 		val, err := a.Export()
-// 		if err != nil {
-// 			return e.Raise("jsexport", "could not convert argument number %d", idx)
-// 		}
-// 		decType := reflect.TypeOf(val)
-// 		typeArray = append(typeArray, parseComplexType(decType))
-// 	}
-// 	retObj, err := e.VM.ToValue(typeArray)
-// 	if err != nil {
-// 		return e.Raise("jsimport", "could not convert return array")
-// 	}
-// 	return retObj
-// }
+func (e *Engine) newTypeBuffer(i interface{}) *typeBuffer {
+	if i == nil {
+		return nil
+	}
+	orig := reflect.ValueOf(i)
+	copy := reflect.New(orig.Type()).Elem()
+	t := &typeBuffer{
+		Input:  i,
+		Buf:    new(bytes.Buffer),
+		Orig:   orig,
+		Copy:   copy,
+		Engine: e,
+	}
+	return t
+}
 
 // func translate(obj interface{}) interface{} {
 // 	// Wrap the original in a reflect.Value
@@ -67,74 +41,121 @@ package engine
 // 	return copy.Interface()
 // }
 
-// func (t *TypeBuffer) WalkType() (string, error) {
-// 	t.translateRecursive(t.Copy, t.Orig)
-// }
+func (t *typeBuffer) WalkType() (string, error) {
+	t.translateRecursive(t.Copy, t.Orig, 0)
+	return t.Buf.String(), nil
+}
 
-// func (t *TypeBuffer) translateRecursive(copy, original reflect.Value) {
-// 	switch original.Kind() {
-// 	// The first cases handle nested structures and translate them recursively
+func (t *typeBuffer) Tab(i int) {
+	for x := 0; x < i; x++ {
+		t.Buf.WriteString("  ")
+	}
+}
 
-// 	// If it is a pointer we need to unwrap and call once again
-// 	case reflect.Ptr:
-// 		t.Buf.WriteString("")
-// 		originalValue := original.Elem()
-// 		// Check if the pointer is nil
-// 		if !originalValue.IsValid() {
-// 			return
-// 		}
-// 		// Allocate a new object and set the pointer to it
-// 		copy.Set(reflect.New(originalValue.Type()))
-// 		// Unwrap the newly created pointer
-// 		translateRecursive(copy.Elem(), originalValue)
+func (t *typeBuffer) translateRecursive(copy, original reflect.Value, depth int) {
+	switch original.Kind() {
+	// The first cases handle nested structures and translate them recursively
 
-// 	// If it is an interface (which is very similar to a pointer), do basically the
-// 	// same as for the pointer. Though a pointer is not the same as an interface so
-// 	// note that we have to call Elem() after creating a new object because otherwise
-// 	// we would end up with an actual pointer
-// 	case reflect.Interface:
-// 		// Get rid of the wrapping interface
-// 		originalValue := original.Elem()
-// 		// Create a new object. Now new gives us a pointer, but we want the value it
-// 		// points to, so we have to call Elem() to unwrap it
-// 		copyValue := reflect.New(originalValue.Type()).Elem()
-// 		translateRecursive(copyValue, originalValue)
-// 		copy.Set(copyValue)
+	// If it is a pointer we need to unwrap and call once again
+	case reflect.Ptr:
+		originalValue := original.Elem()
+		// Check if the pointer is nil
+		if !originalValue.IsValid() {
+			t.Buf.WriteString("<nil>")
+			return
+		}
 
-// 	// If it is a struct we translate each field
-// 	case reflect.Struct:
-// 		for i := 0; i < original.NumField(); i += 1 {
-// 			translateRecursive(copy.Field(i), original.Field(i))
-// 		}
+		t.Buf.WriteString("*")
 
-// 	// If it is a slice we create a new slice and translate each element
-// 	case reflect.Slice:
-// 		copy.Set(reflect.MakeSlice(original.Type(), original.Len(), original.Cap()))
-// 		for i := 0; i < original.Len(); i += 1 {
-// 			translateRecursive(copy.Index(i), original.Index(i))
-// 		}
+		if !originalValue.CanSet() {
+			t.Buf.WriteString("<hidden>")
+			return
+		}
+		// Allocate a new object and set the pointer to it
+		copy.Set(reflect.New(originalValue.Type()))
+		// Unwrap the newly created pointer
+		t.translateRecursive(copy.Elem(), originalValue, depth)
 
-// 	// If it is a map we create a new map and translate each value
-// 	case reflect.Map:
-// 		copy.Set(reflect.MakeMap(original.Type()))
-// 		for _, key := range original.MapKeys() {
-// 			originalValue := original.MapIndex(key)
-// 			// New gives us a pointer, but again we want the value
-// 			copyValue := reflect.New(originalValue.Type()).Elem()
-// 			translateRecursive(copyValue, originalValue)
-// 			copy.SetMapIndex(key, copyValue)
-// 		}
+	// If it is an interface (which is very similar to a pointer), do basically the
+	// same as for the pointer. Though a pointer is not the same as an interface so
+	// note that we have to call Elem() after creating a new object because otherwise
+	// we would end up with an actual pointer
+	case reflect.Interface:
+		// Get rid of the wrapping interface
+		originalValue := original.Elem()
+		// Create a new object. Now new gives us a pointer, but we want the value it
+		// points to, so we have to call Elem() to unwrap it
+		copyValue := reflect.New(originalValue.Type()).Elem()
+		t.translateRecursive(copyValue, originalValue, depth)
+		copy.Set(copyValue)
 
-// 	// Otherwise we cannot traverse anywhere so this finishes the the recursion
+	// If it is a struct we translate each field
+	case reflect.Struct:
+		t.Buf.WriteString(original.Type().String())
+		t.Buf.WriteString("{")
+		//numberOfFields := original.NumField()
+		fieldFound := false
+		for i := 0; i < original.NumField(); i++ {
+			if !original.Field(i).CanSet() {
+				continue
+			}
+			t.Buf.WriteString("\n")
+			t.Tab(depth + 1)
+			t.Buf.WriteString(original.Type().Field(i).Name)
+			t.Buf.WriteString(": ")
+			t.translateRecursive(copy.Field(i), original.Field(i), depth+1)
+			t.Buf.WriteString(", ")
+		}
+		if fieldFound {
+			t.Buf.WriteString("\n")
+			t.Tab(depth)
+		}
+		t.Buf.WriteString("}")
 
-// 	// If it is a string translate it (yay finally we're doing what we came for)
-// 	case reflect.String:
-// 		translatedString := dict[original.Interface().(string)]
-// 		copy.SetString(translatedString)
+	// If it is a slice we create a new slice and translate each element
+	case reflect.Slice:
+		t.Buf.WriteString(original.Type().String())
+		t.Buf.WriteString(" { ")
+		copy.Set(reflect.MakeSlice(original.Type(), original.Len(), original.Cap()))
+		for i := 0; i < original.Len(); i++ {
+			t.translateRecursive(copy.Index(i), original.Index(i), depth)
+			t.Buf.WriteString(", ")
+		}
+		t.Buf.WriteString(" } ")
 
-// 	// And everything else will simply be taken from the original
-// 	default:
-// 		copy.Set(original)
-// 	}
+	// If it is a map we create a new map and translate each value
+	case reflect.Map:
+		t.Buf.WriteString(original.Type().String())
+		t.Buf.WriteString(" { ")
+		copy.Set(reflect.MakeMap(original.Type()))
+		for _, key := range original.MapKeys() {
 
-// }
+			originalValue := original.MapIndex(key)
+			// New gives us a pointer, but again we want the value
+			copyValue := reflect.New(originalValue.Type()).Elem()
+			t.translateRecursive(copyValue, originalValue, depth)
+			copy.SetMapIndex(key, copyValue)
+		}
+		t.Buf.WriteString(" }")
+		return
+
+	// Otherwise we cannot traverse anywhere so this finishes the the recursion
+
+	// If it is a string translate it (yay finally we're doing what we came for)
+	case reflect.String:
+		t.Buf.WriteString("\"")
+		t.Buf.WriteString(original.Interface().(string))
+		t.Buf.WriteString("\"")
+		return
+
+	// And everything else will simply be taken from the original
+
+	case reflect.Bool:
+		t.Buf.WriteString(fmt.Sprintf("%v", original.Interface().(bool)))
+		return
+	default:
+		t.Buf.WriteString(original.String())
+		return
+	}
+
+}

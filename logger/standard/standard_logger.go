@@ -17,6 +17,19 @@ import (
 var (
 	traceEnabled = false
 	reg          regexp.Regexp
+	debugLevel   = color.New(color.FgCyan, color.Bold)
+	infoLevel    = color.New(color.FgHiWhite, color.Bold)
+	warningLevel = color.New(color.FgHiBlue, color.Bold)
+	errorLevel   = color.New(color.FgHiYellow, color.Bold)
+	fatalLevel   = color.New(color.FgRed, color.Bold)
+	defaultLevel = color.New(color.FgGreen, color.Bold)
+
+	debugMsg   = color.New(color.FgCyan)
+	infoMsg    = color.New(color.FgHiWhite)
+	warningMsg = color.New(color.FgHiBlue)
+	errorMsg   = color.New(color.FgHiYellow)
+	fatalMsg   = color.New(color.FgRed)
+	defaultMsg = color.New(color.FgGreen)
 )
 
 func init() {
@@ -37,6 +50,7 @@ type standardLogWriter struct {
 
 type standardStrippedFormatter struct{}
 type standardDefaultFormatter struct{}
+type standardDebugFormatter struct{}
 
 func (g *standardStrippedFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	var buf bytes.Buffer
@@ -60,7 +74,7 @@ func (g *standardStrippedFormatter) Format(entry *logrus.Entry) ([]byte, error) 
 	return buf.Bytes(), nil
 }
 
-func (g *standardDefaultFormatter) Format(entry *logrus.Entry) ([]byte, error) {
+func (g *standardDebugFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	var logLvl, logLine, tracer string
 	var buffer bytes.Buffer
 	var deleteTrace = false
@@ -106,19 +120,19 @@ func (g *standardDefaultFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 
 	switch entry.Level.String() {
 	case "debug":
-		logLvl = color.HiCyanString(strings.ToUpper(entry.Level.String()))
+		logLvl = color.HiCyanString("DEBUG")
 		logLine = color.CyanString(entry.Message)
 	case "info":
-		logLvl = color.HiWhiteString(strings.ToUpper(entry.Level.String()))
+		logLvl = color.HiWhiteString("INFO ")
 		logLine = color.WhiteString(entry.Message)
 	case "warning":
-		logLvl = color.HiBlueString(strings.ToUpper(entry.Level.String()))
+		logLvl = color.HiBlueString("WARN ")
 		logLine = color.HiBlueString(entry.Message)
 	case "error":
-		logLvl = color.HiYellowString(strings.ToUpper(entry.Level.String()))
+		logLvl = color.HiYellowString("ERROR")
 		logLine = color.YellowString(entry.Message)
 	case "fatal":
-		logLvl = color.HiRedString(strings.ToUpper(entry.Level.String()))
+		logLvl = color.HiRedString("FATAL")
 		logLine = color.RedString(entry.Message)
 	default:
 		logLvl = color.HiGreenString(strings.ToUpper(entry.Level.String()))
@@ -130,6 +144,37 @@ func (g *standardDefaultFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 		logLvl,
 		logLine,
 		tracer,
+	)
+	return []byte(line), nil
+}
+
+func (g *standardDefaultFormatter) Format(entry *logrus.Entry) ([]byte, error) {
+	var logLvl, logLine string
+
+	switch entry.Level.String() {
+	case "debug":
+		logLvl = debugLevel.Sprint("DEBUG")
+		logLine = debugMsg.Sprint(entry.Message)
+	case "info":
+		logLvl = infoLevel.Sprint(" INFO")
+		logLine = infoMsg.Sprint(entry.Message)
+	case "warning":
+		logLvl = warningLevel.Sprint(" WARN")
+		logLine = warningMsg.Sprint(entry.Message)
+	case "error":
+		logLvl = errorLevel.Sprint("ERROR")
+		logLine = errorMsg.Sprint(entry.Message)
+	case "fatal":
+		logLvl = fatalLevel.Sprint("FATAL")
+		logLine = fatalMsg.Sprint(entry.Message)
+	default:
+		logLvl = defaultLevel.Sprintf(" %s ", strings.ToUpper(entry.Level.String()))
+		logLine = defaultMsg.Sprint(entry.Message)
+	}
+	line := fmt.Sprintf(
+		"%s %s\n",
+		logLvl,
+		logLine,
 	)
 	return []byte(line), nil
 }

@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"os/user"
 	"path/filepath"
+	"strings"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/fatih/color"
 	"github.com/gen0cide/gscript/engine"
 	"github.com/gen0cide/gscript/logger"
@@ -33,7 +35,15 @@ func New(e *engine.Engine) *Debugger {
 
 // InjectDebugConsole injects the DebugConsole command into the runtime
 func (d *Debugger) InjectDebugConsole() error {
-	return d.VM.VM.Set("DebugConsole", d.vmDebugConsole)
+	err := d.VM.VM.Set("DebugConsole", d.vmDebugConsole)
+	if err != nil {
+		return err
+	}
+	err = d.VM.VM.Set("SymbolTable", d.vmSymbolTable)
+	if err != nil {
+		return err
+	}
+	return d.VM.VM.Set("TypeOf", d.vmTypeChecker)
 }
 
 func (d *Debugger) vmDebugConsole(call otto.FunctionCall) otto.Value {
@@ -41,6 +51,29 @@ func (d *Debugger) vmDebugConsole(call otto.FunctionCall) otto.Value {
 	d.runDebugger()
 	d.VM.SetLogger(d.OldLogger)
 	return otto.UndefinedValue()
+}
+
+func (d *Debugger) vmSymbolTable(call otto.FunctionCall) otto.Value {
+	sym := d.AvailableFuncs()
+	for ns, funcs := range sym {
+		d.Logger.Infof(">>> %s Package\n\t%s\n", ns, strings.Join(funcs, "\n\t"))
+	}
+	return otto.UndefinedValue()
+}
+
+func (d *Debugger) vmTypeChecker(call otto.FunctionCall) otto.Value {
+	if len(call.ArgumentList) == 0 {
+		return d.VM.Raise("arg", "no argument provided")
+	} else if len(call.ArgumentList) == 1 {
+		val, err := call.Argument(0).Export()
+		if err != nil {
+			return d.VM.Raise("jsexport", "could not convert argument number 0")
+		}
+		retVal, _ := call.Otto.ToValue(spew.Sdump(val))
+		return retVal
+	} else {
+		return d.VM.Raise("arg", "too many arguments provided")
+	}
 }
 
 func (d *Debugger) runDebugger() error {
@@ -98,7 +131,7 @@ func (d *Debugger) runDebugger() error {
 		v, err := d.VM.VM.Eval(s)
 		if err != nil {
 			if oerr, ok := err.(*otto.Error); ok {
-				d.Logger.Error(oerr.String())
+				d.Logger.Error(oerr.Error())
 			} else {
 				d.Logger.Error(err.Error())
 			}
@@ -109,4 +142,18 @@ func (d *Debugger) runDebugger() error {
 	}
 
 	return rl.Close()
+}
+
+// AvailableFuncs returns the current debugger's symbol table
+func (d *Debugger) AvailableFuncs() map[string][]string {
+	ret := map[string][]string{}
+	for name, p := range d.VM.Packages {
+		ret[name] = []string{}
+		idx := 0
+		for _, f := range p.SymbolTable {
+			ret[name] = append(ret[name], fmt.Sprintf("%d) %s", idx, f.Signature))
+			idx++
+		}
+	}
+	return ret
 }

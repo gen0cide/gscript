@@ -58,6 +58,9 @@ type LinkedFunction struct {
 
 	// Any errors from the swizzling of this function
 	SwizzleError error
+
+	// Signature is a saved version of the golang's method signature
+	Signature string
 }
 
 // Linker holds the maps between functions called from the genesis script and

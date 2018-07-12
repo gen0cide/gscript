@@ -13,7 +13,7 @@ import (
 
 var (
 	defaultCompileOptions = computil.DefaultOptions()
-	cliLogger             = standard.NewStandardLogger(nil, "cli", false, true)
+	cliLogger             = standard.NewStandardLogger(nil, "cli", false, false)
 	displayBefore         = true
 )
 
@@ -58,8 +58,12 @@ func main() {
 	}
 
 	app.Before = func(c *cli.Context) error {
-		if c.Args().Get(0) != "shell" {
-			fmt.Fprintf(c.App.Writer, "%s\n\n", standard.ASCIILogo())
+		subcmd := ""
+		if len(c.Args()) > 0 {
+			subcmd = c.Args().Get(0)
+		}
+		if subcmd != "shell" {
+			fmt.Fprintf(c.App.Writer, "%s\n", standard.ASCIILogo())
 		}
 		return nil
 	}
