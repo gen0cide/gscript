@@ -1,11 +1,11 @@
-package os
+//package os
 
-import (
-	"testing"
-)
+//import (
+//	"testing"
+//)
 
 // DANGEROUS FUNCTION
-func TestTerminateSelf(t *testing.T) {
-	// DANGEROUS FUNCTION
-	TerminateSelf()
-}
+//func TestTerminateSelf(t *testing.T) {
+// DANGEROUS FUNCTION
+//	TerminateSelf()
+//}
