@@ -204,15 +204,15 @@ func (e *Engine) setGlobalRef() error {
 	if err != nil {
 		return err
 	}
-	err = e.SetConst("G.ENGINE", e)
+	err = e.SetConst("_ENGINE", e)
 	if err != nil {
 		return err
 	}
-	err = e.SetConst("G.OS", runtime.GOOS)
+	err = e.SetConst("OS", runtime.GOOS)
 	if err != nil {
 		return err
 	}
-	err = e.SetConst("G.ARCH", runtime.GOARCH)
+	err = e.SetConst("ARCH", runtime.GOARCH)
 	if err != nil {
 		return err
 	}
