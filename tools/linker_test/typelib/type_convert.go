@@ -1,5 +1,11 @@
 package typelib
 
-func ReturnHandle(arg uintptr) error {
+import "syscall"
+
+func TakePointer(arg uintptr) error {
+	return nil
+}
+
+func TakeHandle(arg syscall.Signal) error {
 	return nil
 }

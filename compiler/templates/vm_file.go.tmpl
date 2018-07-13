@@ -12,24 +12,24 @@ import (
   "github.com/gen0cide/gscript/engine"
   "github.com/robertkrimen/otto"
   {{ if $.HasDebuggingEnabled -}}
-  "github.com/gen0cide/gscript/debugger"
+    "github.com/gen0cide/gscript/debugger"
   {{- end }}
   {{ if $.HasLoggingEnabled -}}
-  "github.com/gen0cide/gscript/logger/standard"
+    "github.com/gen0cide/gscript/logger/standard"
   {{- end }}
 
   // Importing masks
   {{ range $ip, $mi := $.Linker.MaskedImports }}
-  {{ $mi.NewAlias }} "{{ $ip }}"
+    {{ $mi.NewAlias }} "{{ $ip }}"
   {{ end }}
 )
 
 var (
-{{- range $_, $embed := $.Embeds }}
-  // {{ $embed.ID }} holds the data for embedded file {{ $embed.OrigName }}
-  {{ $embed.ID }} = "{{ $embed.Data }}"
+  {{- range $_, $embed := $.Embeds }}
+    // {{ $embed.ID }} holds the data for embedded file {{ $embed.OrigName }}
+    {{ $embed.ID }} = "{{ $embed.Data }}"
 
-{{- end }}
+  {{- end }}
 )
 
 // {{ $.ID }} wraps the genesis VM for {{ $.Name }}
@@ -37,7 +37,7 @@ type {{ $.ID }} struct {
   E *engine.Engine
   K []byte
   {{ if $.HasDebuggingEnabled -}}
-  D *debugger.Debugger
+    D *debugger.Debugger
   {{- end }}
 }
 
@@ -45,16 +45,16 @@ type {{ $.ID }} struct {
 func New{{ $.ID }}() *{{ $.ID }} {
   te := engine.New("{{ $.Name }}", "{{ $.ID }}", 30, "Execute")
   {{ if $.HasLoggingEnabled -}}
-  al := standard.NewStandardLogger(nil, "{{ $.Name }}", false, false)
-  te.SetLogger(al)
+    al := standard.NewStandardLogger(nil, "{{ $.Name }}", false, false)
+    te.SetLogger(al)
   {{- end }}
   {{ if $.HasDebuggingEnabled }}
-  de := debugger.New(te)
+    de := debugger.New(te)
   {{ end }}
   o := &{{ $.ID }}{
     E: te,
     {{ if $.HasDebuggingEnabled -}}
-    D: de,
+      D: de,
     {{- end }}
   }
   return o
@@ -63,11 +63,11 @@ func New{{ $.ID }}() *{{ $.ID }} {
 // {{ $.FunctionKey "import_assets" }} imports assets into the genesis runtime for script {{ $.Name }}
 func (o *{{ $.ID }}) {{ $.FunctionKey "import_assets" }}() error {
   {{ range $eid, $embed := $.Embeds -}}
-  // {{ $eid }} = {{ $embed.OrigName }}
-  o.E.Imports["{{ $eid }}"] = func() []byte {
-    // Unpacker wrapper with const declared above
-    return {{ $.ID }}D({{ $embed.ID }})
-  }
+    // {{ $eid }} = {{ $embed.OrigName }}
+    o.E.Imports["{{ $eid }}"] = func() []byte {
+      // Unpacker wrapper with const declared above
+      return {{ $.ID }}D({{ $embed.ID }})
+    }
   {{ end -}}
   return nil
 }
@@ -85,7 +85,7 @@ func (o *{{ $.ID }}) {{ $.FunctionKey "import_script" }}() error {
 // {{ $.FunctionKey "execute" }} executes the genesis VM at the entry point (defined by version, usually Deploy())
 func (o *{{ $.ID }}) {{ $.FunctionKey "execute" }}() error {
   {{ if $.HasDebuggingEnabled -}}
-  o.D.InjectDebugConsole()
+    o.D.InjectDebugConsole()
   {{- end }}
   o.E.EnableAssets()
   _, err := o.E.CallFunctionWithTimeout("Deploy")
@@ -99,26 +99,30 @@ func (o *{{ $.ID }}) {{ $.FunctionKey "import_native" }}() error {
 
   // -- BEGIN NATIVE PACKAGE IMPORTS
   {{ range $ns, $pkg := $.GoPackageByNamespace -}}
-  // Importing {{ $pkg.ImportPath }} under namespace {{ $pkg.MaskedName }} (originally was {{ $ns }})
-  _np{{ $pkg.MaskedName }} := &engine.NativePackage{
-    ImportPath: "{{ $pkg.ImportPath }}",
-    Name: "{{ $pkg.Name }}",
-    SymbolTable: map[string]*engine.NativeFunc{},
-  }
-  {{ range $fidx, $f := $pkg.SuccessfullyLinkedFuncs -}}
-  // Adding function pointer for native function {{ $pkg.Name }}.{{ $f.Function }} to symbol table
-  _nf{{ $pkg.MaskedName }}{{ $fidx }} := &engine.NativeFunc{
-    Name: "{{ $f.Function }}",
-    Signature: "{{ $f.Signature }}",
-    Func: o.{{ $.ID }}{{ $f.ID }},
-  }
-  _np{{ $pkg.MaskedName }}.SymbolTable["{{ $f.Function }}"] = _nf{{ $pkg.MaskedName }}{{ $fidx }}
-  {{ end -}}
-  // Injecting native package into the genesis VM
-  err = o.E.ImportNativePackage("{{ $ns }}", _np{{ $pkg.MaskedName }})
-  if err != nil {
-    return err
-  }
+    // Importing {{ $pkg.ImportPath }} under namespace {{ $pkg.MaskedName }} (originally was {{ $ns }})
+    _np{{ $pkg.MaskedName }} := &engine.NativePackage{
+      ImportPath: "{{ $pkg.ImportPath }}",
+      Name: "{{ $pkg.Name }}",
+      SymbolTable: map[string]*engine.NativeFunc{},
+    }
+    {{ range $fidx, $f := $pkg.SuccessfullyLinkedFuncs -}}
+      // Adding function pointer for native function {{ $pkg.Name }}.{{ $f.Function }} to symbol table
+      _nf{{ $pkg.MaskedName }}{{ $fidx }} := &engine.NativeFunc{
+        Name: "{{ $f.Function }}",
+        Signature: "{{ $f.Signature }}",
+        Func: o.{{ $.ID }}{{ $f.ID }},
+      }
+      _np{{ $pkg.MaskedName }}.SymbolTable["{{ $f.Function }}"] = _nf{{ $pkg.MaskedName }}{{ $fidx }}
+    {{ end -}}
+
+    // Injecting native package into the genesis VM
+    err = o.E.ImportNativePackage("{{ $ns }}", _np{{ $pkg.MaskedName }})
+    if err != nil {
+      return err
+    }
+
+    // --
+
   {{ end -}}
   // -- END NATIVE PACKAGE IMPORTS
   return err
@@ -132,24 +136,24 @@ func (o *{{ $.ID }}) {{ $.FunctionKey "import_standard_library" }}() error {
 
   // -- BEGIN NATIVE PACKAGE IMPORTS
   {{ range $ns, $pkg := $.EnabledStandardLibs -}}
-  // Importing Standard Library Package: {{ $ns }}
-  _np{{ $pkg.MaskedName }} := &engine.NativePackage{
-    ImportPath: "{{ $pkg.ImportPath }}",
-    Name: "{{ $ns }}",
-    SymbolTable: map[string]*engine.NativeFunc{},
-  }
+    // Importing Standard Library Package: {{ $ns }}
+    _np{{ $pkg.MaskedName }} := &engine.NativePackage{
+      ImportPath: "{{ $pkg.ImportPath }}",
+      Name: "{{ $ns }}",
+      SymbolTable: map[string]*engine.NativeFunc{},
+    }
 
-  {{ range $fidx, $f := $pkg.SuccessfullyLinkedFuncs -}}
-  // Adding function pointer for native function {{ $pkg.Name }}.{{ $f.Function }} to symbol table
-  _nf{{ $pkg.MaskedName }}{{ $fidx }} := &engine.NativeFunc{
-    Name: "{{ $f.Function }}",
-    Signature: "{{ $f.Signature }}",
-    Func: o.{{ $.ID }}{{ $f.ID }},
-  }
-  _np{{ $pkg.MaskedName }}.SymbolTable["{{ $f.Function }}"] = _nf{{ $pkg.MaskedName }}{{ $fidx }}
+    {{ range $fidx, $f := $pkg.SuccessfullyLinkedFuncs -}}
+      // Adding function pointer for native function {{ $pkg.Name }}.{{ $f.Function }} to symbol table
+      _nf{{ $pkg.MaskedName }}{{ $fidx }} := &engine.NativeFunc{
+        Name: "{{ $f.Function }}",
+        Signature: "{{ $f.Signature }}",
+        Func: o.{{ $.ID }}{{ $f.ID }},
+      }
+      _np{{ $pkg.MaskedName }}.SymbolTable["{{ $f.Function }}"] = _nf{{ $pkg.MaskedName }}{{ $fidx }}
 
-  {{ end -}}
-  ntp = append(ntp, _np{{ $pkg.MaskedName }})
+    {{ end -}}
+    ntp = append(ntp, _np{{ $pkg.MaskedName }})
   {{ end -}}
 
   // Injecting standard library into the genesis VM
@@ -169,7 +173,7 @@ func {{ $.ID }}ODK() []byte {
 var {{ $.ID }}ODRD = []byte{
 	{{- range $idx, $b := $.DecryptionKeyArray -}}
 		{{- if mod $idx 7 -}}
-		{{ printf "\n\t" }}
+		  {{ printf "\n\t" }}
 		{{- end -}}
 		{{ printf "0x%x, " $b -}}
 	{{ end }}

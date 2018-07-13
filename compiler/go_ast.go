@@ -40,9 +40,20 @@ var (
 	invalidGoTypes = map[string]bool{
 		"complex128": true,
 		"complex64":  true,
-		"float32":    true,
-		"float64":    true,
-		"uintptr":    true,
+		// "float32":    true,
+		// "float64":    true,
+		// "uintptr": true,
+	}
+
+	intermediateImports = map[string]bool{
+		"bytes": true,
+		"compress/gzip": true,
+		"crypto/aes": true,
+		"crypto/cipher"
+	}
+
+	translatedGoTypes map[string]func(string) (string, error) {
+
 	}
 
 	funcRegexp  = regexp.MustCompile(`^func\({1}(?P<args>.*?)?\){1}\s*\(?(?P<rets>.*?)\)??$`)
@@ -143,6 +154,9 @@ type GoParamDef struct {
 
 	// GoLabel is used to represent the label name within Golang
 	GoLabel string
+
+	// Translator is used incase the golang type needs a wrapper translation for
+	Translator *translator.Translator
 
 	// LinkedFUnction is used to reference the parent LinkedFunction object
 	LinkedFunction *LinkedFunction
@@ -420,4 +434,8 @@ func (gop *GoPackage) SuccessfullyLinkedFuncs() []*LinkedFunction {
 	}
 
 	return lf
+}
+
+func (p *GoParamDef) BuiltInTranslationRequired() bool {
+	return translator.BuiltInMap[p.ExtSig] != ""
 }

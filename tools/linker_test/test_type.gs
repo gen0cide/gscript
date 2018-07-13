@@ -2,6 +2,7 @@
 
 function Deploy() {
   val = 12345
-  t = typelib.ReturnHandle(val)
-  check(t)
+  console.log(typelib.TakePointer(val))
+  console.log(typelib.TakeHandle(val))
+  DebugConsole()
 }
