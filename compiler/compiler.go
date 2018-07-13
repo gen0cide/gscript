@@ -108,81 +108,107 @@ func (c *Compiler) Do() error {
 	if err != nil {
 		return err
 	}
+	c.Logger.Debug("compiler configuration looks good")
 	err = c.CreateBuildDir()
 	if err != nil {
 		return err
 	}
+	c.Logger.Debug("build dir created")
 	err = c.ProcessMacros()
 	if err != nil {
 		return err
 	}
+	c.Logger.Debug("compiler macros processed")
 	err = c.InitializeImports()
 	if err != nil {
 		return err
 	}
+	c.Logger.Debug("import references initialized")
 	err = c.DetectVersions()
 	if err != nil {
 		return err
 	}
+	c.Logger.Debug("entry points located within scripts")
 	err = c.GatherAssets()
 	if err != nil {
 		return err
 	}
+	c.Logger.Debug("asset tree built")
 	err = c.WalkGenesisASTs()
 	if err != nil {
 		return err
 	}
+	c.Logger.Debug("genesis scripts analyzed")
 	err = c.LocateGoDependencies()
 	if err != nil {
 		return err
 	}
+	c.Logger.Debug("native dependencies resolved")
 	err = c.BuildGolangASTs()
 	if err != nil {
 		return err
 	}
+	c.Logger.Debug("native code bundles mapped to the virtual machine")
 	err = c.SanityCheckScriptToNativeMapping()
 	if err != nil {
 		return err
 	}
+	c.Logger.Debug("script callers for native code validated")
 	err = c.SwizzleNativeCalls()
 	if err != nil {
 		return err
 	}
+	c.Logger.Debug("native code dynamically linked to the genesis virtual machine")
 	err = c.SanityCheckSwizzles()
 	if err != nil {
 		return err
 	}
+	c.Logger.Debug("dynamic link correctness validated")
 	err = c.WritePreloads()
 	if err != nil {
 		return err
 	}
+	c.Logger.Debug("built in genesis helper library injected")
 	err = c.WriteScripts()
 	if err != nil {
 		return err
 	}
+	c.Logger.Debug("scripts staged for compilation")
 	err = c.EncodeAssets()
 	if err != nil {
 		return err
 	}
+	c.Logger.Debug("assets encrypted and embedded into the genesis VMs")
 	err = c.WriteVMBundles()
 	if err != nil {
 		return err
 	}
+	c.Logger.Debug("virtual machines compiled into intermediate representation")
 	err = c.CreateEntryPoint()
 	if err != nil {
 		return err
 	}
+	c.Logger.Debug("genesis vm callers embedded into final binary entry point")
 	err = c.PerformPreCompileObfuscation()
 	if err != nil {
 		return err
+	}
+	if c.ObfuscationLevel < 2 {
+		c.Logger.Debug("pre-obfuscation completed (stylist tangled all hairs)")
 	}
 	err = c.BuildNativeBinary()
 	if err != nil {
 		return err
 	}
+	if c.SkipCompilation != true {
+		c.Logger.Debug("statically linked native binary built")
+	}
 	err = c.PerformPostCompileObfuscation()
 	if err != nil {
 		return err
+	}
+	if c.ObfuscationLevel == 0 {
+		c.Logger.Debug("post-obfuscation completed (mordor has assaulted the binary)")
 	}
 	return nil
 }

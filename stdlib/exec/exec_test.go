@@ -23,5 +23,5 @@ func TestExecuteCommandAsync(t *testing.T) {
 	var retcmd *executer.Cmd
 	retcmd, err := ExecuteCommandAsync("sleep", s)
 	assert.Nil(t, err)
-	assert.NotNil(t, retcmd.Process.Pid)
+	assert.NotNil(t, retcmd.Process)
 }

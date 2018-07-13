@@ -11,6 +11,7 @@ import (
 	"sync"
 
 	"github.com/gen0cide/gscript/compiler/computil"
+	"github.com/gen0cide/gscript/compiler/translator"
 )
 
 var (
@@ -40,9 +41,23 @@ var (
 	invalidGoTypes = map[string]bool{
 		"complex128": true,
 		"complex64":  true,
-		"float32":    true,
-		"float64":    true,
-		"uintptr":    true,
+		// "float32":    true,
+		// "float64":    true,
+		// "uintptr": true,
+	}
+
+	binaryImports = map[string]string{
+		"bytes":           "bytes",
+		"compress/gzip":   "gzip",
+		"crypto/aes":      "aes",
+		"crypto/cipher":   "cipher",
+		"encoding/base64": "base64",
+		"fmt":             "fmt",
+		"io":              "io",
+		"github.com/gen0cide/gscript/engine":          "engine",
+		"github.com/robertkrimen/otto":                "otto",
+		"github.com/gen0cide/gscript/debugger":        "debugger",
+		"github.com/gen0cide/gscript/logger/standard": "standard",
 	}
 
 	funcRegexp  = regexp.MustCompile(`^func\({1}(?P<args>.*?)?\){1}\s*\(?(?P<rets>.*?)\)??$`)
@@ -179,11 +194,25 @@ func NewGoParamDef(l *LinkedFunction, idx int) *GoParamDef {
 
 // NewMaskedImport creates a new import mask based on an import path and old alias
 func NewMaskedImport(ip, oa string) *MaskedImport {
+	alias := computil.RandLowerAlphaString(6)
+	if val, ok := binaryImports[ip]; ok {
+		alias = val
+	}
 	return &MaskedImport{
 		ImportPath: ip,
 		OldAlias:   oa,
-		NewAlias:   computil.RandLowerAlphaString(6),
+		NewAlias:   alias,
 	}
+}
+
+// IsDefaultImport tests a golang import path to determine if it is already defined in the intermediate representation
+func IsDefaultImport(ip string) bool {
+	return binaryImports[ip] != ""
+}
+
+// GetDefaultImportNamespace returns the corrasponding namespace to the import path provided that is used in the intermediate representation
+func GetDefaultImportNamespace(ip string) string {
+	return binaryImports[ip]
 }
 
 // import (
@@ -283,10 +312,17 @@ func (p *GoParamDef) ParseStarExpr(a *ast.StarExpr) error {
 // ParseIdent interprets a golang identifier into the appropriate GoParamDef structure
 func (p *GoParamDef) ParseIdent(a *ast.Ident) error {
 	if ok := builtInGoTypes[a.Name]; !ok {
-		p.SigBuffer.WriteString(p.LinkedFunction.GoPackage.MaskedName)
-		p.SigBuffer.WriteString(".")
-		p.NameBuffer.WriteString(p.LinkedFunction.GoPackage.MaskedName)
-		p.NameBuffer.WriteString("_")
+		if IsDefaultImport(p.LinkedFunction.GoPackage.ImportPath) {
+			p.SigBuffer.WriteString(GetDefaultImportNamespace(p.LinkedFunction.GoPackage.ImportPath))
+			p.SigBuffer.WriteString(".")
+			p.NameBuffer.WriteString(GetDefaultImportNamespace(p.LinkedFunction.GoPackage.ImportPath))
+			p.NameBuffer.WriteString("_")
+		} else {
+			p.SigBuffer.WriteString(p.LinkedFunction.GoPackage.MaskedName)
+			p.SigBuffer.WriteString(".")
+			p.NameBuffer.WriteString(p.LinkedFunction.GoPackage.MaskedName)
+			p.NameBuffer.WriteString("_")
+		}
 	}
 	p.SigBuffer.WriteString(a.Name)
 	p.NameBuffer.WriteString(a.Name)
@@ -420,4 +456,14 @@ func (gop *GoPackage) SuccessfullyLinkedFuncs() []*LinkedFunction {
 	}
 
 	return lf
+}
+
+// BuiltInTranslationRequired is a compiler helper to determine if the param definition requires a built in translation
+func (p *GoParamDef) BuiltInTranslationRequired() bool {
+	return translator.BuiltInMap[p.ExtSig] != ""
+}
+
+// BuiltInJSType returns the type that JS will return that we need to convert the ParamDef to golang
+func (p *GoParamDef) BuiltInJSType() string {
+	return translator.BuiltInMap[p.ExtSig]
 }
