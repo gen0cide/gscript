@@ -8,10 +8,14 @@ var (
 		"int":     "int64",
 		"uintptr": "int64",
 	}
+
+	// TypeAliasMap maps a package to it's various type alias conversion types
+	TypeAliasMap = map[string]TypeAliasToBuiltIn{
+		"syscall": TypeAliasToBuiltIn{
+			"Signal": "int",
+		},
+	}
 )
 
-// type Translator struct {
-// 	Logger logger.Logger
-// }
-
-// func convertInt()
+// TypeAliasToBuiltIn maps package type aliases to built in types for conversion
+type TypeAliasToBuiltIn map[string]string

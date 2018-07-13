@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/fatih/color"
 	"github.com/gen0cide/gscript"
 	"github.com/gen0cide/gscript/compiler/computil"
@@ -15,6 +17,7 @@ var (
 	defaultCompileOptions = computil.DefaultOptions()
 	cliLogger             = standard.NewStandardLogger(nil, "cli", false, false)
 	displayBefore         = true
+	debugOutput           = false
 )
 
 func init() {
@@ -31,6 +34,13 @@ func main() {
 	app.Writer = color.Output
 	app.ErrWriter = color.Output
 	app.Name = "gscript"
+	app.Flags = []cli.Flag{
+		cli.BoolFlag{
+			Name:        "debug, d",
+			Usage:       "enables verbose debug output",
+			Destination: &debugOutput,
+		},
+	}
 	app.Version = gscript.Version
 	app.Authors = []cli.Author{
 		cli.Author{
@@ -59,6 +69,9 @@ func main() {
 
 	app.Before = func(c *cli.Context) error {
 		subcmd := ""
+		if debugOutput {
+			cliLogger.Logger.SetLevel(logrus.DebugLevel)
+		}
 		if len(c.Args()) > 0 {
 			subcmd = c.Args().Get(0)
 		}

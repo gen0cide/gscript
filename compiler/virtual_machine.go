@@ -319,10 +319,12 @@ func (g *GenesisVM) InitializeGoImports() error {
 		gop := NewGoPackage(g, m.Params["namespace"], m.Params["gopkg"], false)
 		g.GoPackageByImport[m.Params["gopkg"]] = gop
 		g.GoPackageByNamespace[m.Params["namespace"]] = gop
-		g.Linker.MaskedImports[m.Params["gopkg"]] = &MaskedImport{
-			ImportPath: m.Params["gopkg"],
-			OldAlias:   gop.Name,
-			NewAlias:   gop.MaskedName,
+		if !IsDefaultImport(m.Params["gopkg"]) {
+			g.Linker.MaskedImports[m.Params["gopkg"]] = &MaskedImport{
+				ImportPath: m.Params["gopkg"],
+				OldAlias:   gop.Name,
+				NewAlias:   gop.MaskedName,
+			}
 		}
 	}
 	for l := range computil.GenesisLibs {
@@ -650,10 +652,12 @@ func (g *GenesisVM) GetIDLiterals() []string {
 func (g *GenesisVM) EnableStandardLibrary(name string) (*GoPackage, error) {
 	if pkg, ok := g.StandardLibs[name]; ok {
 		g.EnabledStandardLibs[name] = pkg
-		g.Linker.MaskedImports[pkg.ImportPath] = &MaskedImport{
-			ImportPath: pkg.ImportPath,
-			OldAlias:   pkg.Name,
-			NewAlias:   pkg.MaskedName,
+		if !IsDefaultImport(pkg.ImportPath) {
+			g.Linker.MaskedImports[pkg.ImportPath] = &MaskedImport{
+				ImportPath: pkg.ImportPath,
+				OldAlias:   pkg.Name,
+				NewAlias:   pkg.MaskedName,
+			}
 		}
 		return pkg, nil
 	}
