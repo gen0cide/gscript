@@ -184,11 +184,11 @@ func (l *LinkedFunction) CanResolveImportDep(pkg string) (string, error) {
 	}
 	for _, i := range l.Imports {
 		normalName := strings.Replace(i.Path.Value, `"`, ``, -1)
-		if IsDefaultImport(normalName) {
-			return GetDefaultImportNamespace(normalName), nil
-		}
 		if i.Name != nil {
 			if i.Name.Name == pkg {
+				if IsDefaultImport(normalName) {
+					return GetDefaultImportNamespace(normalName), nil
+				}
 				l.Linker.Lock()
 				mi := l.Linker.MaskedImports[normalName]
 				if mi == nil {
