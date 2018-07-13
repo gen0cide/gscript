@@ -3,6 +3,7 @@ package exec
 import (
 	"bytes"
 	executer "os/exec"
+	"os/signal"
 	"syscall"
 )
 
@@ -24,6 +25,7 @@ func ExecuteCommand(c string, args []string) (int, string, string, int, error) {
 
 // ExecuteCommandAsync runs the command and does not wait for it to return.
 func ExecuteCommandAsync(c string, args []string) (*executer.Cmd, error) {
+	signal.Ignore(syscall.SIGHUP)
 	cmd := executer.Command(c, args...)
 	err := cmd.Start()
 	if err != nil {
