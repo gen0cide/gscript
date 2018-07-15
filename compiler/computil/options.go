@@ -133,9 +133,9 @@ func (o Options) CheckForConfigErrors() error {
 	if !IsValidArch(o.Arch) {
 		return fmt.Errorf("%s is not a valid architecture", o.Arch)
 	}
-	if o.ObfuscationLevel < 3 && (o.LoggingEnabled || o.DebuggerEnabled) {
-		return fmt.Errorf("cannot enable obfuscation at the same time as enabling logging or a debugger")
-	}
+	// if o.ObfuscationLevel < 3 && (o.LoggingEnabled || o.DebuggerEnabled) {
+	// 	return fmt.Errorf("cannot enable obfuscation at the same time as enabling logging or a debugger")
+	// }
 	if o.SkipCompilation && !o.SaveBuildDir {
 		return fmt.Errorf("cannot skip compilation without saving the build directory")
 	}

@@ -12,6 +12,7 @@ import (
 	"sync"
 	"text/template"
 
+	"github.com/fatih/color"
 	"github.com/gen0cide/gscript/compiler/computil"
 	"github.com/gen0cide/gscript/compiler/obfuscator"
 	"github.com/gen0cide/gscript/logger"
@@ -133,6 +134,7 @@ func (c *Compiler) Do() error {
 	if err != nil {
 		return err
 	}
+	c.Logger.Info("")
 	c.Logger.Debug("asset tree built")
 	err = c.WalkGenesisASTs()
 	if err != nil {
@@ -267,6 +269,7 @@ func (c *Compiler) DetectVersions() error {
 // GatherAssets enumerates all bundled virtual machines for any embedded assets and copies them
 // into the build directory's asset cache
 func (c *Compiler) GatherAssets() error {
+	c.Logger.Info(color.HiRedString("***  BUNDLED ASSETS  ***"))
 	fns := []func() error{}
 	for _, vm := range c.VMs {
 		fns = append(fns, vm.CacheAssets)
@@ -457,17 +460,17 @@ func (c *Compiler) PerformPostCompileObfuscation() error {
 		return nil
 	}
 	m := obfuscator.NewMordor(c.Logger)
-	m.AddGhosts(c.GetIDLiterals())
-	m.AddGhosts(c.stringCache)
+	// m.AddGhosts(c.GetIDLiterals())
+	//m.AddGhosts(c.stringCache)
 	for _, vm := range c.VMs {
 		m.AddGhosts(vm.GetIDLiterals())
 	}
-	c.Logger.Infof("Mordorifying %d strings...", len(m.Horde))
-	err := m.Assault(c.OutputFile)
-	if err != nil {
-		return err
-	}
-	m.PrintStats()
+	// c.Logger.Infof("Mordorifying %d strings...", len(m.Horde))
+	// err := m.Assault(c.OutputFile)
+	// if err != nil {
+	// 	return err
+	// }
+	// m.PrintStats()
 	return nil
 }
 

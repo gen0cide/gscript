@@ -19,7 +19,8 @@ import (
 
 const (
 	// GENERICMATCH is a string literal for generic regex matching strings in the executable
-	GENERICMATCH = `[[:word:]\.\/\(\)\*\[\]\&\%\{\}\$ ]*`
+	// GENERICMATCH = `[[:word:]\.\/\(\)\*\[\]\&\%\{\}\$ ]*`
+	GENERICMATCH = `[[:word:]\.\\/ ]*`
 )
 
 var (
@@ -34,6 +35,7 @@ var (
 		"home":         true,
 		"":             true,
 		"Users":        true,
+		"runtime":      true,
 	}
 
 	importantMatches = []string{
@@ -43,11 +45,11 @@ var (
 		`github\.com/robertkrimen/otto`,
 		`github\.com/gen0cide/`,
 		`github\.com/robertkrimen/`,
-		`/home/[[:word:]\.\\/ ]*`,
-		`/Users/[[:word:]\.\\/ ]*`,
-		`/root/[[:word:]\.\\/ ]*`,
-		`/tmp/[[:word:]\.\\/ ]*`,
-		`/usr/local/[[:word:]\.\\/ ]*`,
+		//`/home/[[:word:]\.\\/ ]*`,
+		//`/Users/[[:word:]\.\\/ ]*`,
+		//`/root/[[:word:]\.\\/ ]*`,
+		//`/tmp/[[:word:]\.\\/ ]*`,
+		//`/usr/local/[[:word:]\.\\/ ]*`,
 		`gopkg[[:word:]\.\\/ ]*`,
 		`UPX[[:word:]\.\\/ ]*`,
 		`$Info[[:word:]\.\\/ ]*`,
@@ -141,7 +143,7 @@ func (m *Mordor) AddGhosts(g []string) {
 			continue
 		}
 		if err := m.AddSingleGhost(e); err != nil {
-			m.Logger.Errorf("Error creating ghost %s: %v", e, err)
+			// m.Logger.Errorf("Error creating ghost %s: %v", e, err)
 			continue
 		}
 		if pathTest.MatchString(e) {
@@ -213,7 +215,7 @@ func (m *Mordor) PrintStats() {
 		if o.Hits == 0 {
 			continue
 		}
-		m.Logger.Infof("Mordor Count: %d - %s", o.Hits, n)
+		m.Logger.Debugf("Mordor Count: %d - %s", o.Hits, n)
 	}
 }
 

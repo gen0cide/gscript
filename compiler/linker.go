@@ -204,6 +204,9 @@ func (l *LinkedFunction) CanResolveImportDep(pkg string) (string, error) {
 			packageAlias := pkgParts[len(pkgParts)-1]
 			newAlias := strings.Replace(packageAlias, `"`, ``, -1)
 			if newAlias == pkg {
+				if IsDefaultImport(normalName) {
+					return GetDefaultImportNamespace(normalName), nil
+				}
 				l.Linker.Lock()
 				mi := l.Linker.MaskedImports[normalName]
 				if mi == nil {
