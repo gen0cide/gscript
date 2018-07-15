@@ -91,3 +91,9 @@ func TestSetPerms(t *testing.T) {
 	err := SetPerms("test_file.txt", 0777)
 	assert.Nil(t, err)
 }
+
+func TestCheckExists(t *testing.T) {
+	exists := CheckExists("test_file.txt")
+	assert.NotNil(t, exists)
+	assert.Equal(t, true, exists, "should exist")
+}

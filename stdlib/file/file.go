@@ -189,3 +189,13 @@ func SetPerms(targetPath string, perms int64) error {
 	}
 	return nil
 }
+
+//CheckExists takes a file or directory and checks to see if it exists on the file system
+func CheckExists(targetPath string) bool {
+	_, err := os.Stat(targetPath)
+	if err == nil {
+		return true
+	}
+	return false
+
+}
