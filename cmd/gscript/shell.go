@@ -2,10 +2,12 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 
 	"github.com/gen0cide/gscript/compiler"
 	"github.com/gen0cide/gscript/compiler/computil"
@@ -43,6 +45,9 @@ func interactiveShellCommand(c *cli.Context) error {
 	randBinName := computil.RandLowerAlphaString(18)
 	tmpDir := filepath.Join(os.TempDir(), randDirName)
 	exePath := filepath.Join(tmpDir, randBinName)
+	if runtime.GOOS == "windows" {
+		exePath = fmt.Sprintf("%s.exe", exePath)
+	}
 	scriptPath := filepath.Join(tmpDir, "debugger")
 	os.MkdirAll(tmpDir, 0755)
 	opts := computil.DefaultOptions()
@@ -73,6 +78,8 @@ func runShell(exePath string) error {
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	cmd.Stdin = os.Stdin
-	cmd.Start()
+	if err := cmd.Start(); err != nil {
+		return err
+	}
 	return cmd.Wait()
 }

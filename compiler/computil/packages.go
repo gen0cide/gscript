@@ -7,6 +7,7 @@ import (
 	"os/user"
 	"path/filepath"
 	"regexp"
+	"runtime"
 
 	"github.com/uudashr/gopkgs"
 )
@@ -16,6 +17,7 @@ var (
 	baseRegexpStr  = `github\.com/gen0cide/gscript`
 	baseRegexp     = regexp.MustCompile(baseRegexpStr)
 	testFileRegexp = regexp.MustCompile(`.*_test\.go$`)
+	windowsFix     = regexp.MustCompile(`\\`)
 
 	// GenesisLibs is the name of the packages within the genesis standard library
 	GenesisLibs = map[string]bool{
@@ -35,6 +37,9 @@ var (
 )
 
 func regexpForModule(mod ...string) *regexp.Regexp {
+	if runtime.GOOS == "windows" {
+		return regexp.MustCompile(windowsFix.ReplaceAllString(filepath.Join(append([]string{baseImportPath}, mod...)...), `/`))
+	}
 	return regexp.MustCompile(filepath.Join(append([]string{baseRegexpStr}, mod...)...))
 }
 
@@ -43,6 +48,14 @@ func GatherInstalledGoPackages() map[string]gopkgs.Pkg {
 	goPackages, err := gopkgs.Packages(gopkgs.Options{NoVendor: true})
 	if err != nil {
 		panic(err)
+	}
+	if runtime.GOOS == "windows" {
+		pathFix := regexp.MustCompile(`\\`)
+		newMap := map[string]gopkgs.Pkg{}
+		for n, p := range goPackages {
+			newMap[pathFix.ReplaceAllString(n, `/`)] = p
+		}
+		return newMap
 	}
 	return goPackages
 }
