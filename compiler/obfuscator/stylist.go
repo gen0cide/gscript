@@ -271,7 +271,7 @@ func (s *Stylist) GetIDLiterals() []string {
 	for _, c := range s.Combs {
 		for _, d := range c.Defs {
 			_ = d
-			// lits = append(lits, d.ID)
+			lits = append(lits, d.ID)
 		}
 	}
 	return lits

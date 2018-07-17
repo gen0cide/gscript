@@ -13,6 +13,7 @@ import (
 	"sync"
 	"text/template"
 
+	"github.com/fatih/color"
 	"github.com/gen0cide/gscript/compiler/computil"
 	"github.com/gen0cide/gscript/logger"
 	gast "github.com/robertkrimen/otto/ast"
@@ -239,6 +240,7 @@ func (g *GenesisVM) RetrieveAsset(m *Macro) error {
 	g.Lock()
 	g.Embeds[ef.OrigName] = ef
 	g.Unlock()
+	g.Logger.Infof("  %s -> %s", color.HiWhiteString(g.Name), color.YellowString(ef.OrigName))
 	return nil
 }
 
@@ -677,7 +679,8 @@ func (g *GenesisVM) ShouldIncludeAssetPackage() bool {
 func (g *GenesisVM) GetMaskedImports() []*MaskedImport {
 	mi := []*MaskedImport{}
 	for _, mi2 := range g.Linker.MaskedImports {
-		mi = append(mi, mi2)
+		_ = mi2
+		// mi = append(mi, mi2)
 	}
 	return mi
 }

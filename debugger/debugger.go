@@ -20,7 +20,67 @@ type Debugger struct {
 	VM        *engine.Engine
 	Logger    logger.Logger
 	OldLogger logger.Logger
+	// Not Today
+	// Asyncs    []*AsyncVM
 }
+
+// Not Today
+// // ASyncVM is a container for a managed runtime
+// type AsyncVM struct {
+// 	VM        *otto.Otto
+// 	Debugger  *Debugger
+// 	Interrupt chan bool
+// }
+
+// // NewAsyncVM returns a new async container environment for a javascript runtime
+// func NewAsyncVM(o *otto.Otto, d *Debugger) *AsyncVM {
+// 	newInterrupt := make(chan bool, 1)
+// 	return &AsyncVM{
+// 		VM:        o,
+// 		Debugger:  d,
+// 		Interrupt: newInterrupt,
+// 	}
+// }
+
+// func (a *AsyncVM) ExecuteWithInterrupt(eval string) {
+// 	var wg sync.WaitGroup
+// 	finChan := make(chan bool, 1)
+// 	wg.Add(1)
+// 	go func() {
+// 		defer func() {
+// 			if caught := recover(); caught != nil {
+// 				a.Debugger.Logger.Infof("Halted AsyncVM with error: %v", caught)
+// 				return
+// 			}
+// 			a.Debugger.Logger.Infof("AsyncVM finished execution")
+// 			return
+// 		}()
+// 		a.VM.Eval(eval)
+// 		finChan <- true
+// 		wg.Done()
+// 	}()
+
+// 	go func() {
+// 		wg.Wait()
+// 		close(finChan)
+// 	}()
+// 	select {
+// 	case <-a.Interrupt:
+// 		a.VM.Interrupt <- func() {
+// 			panic("gtfo")
+// 		}
+// 		wg.Done()
+// 		return
+// 	case <-finChan:
+// 		wg.Done()
+// 		return
+// 	}
+// }
+
+// func (a *AsyncVM) Halt() {
+// 	a.Interrupt <- true
+// 	return
+// }
 
 // New returns a new debugger object wrapping the provided engine
 func New(e *engine.Engine) *Debugger {
@@ -29,12 +89,15 @@ func New(e *engine.Engine) *Debugger {
 		VM:        e,
 		Logger:    dbgLogger,
 		OldLogger: e.Logger,
+		// Not Today
+		// Asyncs:    []*AsyncVM{},
 	}
 	return dbg
 }
 
 // InjectDebugConsole injects the DebugConsole command into the runtime
 func (d *Debugger) InjectDebugConsole() error {
+	d.VM.VM.Set("_DEBUGGER", d)
 	err := d.VM.VM.Set("DebugConsole", d.vmDebugConsole)
 	if err != nil {
 		return err
@@ -43,8 +106,23 @@ func (d *Debugger) InjectDebugConsole() error {
 	if err != nil {
 		return err
 	}
+	// Not Today
+	// err = d.VM.VM.Set("async", d.vmAsync)
+	// if err != nil {
+	// 	return err
+	// }
 	return d.VM.VM.Set("TypeOf", d.vmTypeChecker)
 }
+
+// Not Today
+// func (d *Debugger) vmAsync(call otto.FunctionCall) otto.Value {
+// 	arg, _ := call.Argument(0).ToString()
+// 	newVM := NewAsyncVM(call.Otto.Copy(), d)
+// 	d.Asyncs = append(d.Asyncs, newVM)
+// 	go newVM.ExecuteWithInterrupt(arg)
+// 	retval, _ := call.Otto.ToValue(newVM)
+// 	return retval
+// }
 
 func (d *Debugger) vmDebugConsole(call otto.FunctionCall) otto.Value {
 	d.VM.SetLogger(d.Logger)
