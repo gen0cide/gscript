@@ -33,5 +33,6 @@ GetUnix() int64
 **Example Usage:**
 
 ```
-
+var response = G.time.GetUnix();
+console.log("Time: "+response);
 ```

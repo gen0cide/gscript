@@ -38,7 +38,8 @@ GetInt(min int, max int) int
 **Example Usage:**
 
 ```
-
+var out1 = G.rand.RandomInt(1, 10);
+console.log("out: "+out1);
 ```
 
 ### GetAlphaNumericString
@@ -68,7 +69,10 @@ GetAlphaNumericString(len int) string
 **Example Usage:**
 
 ```
-
+var out2 = G.rand.GetAlphaNumericString(4);
+console.log("out: " +out2);
+console.log("out upper: "+ out2.toUpperCase());
+console.log("out lower: "+ out2.toLowerCase());
 ```
 
 ### GetAlphaString
@@ -98,7 +102,10 @@ GetAlphaString(len int) string
 **Example Usage:**
 
 ```
-
+var out3 = G.rand.GetAlphaString(5);
+console.log("out: "+ out3);
+console.log("out upper: "+ out3.toUpperCase());
+console.log("out lower: "+ out3.toLowerCase());
 ```
 
 ### GetAlphaNumericSpecialString
@@ -128,7 +135,10 @@ GetAlphaNumericSpecialString(len int) string
 **Example Usage:**
 
 ```
-
+var out4 = G.rand.GetAlphaNumericSpecialString(6);
+console.log("out: "+ out4);
+console.log("out upper: "+ out4.toUpperCase());
+console.log("out lower: "+ out4.toLowerCase());
 ```
 
 ### GetBool
@@ -157,5 +167,6 @@ GetBool() bool
 **Example Usage:**
 
 ```
-
+var out5 = G.rand.GetBool();
+console.log("out: "+ out5);
 ```
