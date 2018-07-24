@@ -159,6 +159,12 @@ type GoParamDef struct {
 	// GoLabel is used to represent the label name within Golang
 	GoLabel string
 
+	// NeedsMapping defines a hard coded type mapping between golang and javascript types
+	NeedsMapping bool
+
+	// MappedTypeAlias is a helper method to look up the type a method should be
+	MappedTypeAlias string
+
 	// LinkedFUnction is used to reference the parent LinkedFunction object
 	LinkedFunction *LinkedFunction
 }
@@ -293,6 +299,13 @@ func (p *GoParamDef) ParseSelectorExpr(a *ast.SelectorExpr) error {
 	if err != nil {
 		return err
 	}
+
+	mappedType := p.MappedType(x.Name, a.Sel.Name)
+	if mappedType != "" {
+		p.MappedTypeAlias = mappedType
+		p.NeedsMapping = true
+	}
+
 	p.SigBuffer.WriteString(resolved)
 	p.NameBuffer.WriteString(resolved)
 	p.SigBuffer.WriteString(".")
@@ -312,6 +325,7 @@ func (p *GoParamDef) ParseStarExpr(a *ast.StarExpr) error {
 // ParseIdent interprets a golang identifier into the appropriate GoParamDef structure
 func (p *GoParamDef) ParseIdent(a *ast.Ident) error {
 	if ok := builtInGoTypes[a.Name]; !ok {
+
 		if IsDefaultImport(p.LinkedFunction.GoPackage.ImportPath) {
 			p.SigBuffer.WriteString(GetDefaultImportNamespace(p.LinkedFunction.GoPackage.ImportPath))
 			p.SigBuffer.WriteString(".")
@@ -327,6 +341,16 @@ func (p *GoParamDef) ParseIdent(a *ast.Ident) error {
 	p.SigBuffer.WriteString(a.Name)
 	p.NameBuffer.WriteString(a.Name)
 	return nil
+}
+
+// MappedType looks at whether there is a type mapping that needs to be honored
+func (p *GoParamDef) MappedType(pkg, sel string) string {
+	if val, ok := translator.TypeAliasMap[pkg]; ok {
+		if t, ok := val[sel]; ok {
+			return t
+		}
+	}
+	return ""
 }
 
 // IsBuiltInGoType takes a string argument and determines if is a valid built-in type

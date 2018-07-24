@@ -134,7 +134,7 @@ func (c *Compiler) Do() error {
 	if err != nil {
 		return err
 	}
-	c.Logger.Info("")
+	c.Logger.Debug("")
 	c.Logger.Debug("asset tree built")
 	err = c.WalkGenesisASTs()
 	if err != nil {
@@ -269,7 +269,7 @@ func (c *Compiler) DetectVersions() error {
 // GatherAssets enumerates all bundled virtual machines for any embedded assets and copies them
 // into the build directory's asset cache
 func (c *Compiler) GatherAssets() error {
-	c.Logger.Info(color.HiRedString("***  BUNDLED ASSETS  ***"))
+	c.Logger.Debug(color.HiRedString("***  BUNDLED ASSETS  ***"))
 	fns := []func() error{}
 	for _, vm := range c.VMs {
 		fns = append(fns, vm.CacheAssets)

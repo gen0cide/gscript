@@ -228,6 +228,10 @@ func (o *{{ $.ID }}) {{ $.ID }}{{ $f.ID }}(call otto.FunctionCall) otto.Value {
       return o.E.Raise("jsexport", "could not export argument %d of function %s", {{ $aidx }}, "{{ $f.Function }}")
     }
     switch v := ra{{ $aidx }}.(type) {
+    {{ if $a.NeedsMapping }}
+      case {{ $a.MappedTypeAlias }}:
+        a{{ $aidx }} = {{ $a.ExtSig }}(v)
+    {{ end }}
     case {{ $a.ExtSig }}:
       a{{ $aidx }} = ra{{ $aidx }}.({{ $a.ExtSig }})
     {{ if $a.BuiltInTranslationRequired }}

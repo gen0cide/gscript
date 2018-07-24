@@ -240,7 +240,7 @@ func (g *GenesisVM) RetrieveAsset(m *Macro) error {
 	g.Lock()
 	g.Embeds[ef.OrigName] = ef
 	g.Unlock()
-	g.Logger.Infof("  %s -> %s", color.HiWhiteString(g.Name), color.YellowString(ef.OrigName))
+	g.Logger.Debugf("  %s -> %s", color.HiWhiteString(g.Name), color.YellowString(ef.OrigName))
 	return nil
 }
 

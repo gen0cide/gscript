@@ -14,6 +14,9 @@ var (
 		"syscall": TypeAliasToBuiltIn{
 			"Signal": "int",
 		},
+		"time": TypeAliasToBuiltIn{
+			"Duration": "int64",
+		},
 	}
 )
 
