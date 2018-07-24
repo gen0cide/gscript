@@ -40,7 +40,7 @@ GetMD5FromString(data string) string
 **Example Usage:**
 
 ```
-
+var md5s = G.crypto.GetMD5FromString("test");
 ```
 
 ### GetMD5FromBytes
@@ -71,7 +71,8 @@ GetMD5FromBytes(data []byte) string
 **Example Usage:**
 
 ```
-
+var bytes = G.encoding.EncodeStringAsBytes("test");
+var md5b = G.crypto.GetMD5FromBytes(bytes);
 ```
 
 ### GetSHA1FromString
@@ -102,7 +103,7 @@ GetSHA1FromString(data string) string
 **Example Usage:**
 
 ```
-
+var sha1s = G.crypto.GetSHA1FromString("test");
 ```
 
 ### GetSHA1FromBytes
@@ -133,7 +134,8 @@ GetSHA1FromBytes(data []byte) string
 **Example Usage:**
 
 ```
-
+var bytes = G.encoding.EncodeStringAsBytes("test");
+var sha1b = G.crypto.GetSHA1FromBytes(bytes);
 ```
 
 ### GetSHA256FromString
@@ -164,7 +166,7 @@ GetSHA256FromString(data string) string
 **Example Usage:**
 
 ```
-
+var sha256s = G.crypto.GetSHA256FromString("test");
 ```
 
 ### GetSHA256FromBytes
@@ -195,7 +197,8 @@ GetSHA256FromBytes(data []byte) string
 **Example Usage:**
 
 ```
-
+var bytes = G.encoding.EncodeStringAsBytes("test");
+var sha256b = G.crypto.GetSHA256FromBytes(bytes);
 ```
 
 ### GenerateRSASSHKeyPair
