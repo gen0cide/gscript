@@ -92,7 +92,9 @@ func AddRegKeyBinary(registryString string, path string, name string, value []by
 	return openRegKey.SetBinaryValue(name, value)
 }
 
-func AddRegKeyDWORD(registryString string, path string, name string, value uint32) error {
+func AddRegKeyDWORD(registryString string, path string, name string, value int64) error {
+	var uval uint32
+	uval = uint32(value)
 	regKey, err := lookUpKey(registryString)
 	if err != nil {
 		return err
@@ -102,10 +104,12 @@ func AddRegKeyDWORD(registryString string, path string, name string, value uint3
 		return err
 	}
 	defer openRegKey.Close()
-	return openRegKey.SetDWordValue(name, value)
+	return openRegKey.SetDWordValue(name, uval)
 }
 
-func AddRegKeyQWORD(registryString string, path string, name string, value uint64) error {
+func AddRegKeyQWORD(registryString string, path string, name string, value int64) error {
+	var uval uint64
+	uval = uint64(value)
 	regKey, err := lookUpKey(registryString)
 	if err != nil {
 		return err
@@ -115,7 +119,7 @@ func AddRegKeyQWORD(registryString string, path string, name string, value uint6
 		return err
 	}
 	defer openRegKey.Close()
-	return openRegKey.SetQWordValue(name, value)
+	return openRegKey.SetQWordValue(name, uval)
 }
 
 func AddRegKeyStrings(registryString string, path string, name string, value []string) error {
