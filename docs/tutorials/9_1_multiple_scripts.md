@@ -8,3 +8,5 @@ The final argument gscript takes is a path to a script, or any number of paths t
 
 `gscript c /path/to/gscript.gs /path/to/another_gscript.gs /path/to/a_last_gscript.gs`
 `gscript c /path/to/*t.gs`
+
+
