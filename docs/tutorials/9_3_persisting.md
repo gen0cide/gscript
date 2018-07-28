@@ -4,6 +4,7 @@ In this way you can write persistence logic in generic terms and persist arbitra
 
 
 ## Persistence Examples
+The following are some simple persistence examples on the main three operating systems GSCRIPT targets.
 
 ### Windows Persitence example
 The following is a simple regkey persistence example, showing how the technique can remain indpendant of the binary
