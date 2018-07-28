@@ -38,6 +38,7 @@ var (
 		"uintptr":    true,
 	}
 
+	// TODO (gen0cide): fix this
 	invalidGoTypes = map[string]bool{
 		"complex128": true,
 		"complex64":  true,

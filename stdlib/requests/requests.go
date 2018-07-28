@@ -10,7 +10,7 @@ import (
 )
 
 //GetURLAsString will fetch a url and return an http response object, the body as a string, and an error
-func GetURLAsString(url string, headers map[string]string, ignoresslerrors bool) (*http.Response, string, error) {
+func GetURLAsString(url string, ignoresslerrors bool) (*http.Response, string, error) {
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: false},
 	}
@@ -33,7 +33,7 @@ func GetURLAsString(url string, headers map[string]string, ignoresslerrors bool)
 }
 
 //GetURLAsBytes will fetch a url, headers, and a bool for ignoring ssl errors. this returns an http response object, the body as a string, and an error
-func GetURLAsBytes(url string, headers map[string]string, ignoresslerrors bool) (*http.Response, []byte, error) {
+func GetURLAsBytes(url string, header map[string]interface{}, ignoresslerrors bool) (*http.Response, []byte, error) {
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: false},
 	}
@@ -56,7 +56,7 @@ func GetURLAsBytes(url string, headers map[string]string, ignoresslerrors bool) 
 }
 
 //PostJSON takes a url, json data, a map of headers, and a bool to ignore ssl errors, posts json data to url
-func PostJSON(url string, jsondata string, headers map[string]string, ignoresslerrors bool) (*http.Response, string, error) {
+func PostJSON(url string, jsondata string, ignoresslerrors bool) (*http.Response, string, error) {
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: false},
 	}
@@ -89,7 +89,7 @@ func PostJSON(url string, jsondata string, headers map[string]string, ignoressle
 }
 
 //PostURL posts the specified data to a url endpoint as text/plain data
-func PostURL(url string, data string, headers map[string]string, ignoresslerrors bool) (*http.Response, string, error) {
+func PostURL(url string, data string, ignoresslerrors bool) (*http.Response, string, error) {
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: false},
 	}
@@ -113,7 +113,7 @@ func PostURL(url string, data string, headers map[string]string, ignoresslerrors
 }
 
 //PostBinary posts the specified data to a url endpoint as application/octet-stream data
-func PostBinary(url string, readPath string, headers map[string]string, ignoresslerrors bool) (*http.Response, string, error) {
+func PostBinary(url string, readPath string, ignoresslerrors bool) (*http.Response, string, error) {
 	absPath, err := filepath.Abs(readPath)
 	if err != nil {
 		return nil, "", err
