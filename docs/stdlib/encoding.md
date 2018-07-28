@@ -67,7 +67,7 @@ EncodeBase64(data string) string
 **Example Usage:**
 
 ```
-
+var b64 = G.encoding.EncodeBase64("hello world");
 ```
 
 ### EncodeStringAsBytes
@@ -97,7 +97,7 @@ EncodeStringAsBytes(data string) []bytes
 **Example Usage:**
 
 ```
-
+var bytes = encoding.EncodeStringAsBytes("test");
 ```
 
 ### EncodeBytesAsString
@@ -127,5 +127,6 @@ EncodeBytesAsString(data []bytes) string
 **Example Usage:**
 
 ```
-
+var bytes = encoding.EncodeStringAsBytes("test");
+var bstring = encoding.EncodeBytesAsString(bytes);
 ```

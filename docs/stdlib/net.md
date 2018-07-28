@@ -35,7 +35,12 @@ CheckForInUseTCP(port int) (bool, error)
 **Example Usage:**
 
 ```
-
+var response = G.net.CheckForInUseTCP(22);
+if (response[1] != null) {
+    console.log("errors: " + response[1].Error());
+} else {
+    console.log("TCP port open: " + response[0]);
+}
 ```
 
 ### CheckForInUseUDP
@@ -66,5 +71,10 @@ CheckForInUseUDP(port int) (bool, error)
 **Example Usage:**
 
 ```
-
+var response = G.net.CheckForInUseUDP(161);
+if (response[1] != null) {
+    console.log("errors: " + response[1].Error());
+} else {
+    console.log("TCP port open: " + response[0]);
+}
 ```

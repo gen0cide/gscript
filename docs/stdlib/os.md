@@ -33,5 +33,7 @@ TerminateSelf() error
 **Example Usage:**
 
 ```
-
+if (check == true) {
+    TerminateSelf();
+}
 ```

@@ -123,3 +123,12 @@ func ResolveStandardLibraryDir(pkg string) (*gopkgs.Pkg, error) {
 	}
 	return nil, fmt.Errorf("could not locate standard library package %s", pkg)
 }
+
+func ResolveGlobalImport(pkg string) (*gopkgs.Pkg, error) {
+	for _, gpkg := range InstalledGoPackages {
+		if gpkg.ImportPath == pkg {
+			return &gpkg, nil
+		}
+	}
+	return nil, errors.New("could not locate gopackage of that name")
+}

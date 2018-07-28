@@ -124,10 +124,19 @@ type GoPackage struct {
 
 	// FileSet is used by the parser to interpret the current golang's file tokens
 	FileSet *token.FileSet
+
+	// GoTypes are struct type declarations that need to be accounted for in the engine
+	GoTypes map[string]*GoStructDef
 }
 
 // GoParamDef defines a type to represent parameters found in a Golang function declaration (arguments or return types)
 type GoParamDef struct {
+	// Type denotes the type of parameter def (struct, function, etc.)
+	Type string
+
+	// OriginalName is to reference the original name of the field incase of problems
+	OriginalName string
+
 	// SigBuffer is used to create a definition to the actual type declaration in the genesis compiler's linker
 	SigBuffer bytes.Buffer
 
@@ -167,6 +176,53 @@ type GoParamDef struct {
 
 	// LinkedFUnction is used to reference the parent LinkedFunction object
 	LinkedFunction *LinkedFunction
+
+	// IsInterfaceType defines ifthe GoParamDef an interface type?
+	IsInterfaceType bool
+
+	// SkipResolution defines whether the left recursive lexer should skip package resolution
+	SkipResolution bool
+
+	// Reference to the parent GoPackage
+	GoPackage *GoPackage
+
+	// False, unless the interpretation fails
+	Errored bool
+
+	// Holds the error message if the interpretation fails
+	ErrorMessage string
+}
+
+// GoStructDef defines a struct type definition to be used within the genesis engine
+type GoStructDef struct {
+	sync.RWMutex
+
+	// Package is a reference to the parent GoPackage
+	Package *GoPackage
+
+	// File is a reference to the parent AST file
+	File *ast.File
+
+	// TypeSpec references the typespec node within the file's AST
+	TypeSpec *ast.TypeSpec
+
+	// AST references the actual struct definition within the file's AST
+	AST *ast.StructType
+
+	// Name represents the name of the struct definition
+	Name string
+
+	// ImportRefs hold a mapping of any golang dependencies required for this type declaration
+	ImportRefs map[string]*ast.ImportSpec
+
+	// Fields are the fields that can be used within this struct (compatible with genesis type conversion)
+	Fields map[string]*GoParamDef
+
+	// Incompatible are fields that CANNOT be used with genesis
+	Incompatible map[string]*GoParamDef
+
+	// Embeds is a convenience reference showing any embedded types that might exist within this struct
+	Embeds map[string]*GoParamDef
 }
 
 // NewGoPackage is a constructor for a gopackage that will be used in dynamically linking native code
@@ -184,6 +240,7 @@ func NewGoPackage(v *GenesisVM, ns, ikey string, stdlib bool) *GoPackage {
 		LinkedFuncs:    []*LinkedFunction{},
 		IsStandardLib:  stdlib,
 		MaskedName:     computil.RandLowerAlphaString(6),
+		GoTypes:        map[string]*GoStructDef{},
 	}
 }
 
@@ -193,6 +250,9 @@ func NewGoParamDef(l *LinkedFunction, idx int) *GoParamDef {
 		LinkedFunction: l,
 		ImportRefs:     map[string]*ast.ImportSpec{},
 		ParamIdx:       idx,
+		OriginalName:   l.GoDecl.Name.Name,
+		Type:           "function",
+		GoPackage:      l.GoPackage,
 	}
 	gpd.NameBuffer.WriteString("_")
 	return gpd
@@ -254,13 +314,13 @@ func (p *GoParamDef) Interpret(i interface{}) error {
 	case *ast.MapType:
 		return p.ParseMapType(t)
 	case *ast.ChanType:
-		return fmt.Errorf("function %s includes an unsupported parameter type: %s", p.LinkedFunction.GoDecl.Name.Name, "chan")
+		return fmt.Errorf("%s %s includes an unsupported parameter type: %s", p.Type, p.OriginalName, "chan")
 	case *ast.FuncType:
-		return fmt.Errorf("function %s includes an unsupported parameter type: %s", p.LinkedFunction.GoDecl.Name.Name, "func")
+		return fmt.Errorf("%s %s includes an unsupported parameter type: %s", p.Type, p.OriginalName, "func")
 	case *ast.InterfaceType:
-		return fmt.Errorf("function %s includes an unsupported parameter type: %s", p.LinkedFunction.GoDecl.Name.Name, "interface{}")
+		return fmt.Errorf("%s %s includes an unsupported parameter type: %s", p.Type, p.OriginalName, "interface{}")
 	case *ast.StructType:
-		return fmt.Errorf("function %s includes an unsupported parameter type: %s", p.LinkedFunction.GoDecl.Name.Name, "struct")
+		return fmt.Errorf("%s %s includes an unsupported parameter type: %s", p.Type, p.OriginalName, "struct")
 	default:
 		valType := reflect.ValueOf(t)
 		return fmt.Errorf("could not determine the golang ast type of %s in func %s", valType.Type().String(), p.LinkedFunction.Function)
@@ -295,6 +355,17 @@ func (p *GoParamDef) ParseSelectorExpr(a *ast.SelectorExpr) error {
 	if !ok {
 		return fmt.Errorf("could not parse selector namespace in func %s", p.LinkedFunction.Function)
 	}
+
+	if p.SkipResolution {
+		p.SigBuffer.WriteString(x.Name)
+		p.NameBuffer.WriteString(x.Name)
+		p.SigBuffer.WriteString(".")
+		p.NameBuffer.WriteString("_")
+		p.SigBuffer.WriteString(a.Sel.Name)
+		p.NameBuffer.WriteString(a.Sel.Name)
+		return nil
+	}
+
 	resolved, err := p.LinkedFunction.CanResolveImportDep(x.Name)
 	if err != nil {
 		return err
@@ -325,6 +396,12 @@ func (p *GoParamDef) ParseStarExpr(a *ast.StarExpr) error {
 // ParseIdent interprets a golang identifier into the appropriate GoParamDef structure
 func (p *GoParamDef) ParseIdent(a *ast.Ident) error {
 	if ok := builtInGoTypes[a.Name]; !ok {
+
+		if p.SkipResolution {
+			p.SigBuffer.WriteString(a.Name)
+			p.NameBuffer.WriteString(a.Name)
+			return nil
+		}
 
 		if IsDefaultImport(p.LinkedFunction.GoPackage.ImportPath) {
 			p.SigBuffer.WriteString(GetDefaultImportNamespace(p.LinkedFunction.GoPackage.ImportPath))
@@ -359,6 +436,100 @@ func IsBuiltInGoType(s string) bool {
 	return builtInGoTypes[s]
 }
 
+// ParseTypeSpec attempts to filter type spec definitions within the AST to only struct types
+func (gop *GoPackage) ParseTypeSpec(goast *ast.File, v *ast.TypeSpec, wg *sync.WaitGroup, errChan chan error) {
+	defer wg.Done()
+	switch t := v.Type.(type) {
+	case *ast.StructType:
+		wg.Add(1)
+		go gop.ParseStructDef(goast, v, t, wg, errChan)
+	}
+	return
+}
+
+// ParseStructDef creates a new mapping between a go package and a struct type definition
+func (gop *GoPackage) ParseStructDef(goast *ast.File, v *ast.TypeSpec, t *ast.StructType, wg *sync.WaitGroup, errChan chan error) {
+	defer wg.Done()
+	gop.Lock()
+	defer gop.Unlock()
+	if _, ok := gop.GoTypes[v.Name.Name]; ok {
+		errChan <- fmt.Errorf("struct def already mapped for %s - file=%s pkg=%s", v.Name.Name, goast.Name.Name, gop.ImportPath)
+		return
+	}
+	gsd := &GoStructDef{
+		Package:      gop,
+		File:         goast,
+		TypeSpec:     v,
+		AST:          t,
+		Name:         v.Name.Name,
+		ImportRefs:   map[string]*ast.ImportSpec{},
+		Fields:       map[string]*GoParamDef{},
+		Incompatible: map[string]*GoParamDef{},
+		Embeds:       map[string]*GoParamDef{},
+	}
+	gop.GoTypes[v.Name.Name] = gsd
+	wg.Add(1)
+	go gsd.WalkStruct(wg, errChan)
+	return
+}
+
+// WalkStruct walks the type definition AST for exported struct fields
+func (gsd *GoStructDef) WalkStruct(wg *sync.WaitGroup, errChan chan error) {
+	defer wg.Done()
+	if gsd.AST.Fields == nil {
+		return
+	}
+	for fidx, tf := range gsd.AST.Fields.List {
+		if len(tf.Names) == 0 {
+			// struct embed
+			wg.Add(1)
+			go gsd.ParseStructField(tf, "_EMBED", fidx, wg, errChan)
+		}
+		for noff, name := range tf.Names {
+			if !name.IsExported() {
+				continue
+			}
+			wg.Add(1)
+			go gsd.ParseStructField(tf, name.Name, (noff + fidx), wg, errChan)
+		}
+	}
+}
+
+// ParseStructField attempts to interpret the struct fields within exported go types
+func (gsd *GoStructDef) ParseStructField(f *ast.Field, name string, offset int, wg *sync.WaitGroup, errChan chan error) {
+	defer wg.Done()
+	p := &GoParamDef{
+		ParamIdx:       offset,
+		SkipResolution: true,
+		Type:           "struct_field",
+		OriginalName:   name,
+		GoPackage:      gsd.Package,
+	}
+
+	err := p.Interpret(f.Type)
+	if err != nil {
+		p.Errored = true
+		p.ErrorMessage = err.Error()
+		if name == "_EMBED" {
+			name = fmt.Sprintf("EMBED_%d", offset)
+		}
+		gsd.Lock()
+		gsd.Incompatible[name] = p
+		gsd.Unlock()
+		return
+	}
+	if name == "_EMBED" {
+		gsd.Lock()
+		gsd.Embeds[p.SigBuffer.String()] = p
+		gsd.Unlock()
+		return
+	}
+	gsd.Lock()
+	gsd.Fields[name] = p
+	gsd.Unlock()
+	return
+}
+
 // WalkGoFileAST walks the AST of a golang file and determines if it should be included as a linked
 // function based on one of the following statements being true:
 // Parent GoPackage is a member of the standard library
@@ -367,6 +538,20 @@ func IsBuiltInGoType(s string) bool {
 // OR
 // VM Script calls this function explicitly
 func (gop *GoPackage) WalkGoFileAST(goast *ast.File, wg *sync.WaitGroup, errChan chan error) {
+	tmpwg := new(sync.WaitGroup)
+	ast.Inspect(goast, func(n ast.Node) bool {
+		switch v := n.(type) {
+		case *ast.TypeSpec:
+			if !v.Name.IsExported() {
+				return true
+			}
+			tmpwg.Add(1)
+			go gop.ParseTypeSpec(goast, v, tmpwg, errChan)
+		}
+		return true
+	})
+	tmpwg.Wait()
+
 	ast.Inspect(goast, func(n ast.Node) bool {
 		// TODO: Started work on trying to grab CONST declarations, but fuck no. That gets wacky fast.
 		// Revisit when more time have I will.
@@ -392,7 +577,7 @@ func (gop *GoPackage) WalkGoFileAST(goast *ast.File, wg *sync.WaitGroup, errChan
 			if fn.Name.IsExported() && fn.Recv == nil {
 				gop.Lock()
 				caller := gop.ScriptCallers[funcName]
-				if caller == nil && gop.IsStandardLib == false && gop.VM.Options.ImportAllNativeFuncs == false {
+				if caller == nil && !gop.IsStandardLib && !gop.VM.Options.ImportAllNativeFuncs {
 					gop.Unlock()
 					return true
 				}
@@ -403,6 +588,7 @@ func (gop *GoPackage) WalkGoFileAST(goast *ast.File, wg *sync.WaitGroup, errChan
 					caller,
 					goast,
 					fn,
+
 					goast.Imports,
 					gop,
 				)

@@ -39,9 +39,6 @@ type Compiler struct {
 	// logging object to be used
 	Logger logger.Logger
 
-	// source buffer used by the pre-compilation obfuscator
-	sourceBuffer bytes.Buffer
-
 	// a slice of unique priorities that can be found within this VMs bundled into this build
 	UniqPriorities []int
 
@@ -202,7 +199,7 @@ func (c *Compiler) Do() error {
 	if err != nil {
 		return err
 	}
-	if c.SkipCompilation != true {
+	if !c.SkipCompilation {
 		c.Logger.Debug("statically linked native binary built")
 	}
 	err = c.PerformPostCompileObfuscation()
@@ -426,10 +423,7 @@ func (c *Compiler) CreateEntryPoint() error {
 		return err
 	}
 	err = ioutil.WriteFile(fileLocation, newData, 0644)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 // PerformPreCompileObfuscation runs the pre-compilation obfuscation routines on the intermediate representation
@@ -485,10 +479,7 @@ func (c *Compiler) BuildNativeBinary() error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 // MapVMsByPriority creates a pointer mapping of each VM by it's unique priority

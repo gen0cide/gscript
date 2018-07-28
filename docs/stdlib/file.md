@@ -3,16 +3,17 @@
 Handles file operations.
 
 ## Function Index
-- WriteFileFromBytes(data []byte, filepath string) error
-- WriteFileFromString(data string, filepath string) error
+- WriteFileFromBytes(filepath string, data []byte) error
+- WriteFileFromString(filepath string, data string) error
 - ReadFileAsBytes(filepath string) ([]byte, error)
 - ReadFileAsString(filepath string) (string, error)
-- AppendBytesToFile(data []byte, filepath string) error
-- AppendStringToFile(data string, filepath string) error // will not add line breaks, manage yourself
+- AppendBytesToFile(filepath string, data []byte) error
+- AppendStringToFile(filepath string, data string) error
 - CopyFile(srcpath string, dstpath string, perms string) (bytesWritten int, err error)
 - ReplaceInFileWithString(match string, new string) error
 - ReplaceInFileWithRegex(regexString string, replaceWith string) error
 - SetPerms(filepath string, perms string) error
+- CheckExists(targetPath string) bool
 
 ## Details
 
@@ -25,15 +26,15 @@ Handles file operations.
 **Method Signature:**
 
 ```
-WriteFileFromBytes(data []byte, filepath string) error
+WriteFileFromBytes(filepath string, data []byte) error
 ```
 
 **Arguments:**
 
 | Label     | Type         | Description                                |
 |-----------|--------------|--------------------------------------------|
-| `destPath`| `string`     | The location of the file to be written     |
-| `fileData`| `[]byte`     | The data to be written                     |
+| `filepath`| `string`     | The location of the file to be written     |
+| `data`    | `[]byte`     | The data to be written                     |
 
 **Returns:**
 
@@ -44,13 +45,9 @@ WriteFileFromBytes(data []byte, filepath string) error
 **Example Usage:**
 
 ```
-// when an asset was embedded into a binary
-var asset = G.asset.GetAssetAsBytes("real.txt");
-console.log(asset[0]);
-// => "Data in real.txt"
-console.log(asset[1]);
-// => null
-G.WriteFileFromBytes(asset[0], "new_real.txt")
+var myBin = GetAssetAsBytes("example.bin");
+errors = G.file.WriteFileFromBytes("example_test", myBin[0]);
+console.log("errors: "+errors);
 ```
 
 ### WriteFileFromString
@@ -62,15 +59,15 @@ G.WriteFileFromBytes(asset[0], "new_real.txt")
 **Method Signature:**
 
 ```
-WriteFileFromBytes(data string, filepath string) error
+WriteFileFromString(filepath string, data string) error
 ```
 
 **Arguments:**
 
 | Label     | Type         | Description                                |
 |-----------|--------------|--------------------------------------------|
-| `destPath`| `string`     | The location of the file to be written     |
-| `fileData`| `string`     | The data to be written                     |
+| `filepath`| `string`     | The location of the file to be written     |
+| `data`    | `string`     | The data to be written                     |
 
 **Returns:**
 
@@ -81,13 +78,8 @@ WriteFileFromBytes(data string, filepath string) error
 **Example Usage:**
 
 ```
-// when an asset was embedded into a binary
-var asset = G.asset.GetAssetAsString("real.txt");
-console.log(asset[0]);
-// => "Contents in real.txt"
-console.log(asset[1]);
-// => null
-G.WriteFileFromString("new_real.txt")
+var writeStringErrors = G.file.WriteFileFromString("example_test", "Example test\n");
+console.log("errors: "+ writeStringErrors);
 ```
 
 ### ReadFileAsBytes
@@ -118,7 +110,9 @@ ReadFileAsBytes(readPath string) ([]byte, error)
 **Example Usage:**
 
 ```
-
+var fileBytes = G.file.ReadFileAsBytes("example_test");
+console.log("errors: "+ fileBytes[1]);
+console.log("file bytes: "+ fileBytes[0]);
 ```
 
 ### ReadFileAsString
@@ -149,7 +143,9 @@ ReadFileAsString(readPath string) (string, error)
 **Example Usage:**
 
 ```
-
+var readFile = G.file.ReadFileAsString("example_test3");
+console.log("errors: "+ readFile[1]);
+console.log("file contents: "+readFile[0]);
 ```
 
 ### CopyFile
@@ -182,7 +178,8 @@ CopyFile(readPath, destPath string)  (int, error)
 **Example Usage:**
 
 ```
-
+var copyErrors = G.file.CopyFile("example_test", "example_test2");
+console.log("errors: " +copyErrors);
 ```
 
 ### AppendFileBytes
@@ -213,7 +210,9 @@ AppendFileBytes(targetFile string, data []byte]) error
 **Example Usage:**
 
 ```
-
+var myBin = GetAssetAsBytes("example.bin");
+var appendedFileError = G.file.AppendFileBytes("example_test", myBin[0]);
+console.log("errors: "+ appendedFileError);
 ```
 
 ### AppendFileString
@@ -244,7 +243,8 @@ AppendFileString(targetFile, data string) error
 **Example Usage:**
 
 ```
-
+var appendedFileError = G.file.AppendFileString("example_test", "Appended String\n");
+console.log("errors: "+ appendedFileError);
 ```
 
 ### ReplaceInFileWithString
@@ -277,7 +277,8 @@ ReplaceInFileWithString(file, match, replacement string) (int, error)
 **Example Usage:**
 
 ```
-
+var replaceError = G.file.ReplaceInFileWithString("example_test", "test", "replace");
+console.log("errors: "+ replaceError);
 ```
 
 ### ReplaceInFileWithRegex
@@ -310,7 +311,8 @@ ReplaceInFileWithRegex(file, match, replacement string) (int, error)
 **Example Usage:**
 
 ```
-
+var replaceError = G.file.ReplaceInFileWithRegex("example_test", "(Test)", "replaced");
+console.log("errors: "+ replaceError);
 ```
 
 ### SetPerms
@@ -341,5 +343,38 @@ SetPerms(file string, unixPerms int64) (error)
 **Example Usage:**
 
 ```
+var permErrors = G.file.SetPerms("example_test", 0777);
+console.log("errors: "+permErrors);
+```
 
+### CheckExists
+
+**Author:** ahhh
+
+**Description:** Takes a file or directory and checks to see if it exists on the file system
+
+
+**Method Signature:**
+
+```
+CheckExists(targetPath string) bool
+```
+
+**Arguments:**
+
+| Label         | Type         | Description                                |
+|---------------|--------------|--------------------------------------------|
+| `targetPAth`  | `string`     | The location of the file or dir to check   |
+
+**Returns:**
+
+| Position  | Type         | Description                                |
+|-----------|--------------|--------------------------------------------|
+| `0`       | `bool`       | if the file or dir exists                  |
+
+**Example Usage:**
+
+```
+var exists = G.file.CheckExists("example_test");
+console.log("Does it: "+exists);
 ```

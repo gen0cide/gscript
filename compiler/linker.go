@@ -76,6 +76,9 @@ type Linker struct {
 	// mapping of function name to the linked function object used during generation
 	Funcs map[string]*LinkedFunction
 
+	// mapping of type definitions to be linked into the engine
+	Types map[string]*GoStructDef
+
 	// MaskedImports map a golang dependency by import path into a translated path
 	MaskedImports map[string]*MaskedImport
 }

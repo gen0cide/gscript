@@ -157,7 +157,10 @@ func compileScriptCommand(c *cli.Context) error {
 	gc := compiler.NewWithOptions(defaultCompileOptions)
 	gc.SetLogger(cliLogger)
 	for _, a := range c.Args() {
-		gc.AddScript(a)
+		addErr := gc.AddScript(a)
+		if addErr != nil {
+			cliLogger.Errorf("Error adding script %s: %v", a, addErr)
+		}
 	}
 	err := gc.Do()
 	if err != nil {

@@ -67,10 +67,7 @@ func interactiveShellCommand(c *cli.Context) error {
 	}
 	err = runShell(exePath)
 	os.RemoveAll(tmpDir)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func runShell(exePath string) error {
@@ -78,8 +75,7 @@ func runShell(exePath string) error {
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	cmd.Stdin = os.Stdin
-	err := cmd.Start()
-	if err != nil {
+	if err := cmd.Start(); err != nil {
 		return err
 	}
 	return cmd.Wait()

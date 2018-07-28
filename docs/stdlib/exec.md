@@ -40,7 +40,15 @@ ExecuteCommand(progname string, args []string) (pid int, stdout string, stderr s
 **Example Usage:**
 
 ```
-
+var exec = G.exec.ExecuteCommand("launchctl", ["submit", "-l", label, "--", name]);
+if (exec[4] == null) {
+    console.log("Pid: "+exec[0]);;
+    console.log("stdout: "+exec[1]);
+    console.log("stderr: "+exec[2]);
+    console.log("exit code: "+exec[3]);
+} else {
+    console.log("go errors: "+exec[4].Error())  ;
+}   
 ```
 
 ### ExecuteCommandAsync
@@ -72,5 +80,11 @@ ExecuteCommandAsync(progname string, args []string) (proc *exec.Cmd, err error)
 **Example Usage:**
 
 ```
-
+var fullpath = "/bin/cp"
+var running = G.exec.ExecuteCommandAsync(fullpath, ["arg1", "arg2"]);
+if (running[1] != null) {
+    console.log("errors: "+running[1].Error());
+} else {
+    console.log("pid: "+running[0].Process.Pid);
+}
 ```

