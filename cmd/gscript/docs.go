@@ -3,7 +3,6 @@ package main
 import "github.com/urfave/cli"
 
 var (
-	packageName     = ""
 	docsSubcommands = []cli.Command{
 		{
 			Name:   "macros",

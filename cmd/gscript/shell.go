@@ -63,14 +63,12 @@ func interactiveShellCommand(c *cli.Context) error {
 	gc.AddScript(scriptPath)
 	err := gc.Do()
 	if err != nil {
+		cliLogger.Errorf("Build Dir Located At: %s", gc.BuildDir)
 		return err
 	}
 	err = runShell(exePath)
 	os.RemoveAll(tmpDir)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func runShell(exePath string) error {

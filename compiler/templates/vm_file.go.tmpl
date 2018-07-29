@@ -104,6 +104,9 @@ func (o *{{ $.ID }}) {{ $.FunctionKey "import_native" }}() error {
       ImportPath: "{{ $pkg.ImportPath }}",
       Name: "{{ $pkg.Name }}",
       SymbolTable: map[string]*engine.NativeFunc{},
+      Types: map[string]*engine.NativeType{},
+      Consts: map[string]*engine.NativeConst{},
+      Vars: map[string]*engine.NativeVar{},
     }
     {{ range $fidx, $f := $pkg.SuccessfullyLinkedFuncs -}}
       // Adding function pointer for native function {{ $pkg.Name }}.{{ $f.Function }} to symbol table
@@ -113,6 +116,30 @@ func (o *{{ $.ID }}) {{ $.FunctionKey "import_native" }}() error {
         Func: o.{{ $.ID }}{{ $f.ID }},
       }
       _np{{ $pkg.MaskedName }}.SymbolTable["{{ $f.Function }}"] = _nf{{ $pkg.MaskedName }}{{ $fidx }}
+    {{ end -}}
+    {{ range $_, $t := $pkg.GoTypes -}}
+      // Declaring a type alias for {{ $pkg.Name }}.{{ $t.Name }}
+      _nt{{ $pkg.MaskedName }}{{ $t.Key }} := &engine.NativeType{
+        Name: "{{ $t.Name }}",
+        Factory: o.{{ $.ID }}{{ $t.Key }},
+        Fields: map[string]*engine.NativeField{},
+      }
+      _np{{ $pkg.MaskedName }}.Types["{{ $t.Name }}"] = _nt{{ $pkg.MaskedName }}{{ $t.Key }}
+    {{ end -}}
+    {{ range $cidx, $c := $pkg.GoConsts -}}
+      _nc{{ $pkg.MaskedName }}{{ $c.Key }} := &engine.NativeConst{
+        Name: "{{ $c.Name }}",
+        Value: {{ $pkg.MaskedName }}.{{ $c.Name }},
+      }
+      _np{{ $pkg.MaskedName }}.Consts["{{ $cidx }}"] = _nc{{ $pkg.MaskedName }}{{ $c.Key }}
+    {{ end -}}
+    {{ range $vidx, $va := $pkg.ValidVars -}}
+      _nv{{ $pkg.MaskedName }}{{ $va.Key }} := &engine.NativeVar{
+        Name: "{{ $va.Name }}",
+        Signature: `{{ $va.Signature }}`,
+        Value: {{ $pkg.MaskedName }}.{{ $va.Name }},
+      }
+      _np{{ $pkg.MaskedName }}.Vars["{{ $va.Name }}"] = _nv{{ $pkg.MaskedName }}{{ $va.Key }}
     {{ end -}}
 
     // Injecting native package into the genesis VM
@@ -228,6 +255,10 @@ func (o *{{ $.ID }}) {{ $.ID }}{{ $f.ID }}(call otto.FunctionCall) otto.Value {
       return o.E.Raise("jsexport", "could not export argument %d of function %s", {{ $aidx }}, "{{ $f.Function }}")
     }
     switch v := ra{{ $aidx }}.(type) {
+    {{ if $a.NeedsMapping }}
+      case {{ $a.MappedTypeAlias }}:
+        a{{ $aidx }} = {{ $a.ExtSig }}(v)
+    {{ end }}
     case {{ $a.ExtSig }}:
       a{{ $aidx }} = ra{{ $aidx }}.({{ $a.ExtSig }})
     {{ if $a.BuiltInTranslationRequired }}
@@ -280,5 +311,19 @@ func (o *{{ $.ID }}) {{ $.ID }}{{ $f.ID }}(call otto.FunctionCall) otto.Value {
 
 {{ end }}
 
+{{ range $ns, $pkg := $.GoPackageByNamespace -}}
+{{ range $tn, $t := $pkg.GoTypes -}}
+// {{ $.ID }}{{ $t.Key }} declares an accessible native type generator for {{ $pkg.Name }}.{{ $tn }}
+func (o *{{ $.ID }}) {{ $.ID }}{{ $t.Key }}(call otto.FunctionCall) otto.Value {
+  val := new({{ $pkg.MaskedName }}.{{ $tn }})
+  retVal, err := call.Otto.ToValue(val)
+  if err != nil {
+    return o.E.Raise("return", "conversion failed for return 0 (type=%T) - %v", val, err)
+  }
+  return retVal
+}
+
+{{ end -}}
+{{ end -}}
 // Tangled Hairs below
 // ---

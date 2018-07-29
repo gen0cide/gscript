@@ -240,7 +240,7 @@ func (g *GenesisVM) RetrieveAsset(m *Macro) error {
 	g.Lock()
 	g.Embeds[ef.OrigName] = ef
 	g.Unlock()
-	g.Logger.Infof("  %s -> %s", color.HiWhiteString(g.Name), color.YellowString(ef.OrigName))
+	g.Logger.Debugf("  %s -> %s", color.HiWhiteString(g.Name), color.YellowString(ef.OrigName))
 	return nil
 }
 
@@ -501,7 +501,7 @@ func (g *GenesisVM) SwizzleNativeFunctionCalls() error {
 		if err != nil {
 			lf.SwizzleError = err
 			lf.SwizzleSuccessful = false
-			g.Logger.Errorf("Could not swizzle native function %s: %v", id, err)
+			g.Logger.Debugf("Could not swizzle native function %s: %v", id, err)
 			if lf.Caller != nil {
 				return fmt.Errorf("script %s calls %s which is not linkable", g.Name, id)
 			}
@@ -511,7 +511,7 @@ func (g *GenesisVM) SwizzleNativeFunctionCalls() error {
 		if err != nil {
 			lf.SwizzleError = err
 			lf.SwizzleSuccessful = false
-			g.Logger.Errorf("Could not swizzle native function %s: %v", id, err)
+			g.Logger.Debugf("Could not swizzle native function %s: %v", id, err)
 			if lf.Caller != nil {
 				return fmt.Errorf("script %s calls %s which is not linkable", g.Name, id)
 			}
@@ -588,6 +588,7 @@ func (g *GenesisVM) WriteVMBundle() error {
 	}
 	newData, err := imports.Process(filename, g.GenesisFile.Bytes(), &retOpts)
 	if err != nil {
+		ioutil.WriteFile(fileLocation, g.GenesisFile.Bytes(), 0644)
 		return err
 	}
 	err = ioutil.WriteFile(fileLocation, newData, 0644)

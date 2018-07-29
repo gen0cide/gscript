@@ -39,9 +39,6 @@ type Compiler struct {
 	// logging object to be used
 	Logger logger.Logger
 
-	// source buffer used by the pre-compilation obfuscator
-	sourceBuffer bytes.Buffer
-
 	// a slice of unique priorities that can be found within this VMs bundled into this build
 	UniqPriorities []int
 
@@ -134,7 +131,7 @@ func (c *Compiler) Do() error {
 	if err != nil {
 		return err
 	}
-	c.Logger.Info("")
+	c.Logger.Debug("")
 	c.Logger.Debug("asset tree built")
 	err = c.WalkGenesisASTs()
 	if err != nil {
@@ -150,6 +147,15 @@ func (c *Compiler) Do() error {
 	if err != nil {
 		return err
 	}
+
+	// for _, e := range c.VMs {
+	// 	for _, p := range e.GoPackageByImport {
+	// 		p.printResults()
+	// 	}
+	// }
+
+	// return errors.New("debug run exiting")
+
 	c.Logger.Debug("native code bundles mapped to the virtual machine")
 	err = c.SanityCheckScriptToNativeMapping()
 	if err != nil {
@@ -202,7 +208,7 @@ func (c *Compiler) Do() error {
 	if err != nil {
 		return err
 	}
-	if c.SkipCompilation != true {
+	if !c.SkipCompilation {
 		c.Logger.Debug("statically linked native binary built")
 	}
 	err = c.PerformPostCompileObfuscation()
@@ -269,7 +275,7 @@ func (c *Compiler) DetectVersions() error {
 // GatherAssets enumerates all bundled virtual machines for any embedded assets and copies them
 // into the build directory's asset cache
 func (c *Compiler) GatherAssets() error {
-	c.Logger.Info(color.HiRedString("***  BUNDLED ASSETS  ***"))
+	c.Logger.Debug(color.HiRedString("***  BUNDLED ASSETS  ***"))
 	fns := []func() error{}
 	for _, vm := range c.VMs {
 		fns = append(fns, vm.CacheAssets)
@@ -426,10 +432,7 @@ func (c *Compiler) CreateEntryPoint() error {
 		return err
 	}
 	err = ioutil.WriteFile(fileLocation, newData, 0644)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 // PerformPreCompileObfuscation runs the pre-compilation obfuscation routines on the intermediate representation
@@ -485,10 +488,7 @@ func (c *Compiler) BuildNativeBinary() error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 // MapVMsByPriority creates a pointer mapping of each VM by it's unique priority

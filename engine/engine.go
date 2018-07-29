@@ -105,6 +105,24 @@ func (e *Engine) ImportNativePackage(namespace string, pkg *NativePackage) error
 			return err
 		}
 	}
+	for n, t := range pkg.Types {
+		err = ns.Set(n, t)
+		if err != nil {
+			return err
+		}
+	}
+	for n, c := range pkg.Consts {
+		err = ns.Set(n, c.Value)
+		if err != nil {
+			return err
+		}
+	}
+	for n, va := range pkg.Vars {
+		err = ns.Set(n, va.Value)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -214,10 +232,15 @@ func (e *Engine) setGlobalRef() error {
 	if err != nil {
 		return err
 	}
+	err = e.VM.Set("Create", e.createType)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 // EnableAssets injects the core asset handling functions into the engine's runtime
+// TODO (gen0cide): Fix asset retrieval to call from vm functions, not the raw translations
 func (e *Engine) EnableAssets() error {
 	err := e.VM.Set("GetAssetAsString", e.retrieveAssetAsString)
 	if err != nil {

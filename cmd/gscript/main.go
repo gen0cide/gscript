@@ -31,6 +31,7 @@ func init() {
 
 func main() {
 	app := cli.NewApp()
+
 	app.Writer = color.Output
 	app.ErrWriter = color.Output
 	app.Name = "gscript"
