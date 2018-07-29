@@ -1,7 +1,7 @@
-
 # Using the Standard Library
 
 ## Crypto
+
 - GetMD5FromString(data string) string
 
 - GetMD5FromBytes(data []byte) string
@@ -17,6 +17,7 @@
 - GenerateRSASSHKeyPair(size int) (pubkey string, privkey string, error)
 
 ## Encoding
+
 - DecodeBase64(data string) (string, error)
 
 - EncodeBase64(data string) string
@@ -26,11 +27,13 @@
 - EncodeBytesAsString(data []byte) string
 
 ## Exec 
+
 - ExecuteCommand(progname string, args []string) (pid int, stdout string, stderr string, exitCode int, err error)
 
 - ExecuteCommandAsync(progname string, args []string) (proc *exec.Cmd, err error)
 
 ## File 
+
 - WriteFileFromBytes(filepath string, data []byte) error
 
 - WriteFileFromString(filepath string, data string) error
@@ -54,16 +57,19 @@
 - CheckExists(targetPath string) bool
 
 ## Net 
+
 - CheckForInUseTCP(port int) (bool, error)
 
 - CheckForInUseUDP(port int) (bool, error)
 
 ## Os 
+
 - TerminateSelf() error
 
 - TerminateVM()
 
 ## rand 
+
 - GetInt(min int, max int) int
 
 - GetAlphaNumericString(len int) string
@@ -75,6 +81,7 @@
 - GetBool() bool
 
 ## requests 
+
 - PostURL(url string, data string, headers map[string]string, ignoresslerrors bool) (resp *http.Response, body string, err error)
 
 - PostJSON(url string, jsondata string, headers map[string]string, ignoresslerrors bool) (resp *http.Response, body string, err error)
@@ -86,4 +93,5 @@
 - GetURLAsBytes(url string, headers map[string]string, ignoresslerrors bool) (resp *http.Response, body string, err error)
 
 ## time
+
 - GetUnix() int
