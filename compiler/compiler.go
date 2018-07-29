@@ -147,6 +147,15 @@ func (c *Compiler) Do() error {
 	if err != nil {
 		return err
 	}
+
+	// for _, e := range c.VMs {
+	// 	for _, p := range e.GoPackageByImport {
+	// 		p.printResults()
+	// 	}
+	// }
+
+	// return errors.New("debug run exiting")
+
 	c.Logger.Debug("native code bundles mapped to the virtual machine")
 	err = c.SanityCheckScriptToNativeMapping()
 	if err != nil {

@@ -319,7 +319,8 @@ func (p *GoParamDef) Interpret(i interface{}) error {
 	case *ast.FuncType:
 		return fmt.Errorf("%s %s includes an unsupported parameter type: %s", p.Type, p.OriginalName, "func")
 	case *ast.InterfaceType:
-		return fmt.Errorf("%s %s includes an unsupported parameter type: %s", p.Type, p.OriginalName, "interface{}")
+		return p.ParseInterfaceType(t)
+		//return fmt.Errorf("%s %s includes an unsupported parameter type: %s", p.Type, p.OriginalName, "interface{}")
 	case *ast.StructType:
 		return fmt.Errorf("%s %s includes an unsupported parameter type: %s", p.Type, p.OriginalName, "struct")
 	default:
@@ -340,6 +341,13 @@ func (p *GoParamDef) ParseMapType(a *ast.MapType) error {
 	p.NameBuffer.WriteString("WithValType")
 	err = p.Interpret(a.Value)
 	return err
+}
+
+// ParseInterfaceType is used to parse an interface type that is being passed into a linked function
+func (p *GoParamDef) ParseInterfaceType(i *ast.InterfaceType) error {
+	p.SigBuffer.WriteString("interface{}")
+	p.NameBuffer.WriteString("InterfaceType")
+	return nil
 }
 
 // ParseArrayType interprets a golang array/slice type into the appropriate GoParamDef structure
@@ -529,6 +537,44 @@ func (gsd *GoStructDef) ParseStructField(f *ast.Field, name string, offset int, 
 	gsd.Fields[name] = p
 	gsd.Unlock()
 	return
+}
+
+func (gop *GoPackage) printResults() {
+	structs := map[string]*GoStructDef{}
+	// interfaces := map[string]*GoInterfaceDef{}
+	for sname, s := range gop.GoTypes {
+		teststruct, ok := structs[sname]
+		_ = teststruct
+		if ok {
+			//g.Log.Errorf("Duplicate Struct Def: %s is declared in %s, ignoring declaration in %s", sname, teststruct.File.Filename, s.File.Filename)
+		}
+		structs[sname] = s
+		// for iname, i := range f.Interfaces {
+		// 	testinterface, ok := interfaces[iname]
+		// 	_ = testinterface
+		// 	if ok {
+		// 		//g.Log.Errorf("Duplicate Interface Def: %s is declared in %s, ignoring declaration in %s", iname, testinterface.File.Filename, i.File.Filename)
+		// 	}
+		// 	interfaces[iname] = i
+		// }
+	}
+	// g.Log.Infof("=== INTERFACES ===")
+	// for n, i := range interfaces {
+	// 	g.Log.Infof("  %s (len=%d)", n, len(i.Methods))
+	// }
+	gop.VM.Logger.Infof("===  %s STRUCTS  ===", gop.ImportKey)
+	for n, s := range structs {
+		gop.VM.Logger.Infof("  %s (fields=%d, incompatibles=%d, embeds=%d)", n, len(s.Fields), len(s.Incompatible), len(s.Embeds))
+		for fn, f := range s.Fields {
+			gop.VM.Logger.Infof("    (F) %s (%s)", fn, f.SigBuffer.String())
+		}
+		for fn, f := range s.Incompatible {
+			gop.VM.Logger.Infof("    (I) %s (%s)", fn, f.NameBuffer.String())
+		}
+		for _, f := range s.Embeds {
+			gop.VM.Logger.Infof("    (E) %s", f.SigBuffer.String())
+		}
+	}
 }
 
 // WalkGoFileAST walks the AST of a golang file and determines if it should be included as a linked
