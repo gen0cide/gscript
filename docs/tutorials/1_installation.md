@@ -4,19 +4,38 @@ Welcome to the GSCRIPT install!
 
 ## On MacOS
 
-- Install XCode
+- Install XCode or XCode CLI tools - `xcode-select --install`
 - Install GoLang 1.10 minimum - https://golang.org/dl/
-- Setup your GOHOME - mkdir ~/go - export GOHOME=~/go - easily build out the dir structure by using "go get" to grab a package - go get github.com/gen2brain/dlgs - ls -al ~/go/
+- Setup your `GOHOME`:
+
+```sh
+mkdir ~/go
+export GOHOME=~/go
+```
+
+- Easily build out the dir structure by using "go get" to grab a package:
+
+```sh
+go get github.com/gen2brain/dlgs
+ls -al ~/go/
+```
 
 ## Download GSCRIPT
 
 First pull down the gscript command line utility or source.
 https://github.com/gen0cide/gscript (or your fork if you want to change things)
-Make sure you save this project in your GOPATH, i.e:
+Make sure you save this project in your `GOPATH`, i.e:
+
+```sh
 $ echo $GOPATH
 ~/go/
+```
+
 Then the save would go here:
+
+```sh
 ~/go/src/github/gen0cide/gscript/
+```
 
 ## Build GSCRIPT
 
@@ -35,7 +54,10 @@ First we need to get all of the dependencies:
 
 Building the CLI tool:
 
-- cd ~/go/src/github.com/gen0cide/cmd/gscript
-- go build
-- cp ./gscript /usr/local/bin/
-- gscript --help
+```sh
+cd ~/go/src/github.com/gen0cide/cmd/gscript
+go build
+cp ./gscript /usr/local/bin/
+gscript --help
+```
+
