@@ -3,6 +3,7 @@ package requests
 import (
 	"testing"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -32,6 +33,9 @@ func TestGetURLAsString(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.Nil(t, obj)
 	assert.Equal(t, "", resp, "blank means received no data, due to error")
+
+	testslice := make([]string, 0, 0)
+	spew.Dump(testslice)
 }
 
 func TestGetURLAsBytes(t *testing.T) {

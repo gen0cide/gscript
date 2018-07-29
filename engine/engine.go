@@ -218,6 +218,7 @@ func (e *Engine) setGlobalRef() error {
 }
 
 // EnableAssets injects the core asset handling functions into the engine's runtime
+// TODO (gen0cide): Fix asset retrieval to call from vm functions, not the raw translations
 func (e *Engine) EnableAssets() error {
 	err := e.VM.Set("GetAssetAsString", e.retrieveAssetAsString)
 	if err != nil {
