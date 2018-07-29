@@ -447,7 +447,11 @@ func (p *GoParamDef) Interpret(i interface{}) error {
 		valType := reflect.ValueOf(t)
 		return fmt.Errorf("could not determine the golang ast type of %s in %s %s.%s", valType.Type().String(), p.Type, p.GoPackage.Name, p.OriginalName)
 	default:
+		if t == nil {
+			return nil
+		}
 		valType := reflect.ValueOf(t)
+		// spew.Dump(t)
 		return fmt.Errorf("could not determine the golang ast type of %s in %s %s.%s", valType.Type().String(), p.Type, p.GoPackage.Name, p.OriginalName)
 	}
 }
@@ -705,7 +709,7 @@ func (gop *GoPackage) printResults() {
 // ParseVarSpec walks a var declaration inside of a gopackage to make sure it can sanely be accounted for by the compiler
 func (gop *GoPackage) ParseVarSpec(goast *ast.File, vardecl *ast.ValueSpec, offset int, wg *sync.WaitGroup, errChan chan error) {
 	defer wg.Done()
-	gv, err := gop.NewGoVar(goast, vardecl, offset, vardecl.Names[offset], vardecl.Values[offset], vardecl.Names[offset].Name)
+	gv, err := gop.NewGoVar(goast, vardecl, offset, vardecl.Names[offset], vardecl.Type, vardecl.Names[offset].Name)
 	if err != nil {
 		return
 	}

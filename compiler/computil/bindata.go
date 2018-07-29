@@ -189,7 +189,7 @@ func soft_reserved() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "soft_reserved", size: 26, mode: os.FileMode(420), modTime: time.Unix(1531615133, 0)}
+	info := bindataFileInfo{name: "soft_reserved", size: 26, mode: os.FileMode(420), modTime: time.Unix(1532872870, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -209,7 +209,7 @@ func vm_fileGoTmpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "vm_file.go.tmpl", size: 11022, mode: os.FileMode(420), modTime: time.Unix(1532871711, 0)}
+	info := bindataFileInfo{name: "vm_file.go.tmpl", size: 11022, mode: os.FileMode(420), modTime: time.Unix(1532872870, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
