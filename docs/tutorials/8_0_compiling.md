@@ -3,43 +3,39 @@
 Compiling is as simple as running the command line utility, with any number of syntactically valid gscripts at the end. 
 
 ### Compiler options
-`--os : for specifying the platform to compile the target binary to`
 
-`--arch : for specifying the archatecture to compile the target binary to`
-
-`--output-file : for specifying an output file to save the final binary as opposed to a temp path`
-
-`--keep-build-dir : for keeping the build directory that contains the intermediate golang to debug any gscript compiler issues`
-
-`--enable-human-readable-names : this options is useful for debugging any potential linker issues.`
-
-`--enable-debugging : This option only works with obfuscation disabled, it will drop the running vm into an interactive debugger with the fist instance of DebugConsole()`
-
-`--enable-import-all-native-funcs : this options is useful for importing and linking all of the golang native libraries for when the user specifies the --enable-debugging option`
-
-`--enable-logging : This flag is helpful for logging all of the console.log() functions output to stdout. Will only work when obfuscation is disabled.`
-
-`--obfuscation-level : This flag takes a vale of 0-3 with 0 being the highest level obuscation and 3 being no obfuscation applied to the final binary.`
-
-`--disable-native-compilation : This flag will specifically not compile the intermediate representation to a native binary (default is false)`
-
-`--enable-test-build : This will enable the test harness in the build - for testing only! (default: false)`
-
-`--enable-upx-compression : This will ompress the final binary using UPX (default: false)`
+```sh
+gscript --os                              # for specifying the platform to compile the target binary to
+gscript --arch                            # for specifying the archatecture to compile the target binary to
+gscript --output-file                     # for specifying an output file to save the final binary as opposed to a temp path
+gscript --keep-build-dir                  # for keeping the build directory that contains the intermediate golang to debug any gscript compiler issues
+gscript --enable-human-readable-names     # this options is useful for debugging any potential linker issues.
+gscript --enable-debugging                # This option only works with obfuscation disabled, it will drop the running vm into an interactive debugger with the fist instance of DebugConsole()
+gscript --enable-import-all-native-funcs  # this options is useful for importing and linking all of the golang native libraries for when the user specifies the --enable-debugging option
+gscript --enable-logging                  # This flag is helpful for logging all of the console.log() functions output to stdout. Will only work when obfuscation is disabled.
+gscript --obfuscation-level               # This flag takes a vale of 0-3 with 0 being the highest level obuscation and 3 being no obfuscation applied to the final binary.
+gscript --disable-native-compilation      # This flag will specifically not compile the intermediate representation to a native binary (default is false)
+gscript --enable-test-build               # This will enable the test harness in the build - for testing only! (default                        # false)
+gscript --enable-upx-compression          # This will ompress the final binary using UPX (default                        # false)
+```
 
 ## Compiler examples
-`gscript compile /path/to/gscript.gs`
-`gscript c /path/to/gscript.gs`
-`gscirpt c --enable-logging --obfuscation-level 3 /path/to/gscript.gs`
-`gscirpt c --enable-debugging --obfuscation-level 3 /path/to/gscript.gs`
-`gscript compile /gscripts/technique1.gs /gscripts/technique2.gs`
-`gscript c /gscripts/technique1.gs /gscripts/technique2.gs`
-`gscript compile /gscripts/*.gs`
-`gscript c /gscripts/*.gs`
 
+```sh
+gscript compile /path/to/gscript.gs
+gscript c /path/to/gscript.gs
+gscirpt c --enable-logging --obfuscation-level 3 /path/to/gscript.gs
+gscirpt c --enable-debugging --obfuscation-level 3 /path/to/gscript.gs
+gscript compile /gscripts/technique1.gs /gscripts/technique2.gs
+gscript c /gscripts/technique1.gs /gscripts/technique2.gs
+gscript compile /gscripts/*.gs
+gscript c /gscripts/*.gs
+```
 
 ## Compiler details
+
 The compiler executes a complex series of tasks, as defined below:
+
 - CheckForConfigErrors
 Validated compiler configuration
 

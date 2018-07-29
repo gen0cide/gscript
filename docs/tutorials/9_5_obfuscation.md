@@ -17,14 +17,14 @@ The **Pre Compile Obfuscator** is known as the **Stylist**. The basic premise of
 
 Here is a hypothetical example of this:
 
-```
+```js
 // Original Source
 var foo = "bar"
 ```
 
 And after the Stylist is run over this Go source:
 
-```
+```js
 var foo = s(31337, generatedVarA)
 
 var generatedVarA = []rune{

@@ -1,4 +1,3 @@
-
 # Debugging
 
 ## Using The Interactive Debugger
