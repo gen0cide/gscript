@@ -164,6 +164,7 @@ func compileScriptCommand(c *cli.Context) error {
 	}
 	err := gc.Do()
 	if err != nil {
+		cliLogger.Errorf("Build Dir Located At: %s", gc.BuildDir)
 		return err
 	}
 	cliLogger.Infof("Compiled binary located at:\n\n%s\n", gc.OutputFile)

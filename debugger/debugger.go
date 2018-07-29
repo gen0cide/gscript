@@ -106,6 +106,22 @@ func (d *Debugger) InjectDebugConsole() error {
 	if err != nil {
 		return err
 	}
+	err = d.VM.VM.Set("TypeTable", d.vmTypeTable)
+	if err != nil {
+		return err
+	}
+	err = d.VM.VM.Set("ConstTable", d.vmConstTable)
+	if err != nil {
+		return err
+	}
+	err = d.VM.VM.Set("VarTable", d.vmVarTable)
+	if err != nil {
+		return err
+	}
+	err = d.VM.VM.Set("Docs", d.vmPackageDocs)
+	if err != nil {
+		return err
+	}
 	// Not Today
 	// err = d.VM.VM.Set("async", d.vmAsync)
 	// if err != nil {
@@ -131,11 +147,76 @@ func (d *Debugger) vmDebugConsole(call otto.FunctionCall) otto.Value {
 	return otto.UndefinedValue()
 }
 
+func (d *Debugger) vmVarTable(call otto.FunctionCall) otto.Value {
+	vars := d.AvailableVars()
+	for ns, va := range vars {
+		d.Logger.Infof(">>> %s Package\n\t%s\n", ns, strings.Join(va, "\n\t"))
+	}
+	return otto.UndefinedValue()
+}
+
+func (d *Debugger) vmConstTable(call otto.FunctionCall) otto.Value {
+	consts := d.AvailableConsts()
+	for ns, cs := range consts {
+		d.Logger.Infof(">>> %s Package\n\t%s\n", ns, strings.Join(cs, "\n\t"))
+	}
+	return otto.UndefinedValue()
+}
+
+func (d *Debugger) vmTypeTable(call otto.FunctionCall) otto.Value {
+	types := d.AvailableTypes()
+	for ns, ts := range types {
+		d.Logger.Infof(">>> %s Package\n\t%s\n", ns, strings.Join(ts, "\n\t"))
+	}
+	return otto.UndefinedValue()
+}
+
 func (d *Debugger) vmSymbolTable(call otto.FunctionCall) otto.Value {
 	sym := d.AvailableFuncs()
 	for ns, funcs := range sym {
 		d.Logger.Infof(">>> %s Package\n\t%s\n", ns, strings.Join(funcs, "\n\t"))
 	}
+	return otto.UndefinedValue()
+}
+
+func (d *Debugger) vmPackageDocs(call otto.FunctionCall) otto.Value {
+	if len(call.ArgumentList) != 1 {
+		return d.VM.Raise("arg", "must provide one string argument to Docs()")
+	}
+	val, err := call.Argument(0).Export()
+	if err != nil {
+		return d.VM.Raise("jsexport", "coult not convert argument number 0")
+	}
+
+	realval, ok := val.(string)
+	if !ok {
+		return d.VM.Raise("type", "argument was not of type string")
+	}
+
+	consts := d.AvailableConsts()
+	types := d.AvailableTypes()
+	funcs := d.AvailableFuncs()
+	vars := d.AvailableVars()
+
+	cl, clok := consts[realval]
+	tl, tlok := types[realval]
+	fl, flok := funcs[realval]
+	vl, vlok := vars[realval]
+
+	if !clok && !tlok && !flok && !vlok {
+		return d.VM.Raise("undefined", "package is not defined in this genesis engine")
+	}
+
+	title := fmt.Sprintf(">> Package Documentation: %s\n\n", realval)
+
+	contstext := fmt.Sprintf("\n  %s\n\t%s\n", color.HiYellowString("-- CONSTS --"), strings.Join(cl, "\n\t"))
+	varstext := fmt.Sprintf("\n  %s\n\t%s\n", color.HiYellowString("-- VARS --"), strings.Join(vl, "\n\t"))
+	typestext := fmt.Sprintf("\n  %s\n\t%s\n", color.HiYellowString("-- TYPES --"), strings.Join(tl, "\n\t"))
+	funcstext := fmt.Sprintf("\n  %s\n\t%s\n", color.HiYellowString("-- FUNCS --"), strings.Join(fl, "\n\t"))
+
+	finaltext := strings.Join([]string{title, contstext, varstext, typestext, funcstext}, "")
+
+	d.Logger.Infof("%s", finaltext)
 	return otto.UndefinedValue()
 }
 
@@ -226,11 +307,65 @@ func (d *Debugger) runDebugger() error {
 func (d *Debugger) AvailableFuncs() map[string][]string {
 	ret := map[string][]string{}
 	for name, p := range d.VM.Packages {
-		ret[name] = []string{}
+		flist := []string{}
 		idx := 0
 		for _, f := range p.SymbolTable {
-			ret[name] = append(ret[name], fmt.Sprintf("%d) %s", idx, f.Signature))
+			flist = append(flist, fmt.Sprintf("%d) %s", idx, f.Signature))
 			idx++
+		}
+		if len(flist) > 0 {
+			ret[name] = flist
+		}
+	}
+	return ret
+}
+
+// AvailableTypes generates a type table for the debugger
+func (d *Debugger) AvailableTypes() map[string][]string {
+	ret := map[string][]string{}
+	for name, p := range d.VM.Packages {
+		tlist := []string{}
+		idx := 0
+		for tn := range p.Types {
+			tlist = append(tlist, fmt.Sprintf("%d) %s.%s", idx, name, tn))
+			idx++
+		}
+		if len(tlist) > 0 {
+			ret[name] = tlist
+		}
+	}
+	return ret
+}
+
+// AvailableConsts generates a const symbol table for the debugger
+func (d *Debugger) AvailableConsts() map[string][]string {
+	ret := map[string][]string{}
+	for name, p := range d.VM.Packages {
+		clist := []string{}
+		idx := 0
+		for c, cv := range p.Consts {
+			clist = append(clist, fmt.Sprintf("%d) %s.%s = %v", idx, name, c, cv.Value))
+			idx++
+		}
+		if len(clist) > 0 {
+			ret[name] = clist
+		}
+	}
+	return ret
+}
+
+// AvailableVars generates a var symbol table for the debugger
+func (d *Debugger) AvailableVars() map[string][]string {
+	ret := map[string][]string{}
+	for name, p := range d.VM.Packages {
+		vlist := []string{}
+		idx := 0
+		for vname, va := range p.Vars {
+			vlist = append(vlist, fmt.Sprintf("%d) %s.%s (%s)", idx, name, vname, va.Signature))
+			idx++
+		}
+		if len(vlist) > 0 {
+			ret[name] = vlist
 		}
 	}
 	return ret

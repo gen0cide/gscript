@@ -2,6 +2,7 @@ package compiler
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"go/ast"
 	"go/printer"
@@ -42,9 +43,6 @@ var (
 	invalidGoTypes = map[string]bool{
 		"complex128": true,
 		"complex64":  true,
-		// "float32":    true,
-		// "float64":    true,
-		// "uintptr": true,
 	}
 
 	binaryImports = map[string]string{
@@ -128,6 +126,12 @@ type GoPackage struct {
 
 	// GoTypes are struct type declarations that need to be accounted for in the engine
 	GoTypes map[string]*GoStructDef
+
+	// GoConsts are const declarations that need to be accounted for in the engine
+	GoConsts map[string]*GoConst
+
+	// GoVars are top level var declarations that need to be accounted for in the engine
+	GoVars map[string]*GoVar
 }
 
 // GoParamDef defines a type to represent parameters found in a Golang function declaration (arguments or return types)
@@ -213,6 +217,9 @@ type GoStructDef struct {
 	// Name represents the name of the struct definition
 	Name string
 
+	// Key represents the masked name of the function declaration in the intermediate representation
+	Key string
+
 	// ImportRefs hold a mapping of any golang dependencies required for this type declaration
 	ImportRefs map[string]*ast.ImportSpec
 
@@ -224,6 +231,50 @@ type GoStructDef struct {
 
 	// Embeds is a convenience reference showing any embedded types that might exist within this struct
 	Embeds map[string]*GoParamDef
+}
+
+// GoConst defines the name of a golang constant declaration
+type GoConst struct {
+	// Name refers to the const name within the package
+	Name string
+
+	// Key refers to the unique identifier for a const in the intermediate representation
+	Key string
+}
+
+// GoVar defines a top level var declaration within a Golang package
+type GoVar struct {
+	sync.RWMutex
+
+	// Package is a reference to the parent GoPackage
+	Package *GoPackage
+
+	// File is a reference to the parent AST file
+	File *ast.File
+
+	// ValueSpec is the parent ValueSpec declaration in the AST
+	ValueSpec *ast.ValueSpec
+
+	// VSOffset is the offset within the ValueSpec's Ident this var is found
+	VSOffset int
+
+	// Ident is a reference to the actual Golang AST ident object
+	Ident *ast.Ident
+
+	// Expr holds the data we are checking out!
+	Expr ast.Expr
+
+	// Name is the name of the exported var
+	Name string
+
+	// Key is the swizzled unique identifier to the declaration
+	Key string
+
+	// Valid means it has passed swizzle sanity check for types we can't mess with
+	Valid bool
+
+	// Def is the swizzling point of reference for this particular package
+	Def *GoParamDef
 }
 
 // NewGoPackage is a constructor for a gopackage that will be used in dynamically linking native code
@@ -242,6 +293,8 @@ func NewGoPackage(v *GenesisVM, ns, ikey string, stdlib bool) *GoPackage {
 		IsStandardLib:  stdlib,
 		MaskedName:     computil.RandLowerAlphaString(6),
 		GoTypes:        map[string]*GoStructDef{},
+		GoConsts:       map[string]*GoConst{},
+		GoVars:         map[string]*GoVar{},
 	}
 }
 
@@ -270,6 +323,52 @@ func NewMaskedImport(ip, oa string) *MaskedImport {
 		OldAlias:   oa,
 		NewAlias:   alias,
 	}
+}
+
+// NewConst creates a new const reference within a golang package
+func (gop *GoPackage) NewConst(name string) *GoConst {
+	gop.Lock()
+	defer gop.Unlock()
+	val, ok := gop.GoConsts[name]
+	if ok && val != nil {
+		return val
+	}
+	gconst := &GoConst{
+		Name: name,
+		Key:  computil.RandUpperAlphaString(7),
+	}
+	gop.GoConsts[name] = gconst
+	return gconst
+}
+
+// NewGoVar creates a new GoVar object if one doesn't already exist with that name in the GoPackage
+func (gop *GoPackage) NewGoVar(goast *ast.File, vs *ast.ValueSpec, offset int, ident *ast.Ident, expr ast.Expr, name string) (*GoVar, error) {
+	gop.Lock()
+	defer gop.Unlock()
+	ngv, ok := gop.GoVars[name]
+	if ok {
+		return ngv, errors.New("var declaration already exists in this package")
+	}
+	p := &GoParamDef{
+		ParamIdx:       offset,
+		SkipResolution: true,
+		Type:           "var",
+		OriginalName:   name,
+		GoPackage:      gop,
+	}
+	gv := &GoVar{
+		Package:   gop,
+		File:      goast,
+		ValueSpec: vs,
+		VSOffset:  offset,
+		Ident:     ident,
+		Expr:      expr,
+		Name:      name,
+		Key:       computil.RandAlphaNumericString(9),
+		Def:       p,
+	}
+	gop.GoVars[name] = gv
+	return gv, nil
 }
 
 // IsDefaultImport tests a golang import path to determine if it is already defined in the intermediate representation
@@ -323,9 +422,33 @@ func (p *GoParamDef) Interpret(i interface{}) error {
 		//return fmt.Errorf("%s %s includes an unsupported parameter type: %s", p.Type, p.OriginalName, "interface{}")
 	case *ast.StructType:
 		return fmt.Errorf("%s %s includes an unsupported parameter type: %s", p.Type, p.OriginalName, "struct")
+	case *ast.UnaryExpr:
+		if p.Type == "var" {
+			p.SigBuffer.Reset()
+			printer.Fprint(&p.SigBuffer, p.GoPackage.FileSet, t)
+			return nil
+		}
+		valType := reflect.ValueOf(t)
+		return fmt.Errorf("could not determine the golang ast type of %s in %s %s.%s", valType.Type().String(), p.Type, p.GoPackage.Name, p.OriginalName)
+	case *ast.CallExpr:
+		if p.Type == "var" {
+			p.SigBuffer.Reset()
+			printer.Fprint(&p.SigBuffer, p.GoPackage.FileSet, t)
+			return nil
+		}
+		valType := reflect.ValueOf(t)
+		return fmt.Errorf("could not determine the golang ast type of %s in %s %s.%s", valType.Type().String(), p.Type, p.GoPackage.Name, p.OriginalName)
+	case *ast.CompositeLit:
+		if p.Type == "var" {
+			p.SigBuffer.Reset()
+			printer.Fprint(&p.SigBuffer, p.GoPackage.FileSet, t)
+			return nil
+		}
+		valType := reflect.ValueOf(t)
+		return fmt.Errorf("could not determine the golang ast type of %s in %s %s.%s", valType.Type().String(), p.Type, p.GoPackage.Name, p.OriginalName)
 	default:
 		valType := reflect.ValueOf(t)
-		return fmt.Errorf("could not determine the golang ast type of %s in func %s", valType.Type().String(), p.LinkedFunction.Function)
+		return fmt.Errorf("could not determine the golang ast type of %s in %s %s.%s", valType.Type().String(), p.Type, p.GoPackage.Name, p.OriginalName)
 	}
 }
 
@@ -429,6 +552,11 @@ func (p *GoParamDef) ParseIdent(a *ast.Ident) error {
 	return nil
 }
 
+// Signature is a helper function that returns the type representation of a GoVar
+func (gv *GoVar) Signature() string {
+	return gv.Def.SigBuffer.String()
+}
+
 // MappedType looks at whether there is a type mapping that needs to be honored
 func (p *GoParamDef) MappedType(pkg, sel string) string {
 	if val, ok := translator.TypeAliasMap[pkg]; ok {
@@ -475,6 +603,7 @@ func (gop *GoPackage) ParseStructDef(goast *ast.File, v *ast.TypeSpec, t *ast.St
 		Fields:       map[string]*GoParamDef{},
 		Incompatible: map[string]*GoParamDef{},
 		Embeds:       map[string]*GoParamDef{},
+		Key:          computil.RandUpperAlphaString(13),
 	}
 	gop.GoTypes[v.Name.Name] = gsd
 	wg.Add(1)
@@ -539,29 +668,25 @@ func (gsd *GoStructDef) ParseStructField(f *ast.Field, name string, offset int, 
 	return
 }
 
+// ParseDeclaration attempts to parse a top level var declaration and account for any incompatible types
+func (gv *GoVar) ParseDeclaration(wg *sync.WaitGroup, errChan chan error) {
+	defer wg.Done()
+	gv.Lock()
+	defer gv.Unlock()
+	err := gv.Def.Interpret(gv.Expr)
+	if err == nil {
+		gv.Valid = true
+	} else {
+		gv.Package.VM.Logger.Errorf("Could not parse declaration %s.%s: %v", gv.Package.Name, gv.Name, err)
+	}
+	return
+}
+
 func (gop *GoPackage) printResults() {
 	structs := map[string]*GoStructDef{}
-	// interfaces := map[string]*GoInterfaceDef{}
 	for sname, s := range gop.GoTypes {
-		teststruct, ok := structs[sname]
-		_ = teststruct
-		if ok {
-			//g.Log.Errorf("Duplicate Struct Def: %s is declared in %s, ignoring declaration in %s", sname, teststruct.File.Filename, s.File.Filename)
-		}
 		structs[sname] = s
-		// for iname, i := range f.Interfaces {
-		// 	testinterface, ok := interfaces[iname]
-		// 	_ = testinterface
-		// 	if ok {
-		// 		//g.Log.Errorf("Duplicate Interface Def: %s is declared in %s, ignoring declaration in %s", iname, testinterface.File.Filename, i.File.Filename)
-		// 	}
-		// 	interfaces[iname] = i
-		// }
 	}
-	// g.Log.Infof("=== INTERFACES ===")
-	// for n, i := range interfaces {
-	// 	g.Log.Infof("  %s (len=%d)", n, len(i.Methods))
-	// }
 	gop.VM.Logger.Infof("===  %s STRUCTS  ===", gop.ImportKey)
 	for n, s := range structs {
 		gop.VM.Logger.Infof("  %s (fields=%d, incompatibles=%d, embeds=%d)", n, len(s.Fields), len(s.Incompatible), len(s.Embeds))
@@ -577,6 +702,85 @@ func (gop *GoPackage) printResults() {
 	}
 }
 
+// ParseVarSpec walks a var declaration inside of a gopackage to make sure it can sanely be accounted for by the compiler
+func (gop *GoPackage) ParseVarSpec(goast *ast.File, vardecl *ast.ValueSpec, offset int, wg *sync.WaitGroup, errChan chan error) {
+	defer wg.Done()
+	gv, err := gop.NewGoVar(goast, vardecl, offset, vardecl.Names[offset], vardecl.Values[offset], vardecl.Names[offset].Name)
+	if err != nil {
+		return
+	}
+	wg.Add(1)
+	gv.ParseDeclaration(wg, errChan)
+	return
+}
+
+// ParseFuncDecl walks a func declaration inside of a gopackage to result it's method signature
+func (gop *GoPackage) ParseFuncDecl(goast *ast.File, funcdecl *ast.FuncDecl, wg *sync.WaitGroup, errChan chan error) {
+	defer wg.Done()
+	funcName := funcdecl.Name.Name
+	if funcdecl.Name.IsExported() && funcdecl.Recv == nil {
+		gop.Lock()
+		caller := gop.ScriptCallers[funcName]
+		if caller == nil && !gop.IsStandardLib && !gop.VM.Options.ImportAllNativeFuncs {
+			gop.Unlock()
+			return
+		}
+		sig := new(bytes.Buffer)
+		printer.Fprint(sig, gop.FileSet, funcdecl.Type)
+		lf, err := gop.VM.Linker.NewLinkedFunction(
+			funcName,
+			caller,
+			goast,
+			funcdecl,
+			goast.Imports,
+			gop,
+		)
+		if err != nil {
+			gop.Unlock()
+			errChan <- err
+			return
+		}
+		match := funcRegexp.FindStringSubmatch(sig.String())
+		result := make(map[string]string)
+		for i, name := range funcRegexp.SubexpNames() {
+			if i != 0 && name != "" {
+				result[name] = match[i]
+			}
+		}
+
+		newSigBuf := new(bytes.Buffer)
+		if result["rets"] != "" {
+			if multipleRet.MatchString(result["rets"]) {
+				newSigBuf.WriteString("[")
+			}
+			newSigBuf.WriteString(result["rets"])
+			if multipleRet.MatchString(result["rets"]) {
+				newSigBuf.WriteString("]")
+			}
+			newSigBuf.WriteString(" = ")
+		}
+		if gop.IsStandardLib {
+			newSigBuf.WriteString("G.")
+			newSigBuf.WriteString(gop.Name)
+		} else {
+			newSigBuf.WriteString(gop.Namespace)
+		}
+		newSigBuf.WriteString(".")
+		newSigBuf.WriteString(funcName)
+		newSigBuf.WriteString("(")
+		newSigBuf.WriteString(result["args"])
+		newSigBuf.WriteString(")")
+		lf.Signature = newSigBuf.String()
+		if len(gop.ImportsByFile[goast.Name.Name]) == 0 {
+			gop.ImportsByFile[goast.Name.Name] = goast.Imports
+		}
+		gop.FuncTable[funcName] = funcdecl
+		gop.FuncToFileMap[funcName] = goast.Name.Name
+		gop.LinkedFuncs = append(gop.LinkedFuncs, lf)
+		gop.Unlock()
+	}
+}
+
 // WalkGoFileAST walks the AST of a golang file and determines if it should be included as a linked
 // function based on one of the following statements being true:
 // Parent GoPackage is a member of the standard library
@@ -585,108 +789,52 @@ func (gop *GoPackage) printResults() {
 // OR
 // VM Script calls this function explicitly
 func (gop *GoPackage) WalkGoFileAST(goast *ast.File, wg *sync.WaitGroup, errChan chan error) {
-	tmpwg := new(sync.WaitGroup)
-	ast.Inspect(goast, func(n ast.Node) bool {
+	for _, n := range goast.Decls {
 		switch v := n.(type) {
-		case *ast.TypeSpec:
-			if !v.Name.IsExported() {
-				return true
+		case *ast.GenDecl:
+			switch v.Tok {
+			case token.CONST:
+				for _, cdecl := range v.Specs {
+					if valdecl, ok := cdecl.(*ast.ValueSpec); ok {
+						if len(valdecl.Names) > 0 {
+							for _, name := range valdecl.Names {
+								if !name.IsExported() {
+									continue
+								}
+								gop.NewConst(name.Name)
+							}
+						}
+					}
+				}
+			case token.VAR:
+				for _, vdecl := range v.Specs {
+					if valdecl, ok := vdecl.(*ast.ValueSpec); ok {
+						for idx, name := range valdecl.Names {
+							if !name.IsExported() {
+								continue
+							}
+							wg.Add(1)
+							go gop.ParseVarSpec(goast, valdecl, idx, wg, errChan)
+						}
+					}
+				}
+			case token.TYPE:
+				for _, tdecl := range v.Specs {
+					if typedecl, ok := tdecl.(*ast.TypeSpec); ok {
+						if !typedecl.Name.IsExported() {
+							continue
+						}
+						wg.Add(1)
+						go gop.ParseTypeSpec(goast, typedecl, wg, errChan)
+					}
+				}
 			}
-			tmpwg.Add(1)
-			go gop.ParseTypeSpec(goast, v, tmpwg, errChan)
+		case *ast.FuncDecl:
+			wg.Add(1)
+			go gop.ParseFuncDecl(goast, v, wg, errChan)
 		}
-		return true
-	})
-	tmpwg.Wait()
+	}
 
-	ast.Inspect(goast, func(n ast.Node) bool {
-		// TODO: Started work on trying to grab CONST declarations, but fuck no. That gets wacky fast.
-		// Revisit when more time have I will.
-		// decl, ok := n.(*ast.GenDecl)
-		// if ok {
-		// 	if decl.Tok == token.CONST {
-		// 		for _, cdecl := range decl.Specs {
-		// 			if valdecl, ok := cdecl.(*ast.ValueSpec); ok {
-		// 				if len(valdecl.Names) > 0 && valdecl.Names[0].IsExported() {
-		// 					gop.VM.Logger.Infof("Discovered CONST: %s", spew.Sdump(valdecl))
-		// 				}
-		// 				// for
-		// 				// if valdecl.Name[0].IsExported() {
-		// 				// 	gop.VM.Logger.Infof("Discovered CONST: %s.%s = %s", gop.Name, valdecl.Name.Name, valdecl.)
-		// 				// }
-		// 			}
-		// 		}
-		// 	}
-		// }
-		fn, ok := n.(*ast.FuncDecl)
-		if ok {
-			funcName := fn.Name.Name
-			if fn.Name.IsExported() && fn.Recv == nil {
-				gop.Lock()
-				caller := gop.ScriptCallers[funcName]
-				if caller == nil && !gop.IsStandardLib && !gop.VM.Options.ImportAllNativeFuncs {
-					gop.Unlock()
-					return true
-				}
-				sig := new(bytes.Buffer)
-				printer.Fprint(sig, gop.FileSet, fn.Type)
-				lf, err := gop.VM.Linker.NewLinkedFunction(
-					funcName,
-					caller,
-					goast,
-					fn,
-
-					goast.Imports,
-					gop,
-				)
-				if err != nil {
-					gop.Unlock()
-					errChan <- err
-					wg.Done()
-					return false
-				}
-				match := funcRegexp.FindStringSubmatch(sig.String())
-				result := make(map[string]string)
-				for i, name := range funcRegexp.SubexpNames() {
-					if i != 0 && name != "" {
-						result[name] = match[i]
-					}
-				}
-
-				newSigBuf := new(bytes.Buffer)
-				if result["rets"] != "" {
-					if multipleRet.MatchString(result["rets"]) {
-						newSigBuf.WriteString("[")
-					}
-					newSigBuf.WriteString(result["rets"])
-					if multipleRet.MatchString(result["rets"]) {
-						newSigBuf.WriteString("]")
-					}
-					newSigBuf.WriteString(" = ")
-				}
-				if gop.IsStandardLib {
-					newSigBuf.WriteString("G.")
-					newSigBuf.WriteString(gop.Name)
-				} else {
-					newSigBuf.WriteString(gop.Namespace)
-				}
-				newSigBuf.WriteString(".")
-				newSigBuf.WriteString(funcName)
-				newSigBuf.WriteString("(")
-				newSigBuf.WriteString(result["args"])
-				newSigBuf.WriteString(")")
-				lf.Signature = newSigBuf.String()
-				if len(gop.ImportsByFile[goast.Name.Name]) == 0 {
-					gop.ImportsByFile[goast.Name.Name] = goast.Imports
-				}
-				gop.FuncTable[funcName] = fn
-				gop.FuncToFileMap[funcName] = goast.Name.Name
-				gop.LinkedFuncs = append(gop.LinkedFuncs, lf)
-				gop.Unlock()
-			}
-		}
-		return true
-	})
 	wg.Done()
 	return
 }
@@ -713,6 +861,18 @@ func (gop *GoPackage) SuccessfullyLinkedFuncs() []*LinkedFunction {
 	}
 
 	return lf
+}
+
+// ValidVars is used during rendering to ensure that only valid var declarations that have been
+// processed by the swizzler are included in the intermediate representation
+func (gop *GoPackage) ValidVars() []*GoVar {
+	gvs := []*GoVar{}
+	for _, g := range gop.GoVars {
+		if g.Valid {
+			gvs = append(gvs, g)
+		}
+	}
+	return gvs
 }
 
 // BuiltInTranslationRequired is a compiler helper to determine if the param definition requires a built in translation

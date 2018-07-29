@@ -105,6 +105,24 @@ func (e *Engine) ImportNativePackage(namespace string, pkg *NativePackage) error
 			return err
 		}
 	}
+	for n, t := range pkg.Types {
+		err = ns.Set(n, t)
+		if err != nil {
+			return err
+		}
+	}
+	for n, c := range pkg.Consts {
+		err = ns.Set(n, c.Value)
+		if err != nil {
+			return err
+		}
+	}
+	for n, va := range pkg.Vars {
+		err = ns.Set(n, va.Value)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -211,6 +229,10 @@ func (e *Engine) setGlobalRef() error {
 		return err
 	}
 	err = e.SetConst("ARCH", runtime.GOARCH)
+	if err != nil {
+		return err
+	}
+	err = e.VM.Set("Create", e.createType)
 	if err != nil {
 		return err
 	}
