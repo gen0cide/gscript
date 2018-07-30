@@ -25,7 +25,12 @@ func ExecuteCommand(c string, args []interface{}) (int, string, string, int, err
 	if cmd.ProcessState == nil {
 		exitCode = 1
 	} else {
-		exitCode = int(cmd.ProcessState.Sys().(syscall.WaitStatus))
+		ws, ok := cmd.ProcessState.Sys().(syscall.WaitStatus)
+		if !ok {
+			exitCode = 0
+		} else {
+			exitCode = int(ws)
+		}
 	}
 	return pid, stdout.String(), stderr.String(), exitCode, err
 }

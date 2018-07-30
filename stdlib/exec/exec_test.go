@@ -9,7 +9,7 @@ import (
 
 func TestExecuteCommand(t *testing.T) {
 	s := make([]interface{}, 0)
-	pid, stdout, stderr, exitCode, err := ExecuteCommand("whoami", s)
+	pid, stdout, stderr, exitCode, err := ExecuteCommand("wwzzhoami", s)
 	assert.Nil(t, err)
 	assert.Equal(t, "", stderr, "should be no errors")
 	assert.Equal(t, 0, exitCode, "should exit cleanly")
