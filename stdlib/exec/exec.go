@@ -29,7 +29,7 @@ func ExecuteCommand(c string, args []interface{}) (int, string, string, int, err
 		if !ok {
 			exitCode = 0
 		} else {
-			exitCode = int(ws)
+			exitCode = ws.ExitStatus()
 		}
 	}
 	return pid, stdout.String(), stderr.String(), exitCode, err
