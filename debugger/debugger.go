@@ -239,6 +239,8 @@ func (d *Debugger) runDebugger() error {
 	prompt := fmt.Sprintf("%s%s", color.HiRedString("gscript"), color.HiWhiteString("> "))
 	c := &readline.Config{
 		Prompt: prompt,
+		Stdout: color.Output,
+		Stderr: color.Output,
 	}
 	cu, err := user.Current()
 	if err == nil {

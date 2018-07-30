@@ -8,7 +8,7 @@ import (
 )
 
 func TestExecuteCommand(t *testing.T) {
-	s := make([]string, 0)
+	s := make([]interface{}, 0)
 	pid, stdout, stderr, exitCode, err := ExecuteCommand("whoami", s)
 	assert.Nil(t, err)
 	assert.Equal(t, "", stderr, "should be no errors")
@@ -18,7 +18,7 @@ func TestExecuteCommand(t *testing.T) {
 }
 
 func TestExecuteCommandAsync(t *testing.T) {
-	s := make([]string, 1)
+	s := make([]interface{}, 1)
 	s = append(s, "10")
 	var retcmd *executer.Cmd
 	retcmd, err := ExecuteCommandAsync("sleep", s)

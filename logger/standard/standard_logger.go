@@ -3,6 +3,7 @@ package standard
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"path"
 	"regexp"
 	"runtime"
@@ -195,8 +196,10 @@ func (w standardLogWriter) Write(p []byte) (int, error) {
 		color.HiWhiteString("]"),
 		string(p),
 	)
-	fmt.Fprintf(color.Output, "%s", output)
-	return len(output), nil
+	written, err := io.Copy(color.Output, strings.NewReader(output))
+	return int(written), err
+	//fmt.Fprintf(color.Output, "%s", output)
+	//return len(output), nil
 }
 
 // Logger implements the Logger interface and is the standard logger for all genesis output
