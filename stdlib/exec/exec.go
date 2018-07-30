@@ -2,34 +2,49 @@ package exec
 
 import (
 	"bytes"
+	"fmt"
 	executer "os/exec"
 	"os/signal"
 	"syscall"
 )
 
 // ExecuteCommand executes the given command and waits for it to complete, returning pid, stdout, stderr, exitCode, or any errors
-func ExecuteCommand(c string, args []string) (int, string, string, int, error) {
-	cmd := executer.Command(c, args...)
+func ExecuteCommand(c string, args []interface{}) (int, string, string, int, error) {
+	cmd := executer.Command(c, getArgs(args)...)
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 	err := cmd.Run()
-	pid := cmd.Process.Pid
-	sysStatus := cmd.ProcessState.Sys().(syscall.WaitStatus)
-	if sysStatus.ExitStatus() != 1 {
-		return pid, stdout.String(), stderr.String(), sysStatus.ExitStatus(), err
+	var pid, exitCode int
+	if cmd.Process == nil {
+		pid = -1
+	} else {
+		pid = cmd.Process.Pid
 	}
-	return pid, stdout.String(), stderr.String(), sysStatus.ExitStatus(), nil
+	if cmd.ProcessState == nil {
+		exitCode = 1
+	} else {
+		exitCode = int(cmd.ProcessState.Sys().(syscall.WaitStatus))
+	}
+	return pid, stdout.String(), stderr.String(), exitCode, err
 }
 
 // ExecuteCommandAsync runs the command and does not wait for it to return.
-func ExecuteCommandAsync(c string, args []string) (*executer.Cmd, error) {
+func ExecuteCommandAsync(c string, args []interface{}) (*executer.Cmd, error) {
 	signal.Ignore(syscall.SIGHUP)
-	cmd := executer.Command(c, args...)
+	cmd := executer.Command(c, getArgs(args)...)
 	err := cmd.Start()
 	if err != nil {
 		return cmd, err
 	}
 	return cmd, nil
+}
+
+func getArgs(a []interface{}) []string {
+	ret := []string{}
+	for _, s := range a {
+		ret = append(ret, fmt.Sprintf("%v", s))
+	}
+	return ret
 }
