@@ -255,6 +255,14 @@ func (o *{{ $.ID }}) {{ $.ID }}{{ $f.ID }}(call otto.FunctionCall) otto.Value {
       return o.E.Raise("jsexport", "could not export argument %d of function %s", {{ $aidx }}, "{{ $f.Function }}")
     }
     switch v := ra{{ $aidx }}.(type) {
+    {{ if eq $a.ExtSig "[]interface{}" }}
+      case []string:
+        ifs := []interface{}{}
+        for _, x := range v {
+          ifs = append(ifs, x)
+        }
+        a{{ $aidx }} = ifs
+    {{ end }}
     {{ if $a.NeedsMapping }}
       case {{ $a.MappedTypeAlias }}:
         a{{ $aidx }} = {{ $a.ExtSig }}(v)
