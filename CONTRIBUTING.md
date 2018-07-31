@@ -19,7 +19,6 @@
 - Must pass all linter checks
 - Must have an associated unit test(s) written in Golang
 - Must have an associated genesis script that implements the function standalone in a gscript for in VM testing
-- Must follow guidelines for implementing standard library functions (STANDARD_LIBRARY_GUIDELINES.md)
 - Must include a commit updating the standard library documentation (using the function template) and include:
   - Name
   - Description
