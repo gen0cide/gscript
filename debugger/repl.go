@@ -22,8 +22,6 @@ func (d *Debugger) runDebugger() error {
 	interactive := isatty.IsTerminal(os.Stdout.Fd()) && isatty.IsTerminal(os.Stdin.Fd())
 	cygwin := isatty.IsCygwinTerminal(os.Stdout.Fd()) && isatty.IsCygwinTerminal(os.Stdin.Fd())
 
-	var closers []func() error
-
 	var stdin io.ReadCloser
 	if cygwin {
 		stdin = os.Stdin
@@ -38,35 +36,18 @@ func (d *Debugger) runDebugger() error {
 	}
 	histfile = filepath.Join(cu.HomeDir, ".gscript_history")
 
-	// configure stdout
-	var stdout io.Writer
-
-	if cygwin {
-		stdout = color.Output
-	} else {
-		stdout = readline.Stdout
-	}
-
-	// configure stderr
-	var stderr io.Writer = os.Stderr
-	if !cygwin {
-		stderr = readline.Stderr
-	}
-
 	if interactive {
 		stdin = readline.NewCancelableStdin(stdin)
 	}
 
 	// create readline instance
 	rl, err := readline.NewEx(&readline.Config{
-		HistoryFile:            histfile,
-		DisableAutoSaveHistory: true,
-		InterruptPrompt:        "^C",
-		HistorySearchFold:      true,
-		Stdin:                  stdin,
-		Stdout:                 stdout,
-		Stderr:                 stderr,
-		Prompt:                 prompt,
+		HistoryFile:     histfile,
+		InterruptPrompt: "^C",
+		Stdin:           stdin,
+		Stdout:          color.Output,
+		Stderr:          color.Output,
+		Prompt:          prompt,
 		FuncIsTerminal: func() bool {
 			return interactive || cygwin
 		},
@@ -80,8 +61,6 @@ func (d *Debugger) runDebugger() error {
 	if err != nil {
 		return err
 	}
-
-	closers = append(closers, rl.Close)
 
 	standard.PrintLogo()
 	title := fmt.Sprintf(
