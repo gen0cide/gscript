@@ -1,0 +1,11 @@
+set runtimepath+=/opt/vim
+
+source /opt/vim/vimrcs/basic.vim
+source /opt/vim/vimrcs/filetypes.vim
+source /opt/vim/vimrcs/plugins_config.vim
+source /opt/vim/vimrcs/extended.vim
+
+try
+source /opt/vim/my_configs.vim
+catch
+endtry
