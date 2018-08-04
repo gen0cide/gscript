@@ -17,7 +17,7 @@ type Debugger struct {
 
 // New returns a new debugger object wrapping the provided engine
 func New(e *engine.Engine) *Debugger {
-	dbgLogger := standard.NewStandardLogger(nil, "debugger", false, true)
+	dbgLogger := standard.NewStandardLogger(nil, "gscript", "debugger", false, true)
 	dbg := &Debugger{
 		VM:        e,
 		Logger:    dbgLogger,

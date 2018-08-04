@@ -45,7 +45,7 @@ type {{ $.ID }} struct {
 func New{{ $.ID }}() *{{ $.ID }} {
   te := engine.New("{{ $.Name }}", "{{ $.ID }}", 30, "Execute")
   {{ if $.HasLoggingEnabled -}}
-    al := standard.NewStandardLogger(nil, "{{ $.Name }}", false, false)
+    al := standard.NewStandardLogger(nil, "engine", "{{ $.Name }}", false, false)
     te.SetLogger(al)
   {{- end }}
   {{ if $.HasDebuggingEnabled }}
