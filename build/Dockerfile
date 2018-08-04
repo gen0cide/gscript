@@ -2,7 +2,6 @@ FROM ubuntu:latest
 
 MAINTAINER Alex Levinson <alexl@uber.com>
 
-ENV DEBIAN_FRONTEND noninteractive
 ENV INITRD No
 ENV LANGUAGE en_US.UTF-8
 ENV LC_ALL en_US.UTF-8
@@ -12,7 +11,8 @@ ENV GOROOT /opt/go
 ENV GOPATH /root/go
 ENV GSCRIPT_REVISION alex-dev
 
-RUN apt-get update && \
+RUN DEBIAN_FRONTEND=noninteractive \
+    apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
       vim nano wget curl sudo net-tools pwgen locales \
@@ -57,7 +57,7 @@ RUN echo "set tabstop=4" >> /opt/vim/my_configs.vim
 RUN echo "set shiftwidth=4" >> /opt/vim/my_configs.vim
 RUN echo "set expandtab" >> /opt/vim/my_configs.vim
 
+VOLUME /root/share
+
 ENV HOME /root
-
 WORKDIR /root
-
