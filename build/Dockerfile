@@ -32,7 +32,7 @@ RUN go get -d github.com/gen0cide/gscript/... && \
     git checkout $GSCRIPT_REVISION && \
     go get ./... && \
     cd cmd/gscript && \
-    go install && \
+    go install -i -a && \
     cd /root
 
 ADD ps1.sh /etc/profile.d/Z1_PS1.sh
