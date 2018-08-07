@@ -47,6 +47,7 @@ func strip(src string) string {
 
 type standardLogWriter struct {
 	name string
+	prog string
 }
 
 type standardStrippedFormatter struct{}
@@ -182,15 +183,9 @@ func (g *standardDefaultFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 
 func (w standardLogWriter) Write(p []byte) (int, error) {
 	output := fmt.Sprintf(
-		"%s%s%s%s%s%s%s%s%s%s%s %s",
+		"%s%s%s%s%s %s",
 		color.HiWhiteString("["),
-		color.HiRedString("G"),
-		color.HiRedString("S"),
-		color.HiRedString("C"),
-		color.HiRedString("R"),
-		color.HiRedString("I"),
-		color.HiRedString("P"),
-		color.HiRedString("T"),
+		color.HiRedString(w.prog),
 		color.HiWhiteString(":"),
 		color.HiYellowString(strings.ToLower(w.name)),
 		color.HiWhiteString("]"),
@@ -206,15 +201,16 @@ func (w standardLogWriter) Write(p []byte) (int, error) {
 type Logger struct {
 	Name   string
 	Logger *logrus.Logger
+	Prog   string
 }
 
 // NewStandardLogger returns a new Logger
-func NewStandardLogger(l *logrus.Logger, name string, customOutput, stripped bool) *Logger {
+func NewStandardLogger(l *logrus.Logger, prog, name string, customOutput, stripped bool) *Logger {
 	if l == nil {
 		l = logrus.New()
 	}
 	if customOutput == false {
-		l.Out = standardLogWriter{name: name}
+		l.Out = standardLogWriter{name: name, prog: prog}
 		if stripped == true {
 			l.Formatter = &standardStrippedFormatter{}
 		} else {
@@ -224,6 +220,7 @@ func NewStandardLogger(l *logrus.Logger, name string, customOutput, stripped boo
 	return &Logger{
 		Logger: l,
 		Name:   name,
+		Prog:   prog,
 	}
 }
 

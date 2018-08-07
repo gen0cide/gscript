@@ -15,7 +15,7 @@ import (
 
 var (
 	defaultCompileOptions = computil.DefaultOptions()
-	cliLogger             = standard.NewStandardLogger(nil, "cli", false, false)
+	cliLogger             = standard.NewStandardLogger(nil, "gscript", "cli", false, false)
 	displayBefore         = true
 	debugOutput           = false
 )
