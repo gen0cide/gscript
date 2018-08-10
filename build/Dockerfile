@@ -15,7 +15,7 @@ RUN DEBIAN_FRONTEND=noninteractive \
     apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
-      vim nano wget curl sudo net-tools pwgen locales \
+      build-essential vim nano wget curl sudo net-tools pwgen locales \
       git-core logrotate software-properties-common && \
     locale-gen en_US en_US.UTF-8 && \
     apt-get clean && \

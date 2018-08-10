@@ -35,7 +35,26 @@ https://docs.google.com/presentation/d/1kHdz8DY0Zn44yn_XrZ2RVqDY1lpADThLPNPwHP-n
 
 ## Installation
 
-**To use Gscript, you must have a Golang compiler setup and working on your machine. If you need to do this, you can grab an installer [here](https://golang.org/dl/). Make sure `$GOPATH/bin` is in your `$PATH`.**
+### Docker (Easiest)
+
+If you have docker installed, you can run:
+
+```
+$ docker pull gen0cide/gscript:v1
+```
+
+Make a local directory where you can share files between your local machine and the docker container. Replace `$LOCAL_DIR` in the following command with the path to that:
+
+```
+$ docker run -it -v $LOCAL_DIR:/root/share gen0cide/gscript:v1
+```
+
+Thats it! You're good to go.
+
+
+### Local (Good for advanced)
+
+**Local installation requires you to have a Golang compiler setup and working on your machine. If you need to do this, you can grab an installer [here](https://golang.org/dl/). Make sure `$GOPATH/bin` is in your `$PATH`.**
 
 
 After that, all you need to do is run:
