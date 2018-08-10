@@ -82,6 +82,10 @@ type Options struct {
 	// DEFAULT: false
 	ImportAllNativeFuncs bool `json:"import_all_native_funcs,omitempty"`
 
+	// Expirimental: force enable the Modorifier post compilation obfuscator (warning: there be dragons)
+	// DEFAULT: false
+	ForceUseMordorifier bool `json:"force_use_mordorifier,omitempty"`
+
 	// Determines the compilers level of obfuscation performed on the final binary
 	// DEFAULT: 0 (look at compiler const for available options)
 	ObfuscationLevel int `json:"obfuscation_level,omitempty"`
@@ -169,6 +173,7 @@ func DefaultOptions() Options {
 		SkipCompilation:       false,
 		UseHumanReadableNames: false,
 		ImportAllNativeFuncs:  false,
+		ForceUseMordorifier:   false,
 		ObfuscationLevel:      FullObfuscation,
 		GenesisDir:            rootDir,
 	}

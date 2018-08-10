@@ -1,17 +1,16 @@
 # GSCRIPT Basics
 
 Writing gscripts is very simple, the syntax is a very loose JavaScript,
-giving you all native JavaScript functions. 
+giving you all native JavaScript functions.
 
 ## Things to know
 
 - JavaScript Engine 5
-That gives you these native functions: 
+  That gives you these native functions:
 
 - You will want to be familiar w/ the native Lib
-These are helper GoLang functions we wrote just for GSCRIPT
-    - You will want to read the native lib docs 
-    These will help you understand how to handle native lib return objects
+  These are helper GoLang functions we wrote just for GSCRIPT - You will want to read the native lib docs
+  These will help you understand how to handle native lib return objects
 
 - You will want to read the GoDocs of any GoLang Native Library you use
   These are very helpful for understand the objects that things will return
@@ -28,9 +27,9 @@ To start your first script, try a simple function like the one that follows:
 
 ```js
 function Deploy() {
-    console.log("Hello World");
-    var out = G.rand.GetAlphaNumericString(4);
-    console.log("out uppecase: "+ out.toUpperCase());
+  console.log("Hello World");
+  var out = G.rand.GetAlphaNumericString(4);
+  console.log("out uppecase: " + out.toUpperCase());
 }
 ```
 
@@ -39,10 +38,11 @@ function Deploy() {
 You will want to compile the above script with logging, such that you can see the output of
 your randomly generated string
 
-```sh
+````sh
 $ gscript compile --enable-logging --obfuscation-level 3 ./hello_world.gs
 ```sh
 
 ## More simple examples
 
 - https://github.com/ahhh/gscripts/tree/master/attack/multi
+````

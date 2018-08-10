@@ -459,21 +459,21 @@ func (c *Compiler) PerformPreCompileObfuscation() error {
 
 // PerformPostCompileObfuscation runs the post-compilation obfuscation routines on compiled binary
 func (c *Compiler) PerformPostCompileObfuscation() error {
-	if c.SkipCompilation || c.ObfuscationLevel > 0 {
+	if c.SkipCompilation || c.ObfuscationLevel > 0 || !c.ForceUseMordorifier {
 		return nil
 	}
 	m := obfuscator.NewMordor(c.Logger)
-	// m.AddGhosts(c.GetIDLiterals())
-	//m.AddGhosts(c.stringCache)
+	m.AddGhosts(c.GetIDLiterals())
+	m.AddGhosts(c.stringCache)
 	for _, vm := range c.VMs {
 		m.AddGhosts(vm.GetIDLiterals())
 	}
-	// c.Logger.Infof("Mordorifying %d strings...", len(m.Horde))
-	// err := m.Assault(c.OutputFile)
-	// if err != nil {
-	// 	return err
-	// }
-	// m.PrintStats()
+	c.Logger.Infof("Mordorifying %d strings...", len(m.Horde))
+	err := m.Assault(c.OutputFile)
+	if err != nil {
+		return err
+	}
+	m.PrintStats()
 	return nil
 }
 

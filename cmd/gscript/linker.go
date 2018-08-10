@@ -19,6 +19,5 @@ func linkerPackageLookupCommand(c *cli.Context) error {
 	if c.Args().First() == "" {
 		return errors.New("must supply a golang package import path as an argument")
 	}
-	cliLogger.Infof("Golang Package: %s", c.Args().First())
 	return commandNotImplemented(c)
 }

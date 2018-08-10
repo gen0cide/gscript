@@ -34,7 +34,7 @@ func ASCIILogo() string {
 		fmt.Sprintf("       %s   %s  ", color.HiGreenString("888E  888E"), color.YellowString(")\\   )\\(()\\((_) /(/(  (_))/")),
 		fmt.Sprintf("       %s  %s   ", color.HiGreenString("888E  888E"), fatalLevel.Sprint("((_) ((_)((_)(_)((_)_\\ | |_")),
 		fmt.Sprintf("       %s  %s  ", color.HiGreenString("888E  888E"), color.HiRedString("(_-</ _|| '_|| || '_ \\)|  _|")),
-		fmt.Sprintf("       %s  %s %s ", color.HiGreenString("888& .888E"), fatalMsg.Sprint("/__/\\__||_|  |_|| .__/  \\__|"), defaultLevel.Sprint(gscript.Version)),
+		fmt.Sprintf("       %s  %s %s ", color.HiGreenString("888& .888E"), fatalMsg.Sprint("/__/\\__||_|  |_|| .__/  \\__|"), defaultLevel.Sprintf("v%s", gscript.Version)),
 		fmt.Sprintf("       %s                  %s           ", color.HiGreenString("*888\" 888&"), fatalMsg.Sprint("|_|")),
 		fmt.Sprintf("        %s  %s        -- By --", color.HiGreenString("`\"   \"888E"), infoLevel.Sprint("G E N E S I S")),
 		fmt.Sprintf("       %s   %s       %s", color.HiGreenString(".dWi   `88E"), infoLevel.Sprint("S C R I P T I N G"), debugLevel.Sprint("gen0cide")),
