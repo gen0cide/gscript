@@ -74,4 +74,3 @@ gscript compile --disable-native-compilation      # This flag will specifically 
 gscript compile --enable-test-build               # This will enable the test harness in the build - for testing only! (default: false)
 gscript compile --enable-upx-compression          # This will ompress the final binary using UPX (default: false)
 ```
-

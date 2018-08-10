@@ -22,10 +22,10 @@ var (
 
 func init() {
 	cli.HelpFlag = cli.BoolFlag{Name: "help, h"}
-	cli.VersionFlag = cli.BoolFlag{Name: "version, v"}
+	cli.VersionFlag = cli.BoolFlag{Name: "version"}
 
 	cli.VersionPrinter = func(c *cli.Context) {
-		fmt.Fprintf(c.App.Writer, "Genesis Engine Version: %s\n", gscript.Version)
+		fmt.Fprintf(c.App.Writer, "%s\n", gscript.Version)
 	}
 }
 
@@ -34,7 +34,12 @@ func main() {
 
 	app.Writer = color.Output
 	app.ErrWriter = color.Output
+
+	cli.AppHelpTemplate = fmt.Sprintf("%s\n%s", standard.ASCIILogo(), cli.AppHelpTemplate)
 	app.Name = "gscript"
+	app.Usage = "Cross platform dropper framework"
+	app.Description = "Framework to rapidly implement custom droppers for all three major operating systems."
+
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{
 			Name:        "debug, d",
@@ -42,6 +47,7 @@ func main() {
 			Destination: &debugOutput,
 		},
 	}
+
 	app.Version = gscript.Version
 	app.Authors = []cli.Author{
 		cli.Author{
@@ -56,6 +62,10 @@ func main() {
 			Name:  "Vyrus",
 			Email: "vyrus@dc949.org",
 		},
+		cli.Author{
+			Name:  "Lucas Morris",
+			Email: "emperorcow@gmail.com",
+		},
 	}
 	app.Copyright = "(c) 2018 Alex Levinson"
 	app.Commands = []cli.Command{
@@ -69,15 +79,8 @@ func main() {
 	}
 
 	app.Before = func(c *cli.Context) error {
-		subcmd := ""
 		if debugOutput {
 			cliLogger.Logger.SetLevel(logrus.DebugLevel)
-		}
-		if len(c.Args()) > 0 {
-			subcmd = c.Args().Get(0)
-		}
-		if subcmd != "shell" {
-			fmt.Fprintf(c.App.Writer, "%s\n", standard.ASCIILogo())
 		}
 		return nil
 	}

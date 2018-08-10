@@ -9,7 +9,7 @@ ENV LANG en_US.UTF-8
 ENV GOVERSION 1.10.3
 ENV GOROOT /opt/go
 ENV GOPATH /root/go
-ENV GSCRIPT_REVISION alex-dev
+ENV GSCRIPT_REVISION v1
 
 RUN DEBIAN_FRONTEND=noninteractive \
     apt-get update && \

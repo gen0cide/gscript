@@ -73,6 +73,11 @@ var (
 				Usage:       "enable the test harness in the build - for testing only! (default: false)",
 				Destination: &defaultCompileOptions.EnableTestBuild,
 			},
+			cli.BoolFlag{
+				Name:        "touch-a-silmaril",
+				Usage:       "Easter egg expirimental obfuscator of black magic.",
+				Destination: &defaultCompileOptions.ForceUseMordorifier,
+			},
 			cli.IntFlag{
 				Name:        "obfuscation-level",
 				Usage:       "override the default obfuscation level, where argument can be 0-4 with 0 being full and 4 being none",

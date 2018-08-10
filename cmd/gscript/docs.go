@@ -1,6 +1,11 @@
 package main
 
-import "github.com/urfave/cli"
+import (
+	"fmt"
+
+	"github.com/fatih/color"
+	"github.com/urfave/cli"
+)
 
 var (
 	docsSubcommands = []cli.Command{
@@ -25,16 +30,40 @@ var (
 		Usage:       "Shows documentation on a variety of gscript topics",
 		Subcommands: docsSubcommands,
 	}
+
+	macroHelp = fmt.Sprintf(
+		"For more information on the available macros, please check the README at:\n  %s",
+		color.HiGreenString("https://github.com/gen0cide/gscript"),
+	)
+	scriptHelp = fmt.Sprintf(
+		"For more information on the scripts, please refer to:\n  %s: %s\n  %s: %s",
+		color.HiWhiteString("README"),
+		color.HiGreenString("https://github.com/gen0cide/gscript"),
+		color.HiWhiteString("EXAMPLES"),
+		color.HiGreenString("https://github.com/ahhh/gscripts"),
+	)
+	stdlibHelp = fmt.Sprintf(
+		"For more information on the standard library, please refer to:\n  %s: %s\n  %s: %s\n  %s: %s",
+		color.HiWhiteString("README"),
+		color.HiGreenString("https://github.com/gen0cide/gscript"),
+		color.HiWhiteString("EXAMPLES"),
+		color.HiGreenString("https://github.com/ahhh/gscripts"),
+		color.HiWhiteString("INTERACTIVE"),
+		color.HiCyanString("Run \"gscript shell\" and enter the command \"SymbolTable()\""),
+	)
 )
 
 func docsMacrosSubcommand(c *cli.Context) error {
-	return commandNotImplemented(c)
+	cliLogger.Infoln(macroHelp)
+	return nil
 }
 
 func docsScriptsSubcommand(c *cli.Context) error {
-	return commandNotImplemented(c)
+	cliLogger.Infoln(scriptHelp)
+	return nil
 }
 
 func docsStandardLibSubcommand(c *cli.Context) error {
-	return commandNotImplemented(c)
+	cliLogger.Infoln(stdlibHelp)
+	return nil
 }

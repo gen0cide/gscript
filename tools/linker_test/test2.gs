@@ -14,7 +14,9 @@ function Deploy() {
   console.log(da_error);
   clippy = clipboard.ReadAll();
   console.log(clippy[0]);
-  urlObj = testlib.Test1("https://bing.com/search");
+  urlObj = testlib.Test1(
+    "https://bing.com/search"
+  );, , ,
   console.warn(urlObj[0].Host);
   DebugConsole();
 }
