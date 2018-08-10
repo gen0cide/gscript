@@ -1,4 +1,4 @@
-![Laforge Image](https://www.dropbox.com/s/nbq63jk2cj780lm/gscript-logo.png?dl=1)
+![Gscript Logo](https://i.imgur.com/16lZGrA.png)
 
 # Genesis Scripting Engine (gscript)
 
