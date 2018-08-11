@@ -11,7 +11,9 @@ import (
 
 func (d *Debugger) vmDebugConsole(call otto.FunctionCall) otto.Value {
 	d.VM.SetLogger(d.Logger)
+	d.VM.Paused = true
 	d.runDebugger()
+	d.VM.Paused = false
 	d.VM.SetLogger(d.OldLogger)
 	return otto.UndefinedValue()
 }

@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"os/user"
 	"path/filepath"
+	"sort"
 	"sync"
 	"text/template"
 
@@ -500,6 +501,7 @@ func (c *Compiler) MapVMsByPriority() error {
 		}
 		c.SortedVMs[vm.Priority()] = append(c.SortedVMs[vm.Priority()], vm)
 	}
+	sort.Slice(c.UniqPriorities, func(i, j int) bool { return c.UniqPriorities[i] < c.UniqPriorities[j] })
 	return nil
 }
 

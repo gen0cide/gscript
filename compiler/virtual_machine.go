@@ -25,6 +25,7 @@ import (
 
 var (
 	defaultPriority = 100
+	defaultTimeout  = 30
 
 	requiredBuildTemplates = []string{
 		"init",
@@ -225,6 +226,21 @@ func (g *GenesisVM) CacheAssets() error {
 		}
 	}
 	return nil
+}
+
+// GetTimeout attempts to get the timeout value set in the macro (if it was set)
+func (g *GenesisVM) GetTimeout() int {
+	ret := defaultTimeout
+	for _, m := range g.Macros {
+		if m.Key == "timeout" {
+			ret, err := strconv.Atoi(m.Params["value"])
+			if err != nil {
+				panic(fmt.Errorf("script %s has an invalid timeout set: %s", g.Name, m.Params["value"]))
+			}
+			return ret
+		}
+	}
+	return ret
 }
 
 // RetrieveAsset attempts to copy the asset into the build directory
