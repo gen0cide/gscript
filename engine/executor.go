@@ -49,11 +49,13 @@ func (e *Engine) recoveryHandler(begin time.Time) {
 func (e *Engine) timeoutMonitor() {
 	for {
 		time.Sleep(time.Duration(e.Timeout) * time.Second)
-		if e.Paused {
+		if !e.Paused {
 			e.VM.Interrupt <- func() {
 				panic(errTimeout)
 			}
 			return
+		} else {
+			continue
 		}
 	}
 }

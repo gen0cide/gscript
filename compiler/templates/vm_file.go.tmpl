@@ -43,7 +43,7 @@ type {{ $.ID }} struct {
 
 // New{{ $.ID }} creates the genesis runtime for script {{ $.Name }}
 func New{{ $.ID }}() *{{ $.ID }} {
-  te := engine.New("{{ $.Name }}", "{{ $.ID }}", 30, "Execute")
+  te := engine.New("{{ $.Name }}", "{{ $.ID }}", {{ $.GetTimeout }}, "Execute")
   {{ if $.HasLoggingEnabled -}}
     al := standard.NewStandardLogger(nil, "engine", "{{ $.Name }}", false, false)
     te.SetLogger(al)
@@ -89,6 +89,9 @@ func (o *{{ $.ID }}) {{ $.FunctionKey "execute" }}() error {
   {{- end }}
   o.E.EnableAssets()
   _, err := o.E.CallFunctionWithTimeout("Deploy")
+  if err != nil {
+    panic(err)
+  }
   return err
 }
 
