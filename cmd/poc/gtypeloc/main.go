@@ -11,7 +11,7 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/gen0cide/waiter"
-	"github.com/uudashr/gopkgs"
+	"github.com/ahhh/gopkgs"
 
 	"github.com/gen0cide/gscript/compiler"
 
