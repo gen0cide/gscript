@@ -55,7 +55,7 @@ First we need to get all of the dependencies:
 Building the CLI tool:
 
 ```sh
-cd ~/go/src/github.com/gen0cide/cmd/gscript
+cd ~/go/src/github.com/gen0cide/gscript/cmd/gscript
 go build
 cp ./gscript /usr/local/bin/
 gscript --help
