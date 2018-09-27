@@ -6,7 +6,7 @@ import (
 
 	"github.com/karrick/godirwalk"
 	"github.com/pkg/errors"
-	"github.com/uudashr/gopkgs"
+	"github.com/ahhh/gopkgs"
 )
 
 var (
