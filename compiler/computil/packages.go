@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"runtime"
 
-	"github.com/uudashr/gopkgs"
+	"github.com/ahhh/gopkgs"
 )
 
 var (

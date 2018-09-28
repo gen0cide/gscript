@@ -48,14 +48,14 @@ First we need to get all of the dependencies:
 - go get golang.org/x/tools
 - go get github.com/vigneshuvi/GoDateFormat
 - go get github.com/urfave/cli
-- go get github.com/uudashr/gopkgs
+- go get github.com/ahhh/gopkgs
 - go get github.com/tdewolff/minify/js
 - go get github.com/sirupsen/logrus
 
 Building the CLI tool:
 
 ```sh
-cd ~/go/src/github.com/gen0cide/cmd/gscript
+cd ~/go/src/github.com/gen0cide/gscript/cmd/gscript
 go build
 cp ./gscript /usr/local/bin/
 gscript --help
