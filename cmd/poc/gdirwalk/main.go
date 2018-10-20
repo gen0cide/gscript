@@ -15,7 +15,7 @@ var (
 )
 
 func getPackages() map[string]gopkgs.Pkg {
-	p, _ := gopkgs.List(gopkgs.Options{NoVendor: true})
+	p, _ := gopkgs.Packages(gopkgs.Options{NoVendor: true})
 	switched := map[string]gopkgs.Pkg{}
 	for _, pkg := range p {
 		switched[pkg.Dir] = pkg
