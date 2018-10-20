@@ -45,7 +45,7 @@ func regexpForModule(mod ...string) *regexp.Regexp {
 
 // GatherInstalledGoPackages retrieves a list of all installed go packages in the context of current GOPATH and GOROOT
 func GatherInstalledGoPackages() map[string]gopkgs.Pkg {
-	goPackages, err := gopkgs.List(gopkgs.Options{NoVendor: true})
+	goPackages, err := gopkgs.Packages(gopkgs.Options{NoVendor: true})
 	if err != nil {
 		panic(err)
 	}
