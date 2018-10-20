@@ -697,7 +697,7 @@ func (g *GenesisVM) GetMaskedImports() []*MaskedImport {
 	mi := []*MaskedImport{}
 	for _, mi2 := range g.Linker.MaskedImports {
 		_ = mi2
-		// mi = append(mi, mi2)
+		mi = append(mi, mi2)
 	}
 	return mi
 }

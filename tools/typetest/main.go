@@ -9,7 +9,7 @@ import (
 
 	"github.com/robertkrimen/otto"
 	"github.com/sirupsen/logrus"
-	"github.com/thanhpk/randstr"
+	"github.com/gen0cide/randstr"
 )
 
 var (
