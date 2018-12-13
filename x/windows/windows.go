@@ -43,7 +43,9 @@ type RegistryRetValue struct {
 	LongVal        uint64   `json:"long_val"`
 }
 
-// registry funcs
+/*
+	registry helper funcs
+*/
 func lookUpKey(keyString string) (registry.Key, error) {
 	key, ok := regKeys[keyString]
 	if !ok {
@@ -53,6 +55,10 @@ func lookUpKey(keyString string) (registry.Key, error) {
 	return key, nil
 }
 
+/*
+	Public funcs
+*/
+//AddRegKeyString Adds a registry key of type "string".
 func AddRegKeyString(registryString string, path string, name string, value string) error {
 	regKey, err := lookUpKey(registryString)
 	if err != nil {
@@ -66,6 +72,7 @@ func AddRegKeyString(registryString string, path string, name string, value stri
 	return openRegKey.SetStringValue(name, value)
 }
 
+//AddRegKeyExpandedString Adds a registry key of type "expanded string".
 func AddRegKeyExpandedString(registryString string, path string, name string, value string) error {
 	regKey, err := lookUpKey(registryString)
 	if err != nil {
@@ -79,6 +86,7 @@ func AddRegKeyExpandedString(registryString string, path string, name string, va
 	return openRegKey.SetExpandStringValue(name, value)
 }
 
+//AddRegKeyBinary Adds a registry key of type "binary".
 func AddRegKeyBinary(registryString string, path string, name string, value []byte) error {
 	regKey, err := lookUpKey(registryString)
 	if err != nil {
@@ -92,6 +100,7 @@ func AddRegKeyBinary(registryString string, path string, name string, value []by
 	return openRegKey.SetBinaryValue(name, value)
 }
 
+//AddRegKeyDWORD Adds a registry key of type DWORD.
 func AddRegKeyDWORD(registryString string, path string, name string, value int64) error {
 	var uval uint32
 	uval = uint32(value)
@@ -107,6 +116,7 @@ func AddRegKeyDWORD(registryString string, path string, name string, value int64
 	return openRegKey.SetDWordValue(name, uval)
 }
 
+//AddRegKeyQWORD Adds a registry key of type QDWORD.
 func AddRegKeyQWORD(registryString string, path string, name string, value int64) error {
 	var uval uint64
 	uval = uint64(value)
@@ -122,6 +132,7 @@ func AddRegKeyQWORD(registryString string, path string, name string, value int64
 	return openRegKey.SetQWordValue(name, uval)
 }
 
+//AddRegKeyStrings Adds a registry key of type "strings".
 func AddRegKeyStrings(registryString string, path string, name string, value []string) error {
 	regKey, err := lookUpKey(registryString)
 	if err != nil {
@@ -135,6 +146,7 @@ func AddRegKeyStrings(registryString string, path string, name string, value []s
 	return openRegKey.SetStringsValue(name, value)
 }
 
+//DelRegKey Removes a key from the registry.
 func DelRegKey(registryString string, path string) error {
 	regKey, err := lookUpKey(registryString)
 	if err != nil {
@@ -143,6 +155,7 @@ func DelRegKey(registryString string, path string) error {
 	return registry.DeleteKey(regKey, path)
 }
 
+//DelRegKeyValue Removes the value of a key from the registry.
 func DelRegKeyValue(registryString string, path string, valueName string) error {
 	regKey, err := lookUpKey(registryString)
 	if err != nil {
@@ -152,6 +165,7 @@ func DelRegKeyValue(registryString string, path string, valueName string) error 
 	return registry.DeleteKey(regKey, path)
 }
 
+// QueryRegKey Retrives a registry key's value.
 func QueryRegKey(registryString string, path string, key string) (RegistryRetValue, error) {
 	retVal := RegistryRetValue{}
 	regKey, err := lookUpKey(registryString)
@@ -206,6 +220,7 @@ func QueryRegKey(registryString string, path string, key string) (RegistryRetVal
 	return retVal, nil
 }
 
+//FindPid returns the PID of a running proccess as an int.
 func FindPid(procName string) (int, error) {
 	procs, err := ps.Processes()
 	if err != nil {
@@ -219,6 +234,7 @@ func FindPid(procName string) (int, error) {
 	return 0, errors.New("explorer.exe PID not found!")
 }
 
+//InjectShellcode Injects shellcode into a running process.
 func InjectShellcode(pid float64, payload []byte) error {
 	// custom functions
 	checkErr := func(err error) bool {
