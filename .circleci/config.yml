@@ -31,3 +31,7 @@ jobs:
       - run: gscript --debug compile --enable-logging --obfuscation-level=3 -o=/go/src/github.com/gen0cide/gscript/stdlib/time/time_test /go/src/github.com/gen0cide/gscript/stdlib/time/time_test.gs 
       - run: chmod +x /go/src/github.com/gen0cide/gscript/stdlib/time/time_test
       - run: /go/src/github.com/gen0cide/gscript/stdlib/time/time_test
+      # Test and compile multiple gscripts
+      - run: gscript --debug compile --enable-logging --obfuscation-level=3 -o=/go/src/github.com/gen0cide/gscript/stdlib/multi_test /go/src/github.com/gen0cide/gscript/stdlib/encoding/encoding_test.gs /go/src/github.com/gen0cide/gscript/stdlib/rand/rand_test.gs /go/src/github.com/gen0cide/gscript/stdlib/exec/exec_test.gs
+      - run: chmod +x /go/src/github.com/gen0cide/gscript/stdlib/multi_test
+      - run: /go/src/github.com/gen0cide/gscript/stdlib/multi_test
