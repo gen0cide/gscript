@@ -6,7 +6,7 @@
 
 
 
-[![CircleCI](https://circleci.com/gh/gen0cide/gscript/tree/v1.svg?style=svg)](https://circleci.com/gh/gen0cide/gscript/tree/v1)
+[![CircleCI](https://circleci.com/gh/gen0cide/gscript/tree/v1.svg?style=svg)](https://circleci.com/gh/gen0cide/gscript/tree/master)
 
 ## About
 
