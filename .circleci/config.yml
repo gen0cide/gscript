@@ -26,3 +26,6 @@ jobs:
       - run: go test -v ./...
       - run: cd cmd/gscript
       - run: go build -x -v
+      - run: ./gscript -version
+      - run: ./gscript --debug compile --enable-logging --obfuscation-level=3 -o=./outfile ../../stdlib/time/time_test.gs 
+      - run: ./outfile
