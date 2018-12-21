@@ -28,5 +28,5 @@ jobs:
       - run: go build -x -v -o ./gscript
       - run: chmod +x ./gscript
       - run: go get github.com/gen0cide/gscript/cmd/gscript
-      - run: gscript --debug compile --enable-logging --obfuscation-level=3 -o=./outfile ../../stdlib/time/time_test.gs 
+      - run: gscript --debug compile --enable-logging --obfuscation-level=3 -o=./outfile /go/src/github.com/gen0cide/gscript/stdlib/time/time_test.gs 
       - run: ./outfile
