@@ -21,12 +21,13 @@ jobs:
     steps:
       - checkout
 
-      # specify any bash command here prefixed with `run: `
+      # Make sure the gscript tool continues to build properly
       - run: go get -v -t -d ./...
       - run: go test -v ./...
       - run: cd cmd/gscript
-      - run: go build -x -v -o ./gscript
-      - run: chmod +x ./gscript
+      - run: go build -x -v
       - run: go get github.com/gen0cide/gscript/cmd/gscript
-      - run: gscript --debug compile --enable-logging --obfuscation-level=3 -o=./outfile /go/src/github.com/gen0cide/gscript/stdlib/time/time_test.gs 
-      - run: ./outfile
+      # Test compiling and running the a gscript bniary
+      - run: gscript --debug compile --enable-logging --obfuscation-level=3 -o=/go/src/github.com/gen0cide/gscript/stdlib/time/time_test /go/src/github.com/gen0cide/gscript/stdlib/time/time_test.gs 
+      - run: chmod +x /go/src/github.com/gen0cide/gscript/stdlib/time/time_test
+      - run: /go/src/github.com/gen0cide/gscript/stdlib/time/time_test
