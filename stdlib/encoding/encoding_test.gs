@@ -18,11 +18,11 @@ function Deploy() {
     console.log("b64d errors: "+ decoded[1]);
 
     console.log("Starting EncodeStringAsBytes");
-    var bytes = encoding.EncodeStringAsBytes("test");
+    var bytes = G.encoding.EncodeStringAsBytes("test");
     console.log("bytes: "+ bytes);
 
     console.log("EncodingBytesAsString");
-    var bstring = encoding.EncodeBytesAsString(bytes);
+    var bstring = G.encoding.EncodeBytesAsString(bytes);
     console.log("bytes to string: "+ bstring);
     
     return true;
