@@ -90,6 +90,7 @@ mentors, contributors, and great friends of gscript
 - @hecfblog
 - @ccdcredteam
 - @1njecti0n
+- @ahhh
 - @emperorcow
 - @vyrus001
 - @kos
