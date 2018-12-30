@@ -1,11 +1,28 @@
 package main
 
 func main() {
+  {{ if $.IsProductionBuild -}}
+      // make sure any panics are swallowed to prevent stack traces
+      defer func() {
+        if r := recover(); r != nil {
+          os.Exit(0)
+        }
+      }()
+  {{- end }}
   var wg sync.WaitGroup
   {{- range $_, $pri := $.UniqPriorities }}
   {{- range $_, $vm := (index $.SortedVMs $pri) }}
   wg.Add(1)
   go func() {
+    {{ if $.IsProductionBuild -}}
+      // make sure any panics are swallowed to prevent stack traces
+      defer func() {
+        if r := recover(); r != nil {
+          os.Exit(0)
+        }
+      }()
+    {{- end }}
+
     defer wg.Done()
     a{{ $vm.ID }} := New{{ $vm.ID }}()
     if a{{ $vm.ID }} == nil {

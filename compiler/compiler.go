@@ -505,6 +505,11 @@ func (c *Compiler) MapVMsByPriority() error {
 	return nil
 }
 
+// IsProductionBuild is an convienience method for checking to see if dumping a stack trace should be disabled for production builds
+func (c *Compiler) IsProductionBuild() bool {
+	return !c.Options.LoggingEnabled && !c.Options.DebuggerEnabled && !c.Options.EnableTestBuild
+}
+
 // GetIDLiterals returns all interesting IDs used by this compiler
 func (c *Compiler) GetIDLiterals() []string {
 	lits := []string{c.BuildDir}
