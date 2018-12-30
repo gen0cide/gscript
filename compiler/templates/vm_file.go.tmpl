@@ -66,7 +66,7 @@ func (o *{{ $.ID }}) {{ $.FunctionKey "import_assets" }}() error {
     // {{ $eid }} = {{ $embed.OrigName }}
     o.E.Imports["{{ $eid }}"] = func() []byte {
       // Unpacker wrapper with const declared above
-      return {{ $.ID }}D({{ $embed.ID }})
+      return {{ $.ID }}D({{ $embed.ID }}, {{ $embed.ID }}ODK())
     }
   {{ end -}}
   return nil
@@ -194,24 +194,26 @@ func (o *{{ $.ID }}) {{ $.FunctionKey "import_standard_library" }}() error {
   return nil
 }
 
-// {{ $.ID }}ODK returns the decryption key for the genesis VM assets
-func {{ $.ID }}ODK() []byte {
-  return {{ $.ID }}ODRD
-}
+{{ range $_, $embed := $.Embeds -}}
+  // {{ $embed.ID }}ODK returns the decryption key for the {{ $embed.ID }} asset
+  func {{ $embed.ID }}ODK() []byte {
+    return {{ $embed.ID }}ODRD
+  }
 
-// {{ $.ID }}ODRD contains the decryption key for the encrypted assets
-var {{ $.ID }}ODRD = []byte{
-	{{- range $idx, $b := $.DecryptionKeyArray -}}
-		{{- if mod $idx 7 -}}
-		  {{ printf "\n\t" }}
-		{{- end -}}
-		{{ printf "0x%x, " $b -}}
-	{{ end }}
-}
+  // {{ $embed.ID }}ODRD contains the decryption key for the encrypted {{ $embed.ID }} asset
+  var {{ $embed.ID }}ODRD = []byte{
+    {{- range $idx, $b := $embed.EncryptionKey -}}
+      {{- if mod $idx 7 -}}
+        {{ printf "\n\t" }}
+      {{- end -}}
+      {{ printf "0x%x, " $b -}}
+    {{ end }}
+  }
+{{ end -}}
 
 // {{ $.ID }}D is the decoding function for embedded assets for script {{ $.Name }}
-func {{ $.ID }}D(s string) []byte {
-  b, err := aes.NewCipher({{ $.ID }}ODK())
+func {{ $.ID }}D(s string, k []byte) []byte {
+  b, err := aes.NewCipher(k)
   if err != nil {
     return []byte{}
   }
