@@ -125,9 +125,6 @@ type GenesisVM struct {
 	// GenesisFile holds the intermediate representation of this VM's bundle code
 	GenesisFile *bytes.Buffer
 
-	// DecryptionKeys are the keys used to decrypt the embedded assets
-	DecryptionKeys map[string]string
-
 	// Logger to publish output from
 	Logger logger.Logger
 
@@ -155,7 +152,6 @@ func NewGenesisVM(name, path string, data []byte, prog *gast.Program, opts compu
 		GoPackageByNamespace: map[string]*GoPackage{},
 		EntryPointMapping:    map[string]string{},
 		PreloadAlias:         computil.RandUpperAlphaString(12),
-		DecryptionKeys:       map[string]string{},
 		EnabledStandardLibs:  map[string]*GoPackage{},
 		StandardLibs:         map[string]*GoPackage{},
 	}
@@ -250,8 +246,7 @@ func (g *GenesisVM) GetNewDecryptionKey() string {
 
 // RetrieveAsset attempts to copy the asset into the build directory
 func (g *GenesisVM) RetrieveAsset(m *Macro) error {
-	newKey := g.GetNewDecryptionKey()
-	ef, err := NewEmbeddedFile(m.Params["value"], []byte(newKey))
+	ef, err := NewEmbeddedFile(m.Params["value"], []byte(g.GetNewDecryptionKey()))
 	if err != nil {
 		return err
 	}
@@ -261,7 +256,6 @@ func (g *GenesisVM) RetrieveAsset(m *Macro) error {
 	}
 	g.Lock()
 	g.Embeds[ef.OrigName] = ef
-	g.DecryptionKeys[ef.OrigName] = newKey
 	g.Unlock()
 	g.Logger.Debugf("  %s -> %s", color.HiWhiteString(g.Name), color.YellowString(ef.OrigName))
 	return nil
@@ -278,7 +272,7 @@ func (g *GenesisVM) EncodeBundledAssets() error {
 
 // WriteGenesisScript writes a genesis script to the asset directory and returns a reference to an embeddedfile
 // for use by the compiler
-func (g *GenesisVM) WriteGenesisScript(name string, src []byte) (*EmbeddedFile, string, error) {
+func (g *GenesisVM) WriteGenesisScript(name string, src []byte) (*EmbeddedFile, error) {
 	scriptFileID := computil.RandUpperAlphaNumericString(18)
 	scriptName := fmt.Sprintf("%s.gs", scriptFileID)
 	scriptLocation := filepath.Join(g.AssetDir(), scriptName)
@@ -287,33 +281,31 @@ func (g *GenesisVM) WriteGenesisScript(name string, src []byte) (*EmbeddedFile, 
 	miniVersion := new(bytes.Buffer)
 	r := bytes.NewReader(src)
 	if err := m.Minify("text/javascript", miniVersion, r); err != nil {
-		return nil, "", err
+		return nil, err
 	}
 	err := ioutil.WriteFile(scriptLocation, miniVersion.Bytes(), 0644)
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
-	newKey := g.GetNewDecryptionKey()
 	scriptEmbed := &EmbeddedFile{
 		CachedPath:    scriptLocation,
 		Filename:      scriptName,
 		OrigName:      name,
 		ID:            scriptFileID,
-		EncryptionKey: []byte(newKey),
+		EncryptionKey: []byte(g.GetNewDecryptionKey()),
 	}
-	return scriptEmbed, newKey, nil
+	return scriptEmbed, nil
 }
 
 // WriteScript writes the initial user supplied script to the asset directory and tags
 // it in the embed table as the entry point for the user defined functions
 func (g *GenesisVM) WriteScript() error {
-	scriptEmbed, key, err := g.WriteGenesisScript(g.Name, g.Data)
+	scriptEmbed, err := g.WriteGenesisScript(g.Name, g.Data)
 	if err != nil {
 		return err
 	}
 	g.Lock()
 	g.Embeds["__ENTRYPOINT"] = scriptEmbed
-	g.DecryptionKeys["__ENTRYPOINT"] = key
 	g.Unlock()
 	return nil
 }
@@ -321,13 +313,12 @@ func (g *GenesisVM) WriteScript() error {
 // WritePreload writes the preload library to the asset directory and tags
 // it in the embed table as the preload library for the virtual machine
 func (g *GenesisVM) WritePreload() error {
-	scriptEmbed, key, err := g.WriteGenesisScript("preload.gs", computil.MustAsset("preload.gs"))
+	scriptEmbed, err := g.WriteGenesisScript("preload.gs", computil.MustAsset("preload.gs"))
 	if err != nil {
 		return err
 	}
 	g.Lock()
 	g.Embeds["__PRELOAD"] = scriptEmbed
-	g.DecryptionKeys["__PRELOAD"] = key
 	g.Unlock()
 	return nil
 }
