@@ -413,6 +413,7 @@ func (c *Compiler) CreateEntryPoint() error {
 	filename := "main.go"
 	fileLocation := filepath.Join(c.BuildDir, filename)
 	tmpl := template.New(filename)
+	tmpl.Funcs(template.FuncMap{"targetOS": func() string { return c.Options.OS }})
 	tmpl2, err := tmpl.Parse(string(t))
 	if err != nil {
 		return err
