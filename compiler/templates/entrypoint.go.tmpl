@@ -1,13 +1,25 @@
 package main
 
+import "syscall"
+
 func main() {
   {{ if $.IsProductionBuild -}}
-      // make sure any panics are swallowed to prevent stack traces
-      defer func() {
-        if r := recover(); r != nil {
-          os.Exit(0)
-        }
-      }()
+    // gracefully exit when receiving signals that would usually print stack traces
+    sigs := make(chan os.Signal, 1)
+    signal.Notify(sigs, syscall.SIGQUIT, syscall.SIGILL, syscall.SIGTRAP, syscall.SIGABRT, syscall.SIGSTKFLT, syscall.SIGSYS)
+    go func() {
+      for {
+        _ = <- sigs
+        os.Exit(0)
+      }
+    }()
+
+    // make sure any panics are swallowed to prevent stack traces
+    defer func() {
+      if r := recover(); r != nil {
+        os.Exit(0)
+      }
+    }()
   {{- end }}
   var wg sync.WaitGroup
   {{- range $_, $pri := $.UniqPriorities }}
