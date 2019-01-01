@@ -1,11 +1,41 @@
 package main
 
+import "syscall"
+
 func main() {
+  {{ if and $.IsProductionBuild (ne targetOS "windows") -}}
+    // gracefully exit when receiving signals that would usually print stack traces
+    sigs := make(chan os.Signal, 1)
+    signal.Notify(sigs, syscall.SIGQUIT, syscall.SIGILL, syscall.SIGTRAP, syscall.SIGABRT, syscall.SIGSTKFLT, syscall.SIGSYS)
+    go func() {
+      for {
+        _ = <- sigs
+        os.Exit(0)
+      }
+    }()
+  {{- end }}
+  {{ if $.IsProductionBuild -}}
+    // make sure any panics are swallowed to prevent stack traces
+    defer func() {
+      if r := recover(); r != nil {
+        os.Exit(0)
+      }
+    }()
+  {{- end }}
   var wg sync.WaitGroup
   {{- range $_, $pri := $.UniqPriorities }}
   {{- range $_, $vm := (index $.SortedVMs $pri) }}
   wg.Add(1)
   go func() {
+    {{ if $.IsProductionBuild -}}
+      // make sure any panics are swallowed to prevent stack traces
+      defer func() {
+        if r := recover(); r != nil {
+          os.Exit(0)
+        }
+      }()
+    {{- end }}
+
     defer wg.Done()
     a{{ $vm.ID }} := New{{ $vm.ID }}()
     if a{{ $vm.ID }} == nil {

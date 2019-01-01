@@ -413,6 +413,7 @@ func (c *Compiler) CreateEntryPoint() error {
 	filename := "main.go"
 	fileLocation := filepath.Join(c.BuildDir, filename)
 	tmpl := template.New(filename)
+	tmpl.Funcs(template.FuncMap{"targetOS": func() string { return c.Options.OS }})
 	tmpl2, err := tmpl.Parse(string(t))
 	if err != nil {
 		return err
@@ -503,6 +504,11 @@ func (c *Compiler) MapVMsByPriority() error {
 	}
 	sort.Slice(c.UniqPriorities, func(i, j int) bool { return c.UniqPriorities[i] < c.UniqPriorities[j] })
 	return nil
+}
+
+// IsProductionBuild is an convienience method for checking to see if dumping a stack trace should be disabled for production builds
+func (c *Compiler) IsProductionBuild() bool {
+	return !c.Options.LoggingEnabled && !c.Options.DebuggerEnabled && !c.Options.EnableTestBuild
 }
 
 // GetIDLiterals returns all interesting IDs used by this compiler
