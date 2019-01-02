@@ -35,3 +35,8 @@ jobs:
       - run: gscript --debug compile --enable-logging --obfuscation-level=3 -o=/go/src/github.com/gen0cide/gscript/stdlib/multi_test /go/src/github.com/gen0cide/gscript/stdlib/encoding/encoding_test.gs /go/src/github.com/gen0cide/gscript/stdlib/rand/rand_test.gs /go/src/github.com/gen0cide/gscript/stdlib/exec/exec_test.gs
       - run: chmod +x /go/src/github.com/gen0cide/gscript/stdlib/multi_test
       - run: /go/src/github.com/gen0cide/gscript/stdlib/multi_test
+      # Test multiple assets
+      - run: gscript --debug compile --enable-logging --obfuscation-level=3 -o=/go/src/github.com/gen0cide/gscript/stdlib/file/file_tester /go/src/github.com/gen0cide/gscript/stdlib/file/file_test.gs /go/src/github.com/gen0cide/gscript/stdlib/file/file_test3.gs
+      - run: chmod +x /go/src/github.com/gen0cide/gscript/stdlib/file/file_tester
+      - run: /go/src/github.com/gen0cide/gscript/stdlib/file/file_tester
+      
