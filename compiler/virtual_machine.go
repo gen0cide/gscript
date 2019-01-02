@@ -125,9 +125,6 @@ type GenesisVM struct {
 	// GenesisFile holds the intermediate representation of this VM's bundle code
 	GenesisFile *bytes.Buffer
 
-	// DecryptionKey is the key used to decrypt the embedded assets
-	DecryptionKey string
-
 	// Logger to publish output from
 	Logger logger.Logger
 
@@ -155,7 +152,6 @@ func NewGenesisVM(name, path string, data []byte, prog *gast.Program, opts compu
 		GoPackageByNamespace: map[string]*GoPackage{},
 		EntryPointMapping:    map[string]string{},
 		PreloadAlias:         computil.RandUpperAlphaString(12),
-		DecryptionKey:        computil.RandMixedAlphaNumericString(32),
 		EnabledStandardLibs:  map[string]*GoPackage{},
 		StandardLibs:         map[string]*GoPackage{},
 	}
@@ -243,9 +239,14 @@ func (g *GenesisVM) GetTimeout() int {
 	return ret
 }
 
+// GetNewDecryptionKey creates a new decryption key
+func (g *GenesisVM) GetNewDecryptionKey() string {
+	return computil.RandMixedAlphaNumericString(32)
+}
+
 // RetrieveAsset attempts to copy the asset into the build directory
 func (g *GenesisVM) RetrieveAsset(m *Macro) error {
-	ef, err := NewEmbeddedFile(m.Params["value"], []byte(g.DecryptionKey))
+	ef, err := NewEmbeddedFile(m.Params["value"], []byte(g.GetNewDecryptionKey()))
 	if err != nil {
 		return err
 	}
@@ -258,11 +259,6 @@ func (g *GenesisVM) RetrieveAsset(m *Macro) error {
 	g.Unlock()
 	g.Logger.Debugf("  %s -> %s", color.HiWhiteString(g.Name), color.YellowString(ef.OrigName))
 	return nil
-}
-
-// DecryptionKeyArray returns the decryption key as an array
-func (g *GenesisVM) DecryptionKeyArray() []byte {
-	return []byte(g.DecryptionKey)
 }
 
 // EncodeBundledAssets encodes all assets within the asset pack into their compressed format
@@ -296,7 +292,7 @@ func (g *GenesisVM) WriteGenesisScript(name string, src []byte) (*EmbeddedFile, 
 		Filename:      scriptName,
 		OrigName:      name,
 		ID:            scriptFileID,
-		EncryptionKey: []byte(g.DecryptionKey),
+		EncryptionKey: []byte(g.GetNewDecryptionKey()),
 	}
 	return scriptEmbed, nil
 }
