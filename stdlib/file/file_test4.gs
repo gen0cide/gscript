@@ -5,7 +5,6 @@
 // Gscript version: 1.0.0
 // ATT&CK: 
 
-//import:/private/tmp/example.bin
 
 //priority:150
 //timeout:150
