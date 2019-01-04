@@ -39,4 +39,9 @@ jobs:
       - run: gscript --debug compile --enable-logging --obfuscation-level=3 -o=/go/src/github.com/gen0cide/gscript/stdlib/file/file_tester /go/src/github.com/gen0cide/gscript/stdlib/file/file_test.gs /go/src/github.com/gen0cide/gscript/stdlib/file/file_test3.gs
       - run: chmod +x /go/src/github.com/gen0cide/gscript/stdlib/file/file_tester
       - run: /go/src/github.com/gen0cide/gscript/stdlib/file/file_tester
-      
+      # Test obfuscation
+      - run: gscript --debug compile --touch-a-silmaril=true --obfuscation-level=0 -o=/go/src/github.com/gen0cide/gscript/stdlib/file/file_test4 /go/src/github.com/gen0cide/stdlib/file/file_test4.gs
+      - run: chmod +x /go/src/github.com/gen0cide/gscript/stdlib/file/file_test4
+      - run: /go/src/github.com/gen0cide/gscript/stdlib/file/file_test4
+      - run: cat /go/src/github.com/gen0cide/stdlib/file/file_test4.gs
+      - run: grep -i "github" /go/src/github.com/gen0cide/gscript/stdlib/file/file_test4
