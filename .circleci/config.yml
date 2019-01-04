@@ -44,4 +44,5 @@ jobs:
       - run: chmod +x /go/src/github.com/gen0cide/gscript/stdlib/file/file_test4
       - run: /go/src/github.com/gen0cide/gscript/stdlib/file/file_test4
       - run: cat /go/src/github.com/gen0cide/gscript/stdlib/file/file_test4.gs
-      - run: grep -i "github" /go/src/github.com/gen0cide/gscript/stdlib/file/file_test4
+      - run: grep -i "github" /go/src/github.com/gen0cide/gscript/stdlib/file/file_test4 || true
+      - run: grep -i "go" /go/src/github.com/gen0cide/gscript/stdlib/file/file_test4 || true
