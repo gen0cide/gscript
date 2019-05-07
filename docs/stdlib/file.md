@@ -10,8 +10,8 @@ Handles file operations.
 - AppendBytesToFile(filepath string, data []byte) error
 - AppendStringToFile(filepath string, data string) error
 - CopyFile(srcpath string, dstpath string, perms string) (bytesWritten int, err error)
-- ReplaceInFileWithString(match string, new string) error
-- ReplaceInFileWithRegex(regexString string, replaceWith string) error
+- ReplaceInFileWithString(file string, match string, new string) error
+- ReplaceInFileWithRegex(file string, regexString string, replaceWith string) error
 - SetPerms(filepath string, perms string) error
 - CheckExists(targetPath string) bool
 
