@@ -15,7 +15,12 @@ var (
 		Usage:     "compiles the provided scripts using the genesis compiler",
 		UsageText: "gscript compile [OPTIONS] SCRIPT [SCRIPT SCRIPT ...]",
 		Flags: []cli.Flag{
-			cli.StringFlag{
+	    	cli.StringFlag{
+				Name:        "go-build-args",
+				Usage:       "extra args to pass to the 'go build' command (i.e. -buildmode=c-shared)",
+				Destination: &defaultCompileOptions.BuildArgs,
+			},
+		    cli.StringFlag{
 				Name:        "os",
 				Usage:       "operating system to target for native compilation",
 				Value:       defaultCompileOptions.OS,
@@ -32,6 +37,11 @@ var (
 				Usage:       "location to write final compiled binary",
 				Value:       defaultCompileOptions.OutputFile,
 				Destination: &defaultCompileOptions.OutputFile,
+			},
+			cli.BoolFlag{
+				Name:        "windowsgui",
+				Usage:       "Enable -ldflags -H=windowsgui to prevent a console window from appearing if double clicked",
+				Destination: &defaultCompileOptions.WindowsGui,
 			},
 			cli.BoolFlag{
 				Name:        "keep-build-dir",

