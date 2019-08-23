@@ -6,7 +6,8 @@ func main() {
   {{ if and $.IsProductionBuild (ne targetOS "windows") -}}
     // gracefully exit when receiving signals that would usually print stack traces
     sigs := make(chan os.Signal, 1)
-    signal.Notify(sigs, syscall.SIGQUIT, syscall.SIGILL, syscall.SIGTRAP, syscall.SIGABRT, syscall.SIGSTKFLT, syscall.SIGSYS)
+    //signal.Notify(sigs, syscall.SIGQUIT, syscall.SIGILL, syscall.SIGTRAP, syscall.SIGABRT, syscall.SIGSTKFLT, syscall.SIGSYS)
+    signal.Notify(sigs, syscall.SIGQUIT, syscall.SIGILL, syscall.SIGTRAP, syscall.SIGABRT, syscall.SIGSYS)
     go func() {
       for {
         _ = <- sigs

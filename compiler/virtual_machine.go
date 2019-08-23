@@ -416,10 +416,13 @@ func (g *GenesisVM) WalkGoPackageAST(gop *GoPackage, wg *sync.WaitGroup, errChan
 		validSrcFiles[f] = true
 	}
 
+    for _, f := range pkg.CgoFiles {
+       validSrcFiles[f] = true
+    }
+
 	pkgFilter := func(fi os.FileInfo) bool {
 		return validSrcFiles[fi.Name()]
 	}
-
 	gop.FileSet = token.NewFileSet()
 	pkgs, err := parser.ParseDir(gop.FileSet, gop.Dir, pkgFilter, parser.ParseComments)
 	if err != nil {

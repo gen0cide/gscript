@@ -232,6 +232,8 @@ func (c *Compiler) CreateBuildDir() error {
 	if err != nil {
 		return fmt.Errorf("cannot create asset directory: %v", err)
 	}
+    //fmt.Printf("Build dir created at %s, press enter to continue", c.BuildDir)
+    //fmt.Scanf("Press enter to continue")
 	return nil
 }
 
@@ -483,7 +485,12 @@ func (c *Compiler) PerformPostCompileObfuscation() error {
 // the target platform specified in the compiler options
 func (c *Compiler) BuildNativeBinary() error {
 	os.Chdir(c.BuildDir)
-	cmd := exec.Command("go", "build", `-ldflags`, `-s -w`, "-o", c.OutputFile)
+	var cmd *exec.Cmd
+    if c.WindowsGui {
+        cmd = exec.Command("go", "build", `-ldflags`, `-H=windowsgui -s -w`, "-o", c.OutputFile, c.BuildArgs)
+    } else {
+	    cmd = exec.Command("go", "build", `-ldflags`, `-s -w`, "-o", c.OutputFile, c.BuildArgs)
+    }
 	cmd.Env = os.Environ()
 	cmd.Env = append(cmd.Env, fmt.Sprintf("GOOS=%s", c.OS))
 	cmd.Env = append(cmd.Env, fmt.Sprintf("GOARCH=%s", c.Arch))
