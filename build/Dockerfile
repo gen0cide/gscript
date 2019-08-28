@@ -6,10 +6,10 @@ ENV INITRD No
 ENV LANGUAGE en_US.UTF-8
 ENV LC_ALL en_US.UTF-8
 ENV LANG en_US.UTF-8
-ENV GOVERSION 1.10.3
+ENV GOVERSION 1.12.5
 ENV GOROOT /opt/go
 ENV GOPATH /root/go
-ENV GSCRIPT_REVISION v1
+ENV GSCRIPT_REVISION master
 
 RUN DEBIAN_FRONTEND=noninteractive \
     apt-get update && \
@@ -30,6 +30,7 @@ RUN cd /opt && \
 RUN go get -d github.com/gen0cide/gscript/... && \
     cd $GOPATH/src/github.com/gen0cide/gscript && \
     git checkout $GSCRIPT_REVISION && \
+    export GO111MODULE=on && \
     go get ./... && \
     cd cmd/gscript && \
     go install -i -a && \
