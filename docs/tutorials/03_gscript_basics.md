@@ -38,11 +38,10 @@ function Deploy() {
 You will want to compile the above script with logging, such that you can see the output of
 your randomly generated string
 
-````sh
-$ gscript compile --enable-logging --obfuscation-level 3 ./hello_world.gs
 ```sh
+$ gscript compile --enable-logging --obfuscation-level 3 ./hello_world.gs
+```
 
 ## More simple examples
 
 - https://github.com/ahhh/gscripts/tree/master/attack/multi
-````

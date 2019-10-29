@@ -1,14 +1,13 @@
 # Checking Compatibility
 
-Its important to check the os and arch of the things your including in your gscripts, as you will be building to a single final target in the end.
+It is important to check the os and arch of each portion included in your gscripts as you will be building to a single final target in the end.
 
-## Checking Native Libs
+## Checking Native Libraries
 
-Some native libs are not cross platform, this both offers a lot of advantage (for platform specific functions), as well as potential compile and runtime errors
-Make sure your native libs can build to your target platform and arch before building your final binaries
+Some native libraries are not cross platform for platform specific functions. Make sure the specified native libraries can build to the target platform and arch before building the final binaries.
 
 ## Checking Assets
 
-Assets are ussually less of an issue in terms of gscript errors, however you will want to test all of your assets and make sure they work independantly before putting them in gscript
+Assets are usually less of an issue but each asset should be tested and working independently before putting them in gscript.
 
 ## Using OS & Arch
