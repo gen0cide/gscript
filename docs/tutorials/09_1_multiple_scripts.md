@@ -1,10 +1,10 @@
 # Multiple Scripts
 
-One of the massive powers of GSCIRPT is that you can compile any number of scripts into a single binary. This means individual gscripts are often written as atomic as possible, ussually accomplishing a single task. These multiple scripts are then selectivly compiled into a single binary based on the techniques you desire.
+One of the massive powers of GSCRIPT is that you can compile any number of scripts into a single binary. This means individual gscripts are often written as atomic as possible, usually accomplishing a single task. These multiple scripts are then selectively compiled into a single binary based on the desired techniques.
 
 ## N Number of Scripts
 
-The final argument gscript takes is a path to a script, or any number of paths to a script. This must be the final command line argument. This can include wildcards or any type of path expansion in bash. 
+The final argument `gscript` takes is a path to a script, or any number of paths to a script. This must be the final command line argument. This can include wildcards or any type of path expansion in bash. 
 
 ## Multiple Script Examples
 

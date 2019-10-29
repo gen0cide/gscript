@@ -2,11 +2,11 @@
 
 ## Command Exec 
 
-When calling G.exec.ExecuteCommand it will spawn a child process that waits for execution to finish before proceding. 
+When calling `G.exec.ExecuteCommand` a child process is spawned that waits for execution to finish before proceding. 
 
 ## Async Exec
 
-When calling G.exec.ExecuteComandAsync it will specifically catch all Signals for SigHup by default. 
+When calling `G.exec.ExecuteComandAsync` all Signals for SigHup will be caught by default. 
 
 ### Async Example
 

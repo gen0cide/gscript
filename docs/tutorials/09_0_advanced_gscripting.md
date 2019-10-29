@@ -1,21 +1,19 @@
 # Advanced GSCRIPTing
 
-The following will cover several advanced techniques using gscript
+- [Multiple Scripts](https://github.com/gen0cide/gscript/blob/master/docs/tutorials/09_1_multiple_scripts.md)
 
-- Multiple Scripts
+- [Anti Detection](https://github.com/gen0cide/gscript/blob/master/docs/tutorials/09_2_anti_detection.md)
 
-- Anti Detection 
+- [Persisting](https://github.com/gen0cide/gscript/blob/master/docs/tutorials/09_3_persisting.md)
 
-- Persisting
+- [Networking](https://github.com/gen0cide/gscript/blob/master/docs/tutorials/09_4_networking.md)
 
-- Networking 
+- [Obfuscation](https://github.com/gen0cide/gscript/blob/master/docs/tutorials/09_5_obfuscation.md)
 
-- Obfuscation
+- [Child Processes](https://github.com/gen0cide/gscript/blob/master/docs/tutorials/09_6_child_processes.md)
 
-- Child Processes
+- [System Services](https://github.com/gen0cide/gscript/blob/master/docs/tutorials/09_7_system_services.md)
 
-- System Services 
+- [Managing Team Persistence](https://github.com/gen0cide/gscript/blob/master/docs/tutorials/09_8_managing_team_persistence.md)
 
-- Managing Team Persistence
-
-- Auditing Other gscripts
+- [Auditing Other GSCRIPTs](https://github.com/gen0cide/gscript/blob/master/docs/tutorials/09_9_auditing_other_gscripts.md)

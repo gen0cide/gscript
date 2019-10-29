@@ -9,7 +9,7 @@ GSCRIPT does two types of obfuscation:
 
 Each have strengths and weaknesses and knowing more about them will help you decide in what cases you will find them most useful.
 
-!! WARNING - Before reading about them, it's encouraged that you have an understanding of the GSCRIPT compiler and how it works at a high level.
+**WARNING - Before reading about them, it's encouraged that you have an understanding of the GSCRIPT compiler and how it works at a high level.**
 
 ### Pre-Compiler Obfuscation
 
@@ -42,7 +42,7 @@ If you want to see this in action, you can use the compiler flag `--keep-build-d
 
 ### Post-Compiler Obfuscation
 
-// WARNING: There be dragons here. Proceed with caution.
+**WARNING: There be dragons here. Proceed with caution.**
 
 The **Post Compile Obfuscation** is known as the **Mordorifier**. The basic premise of the Mordorifier is that once GSCRIPT uses the Go compiler to build a native binary, regardless of platform, plaintext strings might exist which would be undesirable in a production build. This includes references to GSCRIPT, it's Engine, your `$HOME` directory or username, etc.
 

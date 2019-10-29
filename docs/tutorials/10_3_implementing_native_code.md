@@ -1,31 +1,28 @@
 # Implementing Native Code
 
-Native Code in gscript is when you use the //go_import: macro to reference a native GoLang library in gscript, allowing you to call those exported golang packages and functions directly from gscript, and do powerfull thigns you otherwise couldn't do in JavaScript.
+Native Code in GSCRIPT is when you use the //go_import: macro to reference a native GoLang library in GSCRIPT, allowing you to call those exported GoLang packages and functions directly from GSCRIPT. This allows Go code to be used when Javascript limitations are encountered.
 
-## Converting a tool to a lib
+## Converting a Tool Into a GSCRIPT Library
 
-Sometimes you will want to call an existing GoLang library from gscript, but the tool needs a bit of tweaking to be used in gscript
-We can see a great example of this w/ the conversion of GoRedLoot to gloot
+Sometimes you will want to call an existing GoLang library from GSCRIPT, but the tool may need a bit of tweaking to be used by GSCRIPT.
+
+An example of this can be seen in the conversion of GoRedLoot to gloot:
 
 #### GoRedLoot:
-- https://github.com/ahhh/GoRedLoot/blob/master/main.go
+- __https://github.com/ahhh/GoRedLoot/blob/master/main.go__
 
 #### Gloot:
-- https://github.com/ahhh/gloot/blob/master/gloot.go
+- __https://github.com/ahhh/gloot/blob/master/gloot.go__
 
 #### Gscript:
-- https://github.com/ahhh/gscripts/blob/master/attack/os_x/looter_example.gs
+- __https://github.com/ahhh/GSCRIPTs/blob/master/attack/os_x/looter_example.gs__
 
-### Some Reasons you may want to do this
-#### Adding a non-main package
+### Reasons For Converting a Tool Into a GSCRIPT Libary: 
 
-Many golang tools are written inside of main, or in the main package. 
-It will help to change these tools to a library so they can be called from GSCRIPT
+- Adding a non-main package: Many GoLang tools are written inside of main, or in the main package. These tools should be converted into a library so they can be called from GSCRIPT.
 
-#### Creating Helper Type Functions
+- Creating helper functions: GSCRIPT cannot use custom types from native libraries directly, unless a function returns that type. Helper functions could be used to make the type GSCRIPT compatable.
 
-Many golang tools implmenet custom types, unfortuantly GSCRIPT can't use custom types from native libraries directly, unless a function returns that type.
+## Writing Your Own Native Library
 
-## Writing your own native lib
-
-Sometimes you will need to write your tools in GoLang so that they can be used in GSCRIPT
+Sometimes you will need to write your tools in GoLang so that they can be used in GSCRIPT.
