@@ -18,7 +18,7 @@ this is a value 0-1000 (defaults 100) that specifies the order that the gscript 
 
 This is a value 0-1000 (defaults 30), representing the maximum number of seconds a VM should run for.
 
-## Sugested
+## Suggested
 
 ### // title:
 

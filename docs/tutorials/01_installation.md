@@ -2,25 +2,23 @@
 
 Welcome to the GSCRIPT install!
 
-## On MacOS
+## Docker
 
-- Install XCode or XCode CLI tools - `xcode-select --install`
-- Install GoLang 1.10 minimum - https://golang.org/dl/
-- Setup your `GOHOME`:
+If you have docker installed, you can run:
 
 ```sh
-mkdir ~/go
-export GOHOME=~/go
+docker pull gen0cide/gscript:v1
 ```
 
-- Easily build out the dir structure by using "go get" to grab a package:
+Make a local directory where you can share files between your local machine and the docker container. Replace `$LOCAL_DIR` in the following command with the path to that:
 
 ```sh
-go get github.com/gen2brain/dlgs
-ls -al ~/go/
+docker run -it -v $LOCAL_DIR:/root/share gen0cide/gscript:v1
 ```
 
-## Download GSCRIPT
+## Manually
+
+### Download GSCRIPT
 
 First pull down the gscript command line utility or source.
 https://github.com/gen0cide/gscript (or your fork if you want to change things)
@@ -37,22 +35,32 @@ Then the save would go here:
 ~/go/src/github/gen0cide/gscript/
 ```
 
-## Build GSCRIPT
+Like so:
+
+```sh
+mkdir -p ~/go/src/github/gen0cide/gscript/ && \
+	git clone https://github.com/gen0cide/gscript.git ~/go/src/github/gen0cide/gscript
+```
+
+
+### Build GSCRIPT
 
 !!NOTE: This doesn't need to happen if you download gscript by doing `go get -a github.com/gen0cide/gscript/cmd/gscript`
 
 First we need to get all of the dependencies:
 
-- go get github.com/faith/color
-- go get github.com/robertkrimen/otto
-- go get golang.org/x/tools
-- go get github.com/vigneshuvi/GoDateFormat
-- go get github.com/urfave/cli
-- go get github.com/ahhh/gopkgs
-- go get github.com/tdewolff/minify/js
-- go get github.com/sirupsen/logrus
+```sh
+go get github.com/faith/color
+go get github.com/robertkrimen/otto
+go get golang.org/x/tools
+go get github.com/vigneshuvi/GoDateFormat
+go get github.com/urfave/cli
+go get github.com/ahhh/gopkgs
+go get github.com/tdewolff/minify/js
+go get github.com/sirupsen/logrus
+```
 
-Building the CLI tool:
+Then build the CLI tool:
 
 ```sh
 cd ~/go/src/github.com/gen0cide/gscript/cmd/gscript
@@ -60,4 +68,3 @@ go build
 cp ./gscript /usr/local/bin/
 gscript --help
 ```
-

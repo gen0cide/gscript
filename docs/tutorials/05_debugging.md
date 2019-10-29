@@ -15,4 +15,3 @@ To enable this feature the `--enable-debugging` must be specified on the command
 `DebugConsole()` - This is the GSCRIPT function that will drop a running GSCRIPT into the interactive debugging console. It is often helpful to put these where you want to start debugging, after importing and using some functions. 
 `TypeOf(object)` - This is a function only exposed in the interactive GSCRIPT debugger, but it will dump the GoLang types of the target object, letting one debug type confusion issues between javascript and GoLang native functions. 
 
-### Debugger Examples
