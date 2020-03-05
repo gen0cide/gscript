@@ -126,12 +126,9 @@ func createClient(ignoreSSL bool) *http.Client {
 }
 
 func genJSON(data map[string]interface{}) (*strings.Reader, error) {
-	jsonObj, err := gabs.Consume(data)
-	if err != nil || jsonObj == nil {
-		if jsonObj == nil && err == nil {
-			err = errors.New("invalid argument for data")
-		}
-		return strings.NewReader("{}"), errors.Wrap(err, "could not generate JSON body")
+	jsonObj := gabs.Wrap(data)
+	if jsonObj == nil {
+		return strings.NewReader("{}"), errors.New("could not generate JSON body")
 	}
 	return strings.NewReader(jsonObj.String()), nil
 }
