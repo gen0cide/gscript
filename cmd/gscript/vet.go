@@ -9,11 +9,11 @@ import (
 	"github.com/fatih/color"
 	"github.com/robertkrimen/otto/parser"
 
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 var (
-	vetCommand = cli.Command{
+	vetCommand = &cli.Command{
 		Name:      "vet",
 		Usage:     "verifies the syntax of a supplied gscripts",
 		UsageText: "gscript vet LOCATION",
@@ -22,10 +22,10 @@ var (
 )
 
 func vetScriptCommand(c *cli.Context) error {
-	if len(c.Args()) == 0 {
+	if c.Args().Len() == 0 {
 		return errors.New("must supply a script to this command")
 	}
-	for _, a := range c.Args() {
+	for _, a := range c.Args().Slice() {
 		if _, err := os.Stat(a); err != nil {
 			cliLogger.Errorf("Error locating file %s:\n  %v", a, err)
 			continue

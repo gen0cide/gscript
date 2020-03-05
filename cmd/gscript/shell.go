@@ -11,17 +11,17 @@ import (
 
 	"github.com/gen0cide/gscript/compiler"
 	"github.com/gen0cide/gscript/compiler/computil"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 var (
-	shellCommand = cli.Command{
+	shellCommand = &cli.Command{
 		Name:      "shell",
 		Usage:     "drop into an interactive REPL within the genesis runtime",
 		UsageText: "gscript shell [--macro MACRO] [--macro MACRO] ...",
 		Action:    interactiveShellCommand,
 		Flags: []cli.Flag{
-			cli.StringSliceFlag{
+			&cli.StringSliceFlag{
 				Name:  "macro, m",
 				Usage: "apply a compiler macro to the interactive shell",
 			},

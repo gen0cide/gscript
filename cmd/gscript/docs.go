@@ -4,11 +4,11 @@ import (
 	"fmt"
 
 	"github.com/fatih/color"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 var (
-	docsSubcommands = []cli.Command{
+	docsSubcommands = []*cli.Command{
 		{
 			Name:   "macros",
 			Usage:  "shows macros available to the gscript compiler",
@@ -25,7 +25,7 @@ var (
 			Action: docsStandardLibSubcommand,
 		},
 	}
-	docsCommand = cli.Command{
+	docsCommand = &cli.Command{
 		Name:        "docs",
 		Usage:       "Shows documentation on a variety of gscript topics",
 		Subcommands: docsSubcommands,

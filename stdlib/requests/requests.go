@@ -18,7 +18,7 @@ import (
 	// implement for serializing arbitrary JSON but
 	// has the advantage of being more widely tested
 	// and stable.
-	"github.com/Jeffail/gabs"
+	"github.com/Jeffail/gabs/v2"
 
 	// IMPORT EXCEPTION OVERRIDE (gen0cide):
 	// This is a small wrapper by the *AUTHORS OF GO ITSELF*
@@ -126,12 +126,9 @@ func createClient(ignoreSSL bool) *http.Client {
 }
 
 func genJSON(data map[string]interface{}) (*strings.Reader, error) {
-	jsonObj, err := gabs.Consume(data)
-	if err != nil || jsonObj == nil {
-		if jsonObj == nil && err == nil {
-			err = errors.New("invalid argument for data")
-		}
-		return strings.NewReader("{}"), errors.Wrap(err, "could not generate JSON body")
+	jsonObj := gabs.Wrap(data)
+	if jsonObj == nil {
+		return strings.NewReader("{}"), errors.New("could not generate JSON body")
 	}
 	return strings.NewReader(jsonObj.String()), nil
 }
