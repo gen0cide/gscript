@@ -4,11 +4,11 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 var (
-	templatesSubcommands = []cli.Command{
+	templatesSubcommands = []*cli.Command{
 		{
 			Name:   "list",
 			Usage:  "show a list of all templates and their descriptions",
@@ -19,14 +19,14 @@ var (
 			Usage:  "print the named template to standard output",
 			Action: templatesPrintSubcommand,
 			Flags: []cli.Flag{
-				cli.StringFlag{
+				&cli.StringFlag{
 					Name:  "template, t",
 					Usage: "Show code for `TEMPLATE`",
 				},
 			},
 		},
 	}
-	templatesCommand = cli.Command{
+	templatesCommand = &cli.Command{
 		Name:        "templates",
 		Usage:       "access a library of pre-templated gscripts",
 		Subcommands: templatesSubcommands,

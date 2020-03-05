@@ -10,7 +10,7 @@ import (
 	"github.com/gen0cide/gscript"
 	"github.com/gen0cide/gscript/compiler/computil"
 	"github.com/gen0cide/gscript/logger/standard"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 var (
@@ -21,8 +21,8 @@ var (
 )
 
 func init() {
-	cli.HelpFlag = cli.BoolFlag{Name: "help, h"}
-	cli.VersionFlag = cli.BoolFlag{Name: "version"}
+	cli.HelpFlag = &cli.BoolFlag{Name: "help, h"}
+	cli.VersionFlag = &cli.BoolFlag{Name: "version"}
 
 	cli.VersionPrinter = func(c *cli.Context) {
 		fmt.Fprintf(c.App.Writer, "%s\n", gscript.Version)
@@ -41,7 +41,7 @@ func main() {
 	app.Description = "Framework to rapidly implement custom droppers for all three major operating systems."
 
 	app.Flags = []cli.Flag{
-		cli.BoolFlag{
+		&cli.BoolFlag{
 			Name:        "debug, d",
 			Usage:       "enables verbose debug output",
 			Destination: &debugOutput,
@@ -49,26 +49,26 @@ func main() {
 	}
 
 	app.Version = gscript.Version
-	app.Authors = []cli.Author{
-		cli.Author{
+	app.Authors = []*cli.Author{
+		&cli.Author{
 			Name:  "Alex Levinson",
 			Email: "gen0cide.threats@gmail.com",
 		},
-		cli.Author{
+		&cli.Author{
 			Name:  "Dan Borges",
 			Email: "ahhh.db@gmail.com",
 		},
-		cli.Author{
+		&cli.Author{
 			Name:  "Vyrus",
 			Email: "vyrus@dc949.org",
 		},
-		cli.Author{
+		&cli.Author{
 			Name:  "Lucas Morris",
 			Email: "emperorcow@gmail.com",
 		},
 	}
 	app.Copyright = "(c) 2018 Alex Levinson"
-	app.Commands = []cli.Command{
+	app.Commands = []*cli.Command{
 		docsCommand,
 		templatesCommand,
 		shellCommand,

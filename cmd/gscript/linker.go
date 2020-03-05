@@ -3,11 +3,11 @@ package main
 import (
 	"errors"
 
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 var (
-	linkerCommand = cli.Command{
+	linkerCommand = &cli.Command{
 		Name:      "linker",
 		Usage:     "provide information about how compatible functions in a native golang package from a genesis script",
 		UsageText: "gscript linker GO_IMPORT_PATH",
