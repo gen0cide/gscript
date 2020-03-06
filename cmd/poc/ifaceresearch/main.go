@@ -5,14 +5,14 @@ import (
 	"net/http"
 	"reflect"
 
-	"github.com/Jeffail/gabs"
+	"github.com/Jeffail/gabs/v2"
 
 	"github.com/gen0cide/gscript/compiler"
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/robertkrimen/otto"
 	"github.com/sirupsen/logrus"
-	"github.com/x-cray/logrus-prefixed-formatter"
+	prefixed "github.com/x-cray/logrus-prefixed-formatter"
 )
 
 var (
@@ -70,10 +70,7 @@ func ttype(name string, val interface{}) {
 			logger.Infof("%s is not a map[string]interface{}", name)
 		} else {
 			logger.Infof("%s is a map[string]interface{}", name)
-			jsonObj, err := gabs.Consume(val)
-			if err != nil {
-				logger.Errorf("ERROR IN JSON SERIALIZATION OF %s: %v", name, err)
-			}
+			jsonObj := gabs.Wrap(val)
 			if jsonObj != nil {
 				logger.Infof("JSON VERSION of %s:\n%s\n", name, jsonObj.StringIndent("", "  "))
 			} else {
