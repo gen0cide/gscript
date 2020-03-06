@@ -28,19 +28,19 @@ jobs:
       - run: go build -x -v
       - run: go get github.com/gen0cide/gscript/cmd/gscript
       # Test compiling and running the a gscript bniary
-      - run: gscript --debug compile --enable-logging --obfuscation-level=3 -o=/go/src/github.com/gen0cide/gscript/stdlib/time/time_test /go/src/github.com/gen0cide/gscript/stdlib/time/time_test.gs 
+      - run: gscript --debug compile --enable-logging --obfuscation-level=3 --output-file=/go/src/github.com/gen0cide/gscript/stdlib/time/time_test /go/src/github.com/gen0cide/gscript/stdlib/time/time_test.gs 
       - run: chmod +x /go/src/github.com/gen0cide/gscript/stdlib/time/time_test
       - run: /go/src/github.com/gen0cide/gscript/stdlib/time/time_test
       # Test and compile multiple gscripts
-      - run: gscript --debug compile --enable-logging --obfuscation-level=3 -o=/go/src/github.com/gen0cide/gscript/stdlib/multi_test /go/src/github.com/gen0cide/gscript/stdlib/encoding/encoding_test.gs /go/src/github.com/gen0cide/gscript/stdlib/rand/rand_test.gs /go/src/github.com/gen0cide/gscript/stdlib/exec/exec_test.gs
+      - run: gscript --debug compile --enable-logging --obfuscation-level=3 --output-file=/go/src/github.com/gen0cide/gscript/stdlib/multi_test /go/src/github.com/gen0cide/gscript/stdlib/encoding/encoding_test.gs /go/src/github.com/gen0cide/gscript/stdlib/rand/rand_test.gs /go/src/github.com/gen0cide/gscript/stdlib/exec/exec_test.gs
       - run: chmod +x /go/src/github.com/gen0cide/gscript/stdlib/multi_test
       - run: /go/src/github.com/gen0cide/gscript/stdlib/multi_test
       # Test multiple assets
-      - run: gscript --debug compile --enable-logging --obfuscation-level=3 -o=/go/src/github.com/gen0cide/gscript/stdlib/file/file_tester /go/src/github.com/gen0cide/gscript/stdlib/file/file_test.gs /go/src/github.com/gen0cide/gscript/stdlib/file/file_test3.gs
+      - run: gscript --debug compile --enable-logging --obfuscation-level=3 --output-file=/go/src/github.com/gen0cide/gscript/stdlib/file/file_tester /go/src/github.com/gen0cide/gscript/stdlib/file/file_test.gs /go/src/github.com/gen0cide/gscript/stdlib/file/file_test3.gs
       - run: chmod +x /go/src/github.com/gen0cide/gscript/stdlib/file/file_tester
       - run: /go/src/github.com/gen0cide/gscript/stdlib/file/file_tester
       # Test obfuscation
-      - run: gscript --debug compile --touch-a-silmaril=true --obfuscation-level=0 -o=/go/src/github.com/gen0cide/gscript/stdlib/file/file_test4 /go/src/github.com/gen0cide/gscript/stdlib/file/file_test4.gs
+      - run: gscript --debug compile --touch-a-silmaril=true --obfuscation-level=0 --output-file=/go/src/github.com/gen0cide/gscript/stdlib/file/file_test4 /go/src/github.com/gen0cide/gscript/stdlib/file/file_test4.gs
       - run: chmod +x /go/src/github.com/gen0cide/gscript/stdlib/file/file_test4
       - run: /go/src/github.com/gen0cide/gscript/stdlib/file/file_test4
       #- run: cat /go/src/github.com/gen0cide/gscript/stdlib/file/file_test4.txt
