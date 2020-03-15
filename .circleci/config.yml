@@ -20,9 +20,9 @@ jobs:
     working_directory: /go/src/github.com/gen0cide/gscript
     steps:
       - checkout
-      # Make sure the gscript tool continues to build properly
+      # go get cmd/gscript from outside GOPATH pulls dependancies into GOPATH
       - run: cd / ; go get github.com/gen0cide/gscript/cmd/gscript
-      - run: cd /go/src/github.com/gen0cide/gscript/cmd/gscript
+      # Make sure the gscript tool continues to build properly
       - run: go test -v ./...
       - run: go build -x -v
       # Test compiling and running the a gscript bniary
