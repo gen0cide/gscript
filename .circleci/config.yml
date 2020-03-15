@@ -21,11 +21,9 @@ jobs:
     steps:
       - checkout
       # Make sure the gscript tool continues to build properly
-      - run: cd /
-      - run: go get github.com/gen0cide/gscript/cmd/gscript
-      - run: cd /go/src/github.com/gen0cide/gscript
+      - run: cd / ; go get github.com/gen0cide/gscript/cmd/gscript
+      - run: cd /go/src/github.com/gen0cide/gscript/cmd/gscript
       - run: go test -v ./...
-      - run: cd cmd/gscript
       - run: go build -x -v
       # Test compiling and running the a gscript bniary
       - run: gscript --debug compile --enable-logging --obfuscation-level=3 --output-file=/go/src/github.com/gen0cide/gscript/stdlib/time/time_test /go/src/github.com/gen0cide/gscript/stdlib/time/time_test.gs 
