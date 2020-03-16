@@ -20,13 +20,11 @@ jobs:
     working_directory: /go/src/github.com/gen0cide/gscript
     steps:
       - checkout
-
+      # go get cmd/gscript from outside GOPATH pulls dependancies into GOPATH
+      - run: cd / ; go get github.com/gen0cide/gscript/cmd/gscript
       # Make sure the gscript tool continues to build properly
-      - run: go get -u ./...
       - run: go test -v ./...
-      - run: cd cmd/gscript
       - run: go build -x -v
-      - run: go get -u ./...
       # Test compiling and running the a gscript bniary
       - run: gscript --debug compile --enable-logging --obfuscation-level=3 --output-file=/go/src/github.com/gen0cide/gscript/stdlib/time/time_test /go/src/github.com/gen0cide/gscript/stdlib/time/time_test.gs 
       - run: chmod +x /go/src/github.com/gen0cide/gscript/stdlib/time/time_test
