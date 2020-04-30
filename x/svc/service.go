@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/Jeffail/gabs"
+	"github.com/Jeffail/gabs/v2"
 	"github.com/gen0cide/privcheck"
 	"github.com/kardianos/service"
 	"github.com/phayes/permbits"

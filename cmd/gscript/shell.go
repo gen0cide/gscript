@@ -15,12 +15,18 @@ import (
 )
 
 var (
+	shellOpts    = computil.DefaultOptions()
 	shellCommand = &cli.Command{
 		Name:      "shell",
 		Usage:     "drop into an interactive REPL within the genesis runtime",
 		UsageText: "gscript shell [--macro MACRO] [--macro MACRO] ...",
 		Action:    interactiveShellCommand,
 		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:        "build-dir",
+				Usage:       "Perform the gscript compile in a specific build directory.",
+				Destination: &shellOpts.BuildDir,
+			},
 			&cli.StringSliceFlag{
 				Name:  "macro, m",
 				Usage: "apply a compiler macro to the interactive shell",
@@ -44,20 +50,19 @@ func interactiveShellCommand(c *cli.Context) error {
 	randDirName := computil.RandLowerAlphaString(18)
 	randBinName := computil.RandLowerAlphaString(18)
 	tmpDir := filepath.Join(os.TempDir(), randDirName)
-	exePath := filepath.Join(tmpDir, randBinName)
+	scriptPath := filepath.Join(tmpDir, "debugger")
+	os.MkdirAll(tmpDir, 0755)
+	shellOpts.ObfuscationLevel = 3
+	shellOpts.ImportAllNativeFuncs = true
+	shellOpts.UseHumanReadableNames = true
+	shellOpts.DebuggerEnabled = true
+	shellOpts.LoggingEnabled = true
+	exePath := filepath.Join(shellOpts.BuildDir, randBinName)
 	if runtime.GOOS == "windows" {
 		exePath = fmt.Sprintf("%s.exe", exePath)
 	}
-	scriptPath := filepath.Join(tmpDir, "debugger")
-	os.MkdirAll(tmpDir, 0755)
-	opts := computil.DefaultOptions()
-	opts.ObfuscationLevel = 3
-	opts.ImportAllNativeFuncs = true
-	opts.UseHumanReadableNames = true
-	opts.DebuggerEnabled = true
-	opts.LoggingEnabled = true
-	opts.OutputFile = exePath
-	gc := compiler.NewWithOptions(opts)
+	shellOpts.OutputFile = exePath
+	gc := compiler.NewWithOptions(shellOpts)
 	gc.SetLogger(cliLogger)
 	ioutil.WriteFile(scriptPath, buf.Bytes(), 0644)
 	gc.AddScript(scriptPath)

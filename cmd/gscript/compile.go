@@ -21,6 +21,11 @@ var (
 				Destination: &defaultCompileOptions.BuildArgs,
 			},
 			&cli.StringFlag{
+				Name:        "build-dir",
+				Usage:       "Specify a custom directory to perform the build in.",
+				Destination: &defaultCompileOptions.BuildDir,
+			},
+			&cli.StringFlag{
 				Name:        "os",
 				Usage:       "operating system to target for native compilation",
 				Value:       defaultCompileOptions.OS,
