@@ -33,19 +33,19 @@ var (
 	validTargetArchitectures = []string{
 		"amd64",
 		"386",
-        "arm",
+		"arm",
 	}
 )
 
 // Options defines a type to allow customization of a compiler at runtime
 type Options struct {
-    // Extra args that will be passed to 'go build'
-    // DEFAULT: ""
-    BuildArgs string `json:"build_args,omitempty"`
+	// Extra args that will be passed to 'go build'
+	// DEFAULT: ""
+	BuildArgs string `json:"build_args,omitempty"`
 
-    // Compile as a GUI application for windows
-    // DEFAULT: false
-    WindowsGui bool `json:"windowsgui,omitempty"`
+	// Compile as a GUI application for windows
+	// DEFAULT: false
+	WindowsGui bool `json:"windowsgui,omitempty"`
 
 	// Target operating system
 	// DEFAULT: current operating system
@@ -171,8 +171,8 @@ func DefaultOptions() Options {
 	dirName := RandMixedAlphaNumericString(16)
 	buildDir := filepath.Join(os.TempDir(), dirName)
 	return Options{
-        BuildArgs:             "",
-        WindowsGui:            false,
+		BuildArgs:             "",
+		WindowsGui:            false,
 		OS:                    currentOS,
 		Arch:                  currentArch,
 		OutputFile:            finalFile,
