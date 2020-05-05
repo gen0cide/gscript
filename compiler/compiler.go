@@ -63,7 +63,12 @@ func NewWithDefault() *Compiler {
 
 // NewWithOptions returns a new compiler object with custom options
 func NewWithOptions(o computil.Options) *Compiler {
-	return &Compiler{
+	/*
+		this is a horrible fix, a proper fix is to combine
+		this and the above function into 1 and apply ALL
+		options where appropriate
+	*/
+	comp := Compiler{
 		Logger:         &null.Logger{},
 		Options:        o,
 		SortedVMs:      map[int][]*GenesisVM{},
@@ -71,6 +76,11 @@ func NewWithOptions(o computil.Options) *Compiler {
 		UniqPriorities: []int{},
 		stringCache:    []string{},
 	}
+	defaults := computil.DefaultOptions()
+	if len(comp.Options.BuildDir) == 0 {
+		comp.Options.BuildDir = defaults.BuildDir
+	}
+	return &comp
 }
 
 // SetLogger overrides the logger for the compiler (defaults to an engine.NullLogger)
@@ -232,8 +242,8 @@ func (c *Compiler) CreateBuildDir() error {
 	if err != nil {
 		return fmt.Errorf("cannot create asset directory: %v", err)
 	}
-    //fmt.Printf("Build dir created at %s, press enter to continue", c.BuildDir)
-    //fmt.Scanf("Press enter to continue")
+	//fmt.Printf("Build dir created at %s, press enter to continue", c.BuildDir)
+	//fmt.Scanf("Press enter to continue")
 	return nil
 }
 
@@ -486,11 +496,11 @@ func (c *Compiler) PerformPostCompileObfuscation() error {
 func (c *Compiler) BuildNativeBinary() error {
 	os.Chdir(c.BuildDir)
 	var cmd *exec.Cmd
-    if c.WindowsGui {
-        cmd = exec.Command("go", "build", `-ldflags`, `-H=windowsgui -s -w`, "-o", c.OutputFile, c.BuildArgs)
-    } else {
-	    cmd = exec.Command("go", "build", `-ldflags`, `-s -w`, "-o", c.OutputFile, c.BuildArgs)
-    }
+	if c.WindowsGui {
+		cmd = exec.Command("go", "build", `-ldflags`, `-H=windowsgui -s -w`, "-o", c.OutputFile, c.BuildArgs)
+	} else {
+		cmd = exec.Command("go", "build", `-ldflags`, `-s -w`, "-o", c.OutputFile, c.BuildArgs)
+	}
 	cmd.Env = os.Environ()
 	cmd.Env = append(cmd.Env, fmt.Sprintf("GOOS=%s", c.OS))
 	cmd.Env = append(cmd.Env, fmt.Sprintf("GOARCH=%s", c.Arch))

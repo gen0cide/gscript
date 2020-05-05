@@ -192,5 +192,6 @@ func DefaultOptions() Options {
 
 // AssetDir returns the file path to the asset build directory of the compiler
 func (o Options) AssetDir() string {
+
 	return filepath.Join(o.BuildDir, "assets")
 }

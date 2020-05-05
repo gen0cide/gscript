@@ -51,7 +51,9 @@ func interactiveShellCommand(c *cli.Context) error {
 	randBinName := computil.RandLowerAlphaString(18)
 	tmpDir := filepath.Join(os.TempDir(), randDirName)
 	scriptPath := filepath.Join(tmpDir, "debugger")
-	os.MkdirAll(tmpDir, 0755)
+	if err := os.MkdirAll(tmpDir, 0755); err != nil {
+		return err
+	}
 	shellOpts.ObfuscationLevel = 3
 	shellOpts.ImportAllNativeFuncs = true
 	shellOpts.UseHumanReadableNames = true
