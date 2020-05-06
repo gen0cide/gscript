@@ -15,29 +15,29 @@ require (
 	github.com/gen0cide/waiter v0.0.0-20180804103907-1df131552b6a
 	github.com/gohxs/readline v0.0.0-20171011095936-a780388e6e7c
 	github.com/kardianos/service v1.0.0
-	github.com/karrick/godirwalk v1.15.3
-	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
+	github.com/karrick/godirwalk v1.15.6
 	github.com/kr/pretty v0.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.6 // indirect
 	github.com/mattn/go-isatty v0.0.12
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b // indirect
-	github.com/mitchellh/go-ps v0.0.0-20170309133038-4fdf99ab2936
+	github.com/mitchellh/go-ps v1.0.0
 	github.com/onsi/gomega v1.4.2 // indirect
 	github.com/phayes/permbits v0.0.0-20190612203442-39d7c581d2ee
 	github.com/pkg/errors v0.9.1
 	github.com/robertkrimen/otto v0.0.0-20191219234010-c382bd3c16ff
-	github.com/sirupsen/logrus v1.4.2
+	github.com/sirupsen/logrus v1.6.0
+	github.com/stretchr/objx v0.1.1 // indirect
 	github.com/stretchr/testify v1.2.2
 	github.com/tdewolff/minify v2.3.6+incompatible
 	github.com/tdewolff/parse v2.3.4+incompatible // indirect
 	github.com/tdewolff/test v0.0.0-20171106182207-265427085153 // indirect
-	github.com/urfave/cli/v2 v2.1.1
+	github.com/urfave/cli/v2 v2.2.0
 	github.com/uudashr/gopkgs v2.0.1+incompatible // indirect
 	github.com/vigneshuvi/GoDateFormat v0.0.0-20190923034126-379ee8a8c45f
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
-	golang.org/x/crypto v0.0.0-20200302210943-78000ba7a073 // indirect
-	golang.org/x/sys v0.0.0-20200302150141-5c8b2ff67527
-	golang.org/x/tools v0.0.0-20200305224536-de023d59a5d1
+	golang.org/x/crypto v0.0.0-20200429183012-4b2356b1ed79 // indirect
+	golang.org/x/sys v0.0.0-20200501145240-bc7a7d42d5c3
+	golang.org/x/tools v0.0.0-20200506181757-c20a87c16a39
 	gopkg.in/VividCortex/ewma.v1 v1.1.1 // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/cheggaaa/pb.v2 v2.0.7 // indirect

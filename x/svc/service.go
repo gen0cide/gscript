@@ -165,12 +165,8 @@ func NewFromArgs(name, displayName, description, exePath string, args []interfac
 
 // NewFromJSON instantiates a Service object from a given map of parameters
 func NewFromJSON(jsonData map[string]interface{}) (*Service, error) {
-	data, err := gabs.Consume(jsonData)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not parse JSON arguments")
-	}
 	var svc Service
-	err = json.Unmarshal(data.Bytes(), &svc)
+	err := json.Unmarshal(gabs.Wrap(jsonData).Bytes(), &svc)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not marshal JSON argument")
 	}
