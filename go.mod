@@ -35,9 +35,9 @@ require (
 	github.com/uudashr/gopkgs v2.0.1+incompatible // indirect
 	github.com/vigneshuvi/GoDateFormat v0.0.0-20190923034126-379ee8a8c45f
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
-	golang.org/x/crypto v0.0.0-20200429183012-4b2356b1ed79 // indirect
-	golang.org/x/sys v0.0.0-20200501145240-bc7a7d42d5c3
-	golang.org/x/tools v0.0.0-20200506181757-c20a87c16a39
+	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37 // indirect
+	golang.org/x/sys v0.0.0-20200511232937-7e40ca221e25
+	golang.org/x/tools v0.0.0-20200512001501-aaeff5de670a
 	gopkg.in/VividCortex/ewma.v1 v1.1.1 // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/cheggaaa/pb.v2 v2.0.7 // indirect

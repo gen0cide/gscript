@@ -49,38 +49,40 @@ type Compiler struct {
 	stringCache []string
 }
 
-// NewWithDefault returns a new compiler object with default options
-func NewWithDefault() *Compiler {
+// New returns a new compiler object
+func New(o *computil.Options) *Compiler {
+	defaults := computil.DefaultOptions()
+	if o == nil {
+		o = &defaults
+	}
+
+	if len(o.OS) == 0 {
+		o.OS = computil.DefaultOptions().OS
+	}
+	if len(o.Arch) == 0 {
+		o.Arch = computil.DefaultOptions().Arch
+	}
+	if len(o.OutputFile) == 0 {
+		o.OutputFile = computil.DefaultOptions().OutputFile
+	}
+	if len(o.BuildDir) == 0 {
+		o.BuildDir = computil.DefaultOptions().BuildDir
+	}
+	if err := os.MkdirAll(o.BuildDir, os.ModePerm); err != nil {
+		panic(err)
+	}
+	if len(o.GenesisDir) == 0 {
+		o.GenesisDir = computil.DefaultOptions().GenesisDir
+	}
+
 	return &Compiler{
 		Logger:         &null.Logger{},
-		Options:        computil.DefaultOptions(),
 		SortedVMs:      map[int][]*GenesisVM{},
 		VMs:            []*GenesisVM{},
 		UniqPriorities: []int{},
 		stringCache:    []string{},
+		Options:        *o,
 	}
-}
-
-// NewWithOptions returns a new compiler object with custom options
-func NewWithOptions(o computil.Options) *Compiler {
-	/*
-		this is a horrible fix, a proper fix is to combine
-		this and the above function into 1 and apply ALL
-		options where appropriate
-	*/
-	comp := Compiler{
-		Logger:         &null.Logger{},
-		Options:        o,
-		SortedVMs:      map[int][]*GenesisVM{},
-		VMs:            []*GenesisVM{},
-		UniqPriorities: []int{},
-		stringCache:    []string{},
-	}
-	defaults := computil.DefaultOptions()
-	if len(comp.Options.BuildDir) == 0 {
-		comp.Options.BuildDir = defaults.BuildDir
-	}
-	return &comp
 }
 
 // SetLogger overrides the logger for the compiler (defaults to an engine.NullLogger)

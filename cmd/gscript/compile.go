@@ -174,7 +174,7 @@ func compileScriptCommand(c *cli.Context) error {
 	cliLogger.Info("")
 	cliLogger.Info(color.HiRedString("************************"))
 	cliLogger.Info("")
-	gc := compiler.NewWithOptions(defaultCompileOptions)
+	gc := compiler.New(&defaultCompileOptions)
 	gc.SetLogger(cliLogger)
 	for _, a := range c.Args().Slice() {
 		addErr := gc.AddScript(a)

@@ -2,12 +2,10 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 
 	"github.com/gen0cide/gscript/compiler"
 	"github.com/gen0cide/gscript/compiler/computil"
@@ -47,34 +45,31 @@ func interactiveShellCommand(c *cli.Context) error {
 	}
 	buf.WriteString("\n")
 	buf.WriteString(string(computil.MustAsset("debugger.gs")))
-	randDirName := computil.RandLowerAlphaString(18)
-	randBinName := computil.RandLowerAlphaString(18)
-	tmpDir := filepath.Join(os.TempDir(), randDirName)
-	scriptPath := filepath.Join(tmpDir, "debugger")
-	if err := os.MkdirAll(tmpDir, 0755); err != nil {
-		return err
-	}
 	shellOpts.ObfuscationLevel = 3
 	shellOpts.ImportAllNativeFuncs = true
 	shellOpts.UseHumanReadableNames = true
 	shellOpts.DebuggerEnabled = true
 	shellOpts.LoggingEnabled = true
-	exePath := filepath.Join(shellOpts.BuildDir, randBinName)
-	if runtime.GOOS == "windows" {
-		exePath = fmt.Sprintf("%s.exe", exePath)
-	}
-	shellOpts.OutputFile = exePath
-	gc := compiler.NewWithOptions(shellOpts)
+	gc := compiler.New(&shellOpts)
+	scriptPath := filepath.Join(gc.BuildDir, "debugger")
 	gc.SetLogger(cliLogger)
-	ioutil.WriteFile(scriptPath, buf.Bytes(), 0644)
-	gc.AddScript(scriptPath)
-	err := gc.Do()
+	err := ioutil.WriteFile(scriptPath, buf.Bytes(), 0644)
+	if err != nil {
+		cliLogger.Errorf("Error writing script to file path: %s", scriptPath)
+		return err
+	}
+	err = gc.AddScript(scriptPath)
+	if err != nil {
+		cliLogger.Errorf("Error adding to runtime: %s", scriptPath)
+		return err
+	}
+	err = gc.Do()
 	if err != nil {
 		cliLogger.Errorf("Build Dir Located At: %s", gc.BuildDir)
 		return err
 	}
-	err = runShell(exePath)
-	os.RemoveAll(tmpDir)
+	err = runShell(gc.OutputFile)
+	os.RemoveAll(gc.BuildDir)
 	return err
 }
 

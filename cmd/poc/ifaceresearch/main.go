@@ -108,7 +108,7 @@ func main() {
 	}
 	vm.Set("b", b)
 
-	c := compiler.NewWithDefault()
+	c := compiler.New(nil)
 	vm.Set("c", c)
 
 	d := map[string]interface{}{
