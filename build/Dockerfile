@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM golang:buster
 
 MAINTAINER Alex Levinson <alexl@uber.com>
 
@@ -6,9 +6,6 @@ ENV INITRD No
 ENV LANGUAGE en_US.UTF-8
 ENV LC_ALL en_US.UTF-8
 ENV LANG en_US.UTF-8
-ENV GOVERSION 1.12.5
-ENV GOROOT /opt/go
-ENV GOPATH /root/go
 ENV GSCRIPT_REVISION master
 
 RUN DEBIAN_FRONTEND=noninteractive \
@@ -21,17 +18,11 @@ RUN DEBIAN_FRONTEND=noninteractive \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN cd /opt && \
-    wget https://storage.googleapis.com/golang/go${GOVERSION}.linux-amd64.tar.gz && \
-    tar zxf go${GOVERSION}.linux-amd64.tar.gz && rm go${GOVERSION}.linux-amd64.tar.gz && \
-    ln -s /opt/go/bin/go /usr/bin/ && \
-    mkdir $GOPATH
-
-RUN go get -d github.com/gen0cide/gscript/... && \
+RUN git clone https://github.com/gen0cide/gscript $GOPATH/src/github.com/gen0cide/gscript && \
     cd $GOPATH/src/github.com/gen0cide/gscript && \
     git checkout $GSCRIPT_REVISION && \
     export GO111MODULE=on && \
-    go get ./... && \
+    go get && \
     cd cmd/gscript && \
     go install -i -a && \
     cd /root
