@@ -1,16 +1,19 @@
-FROM golang:bullseye
+FROM golang:1.17.13-bullseye
 MAINTAINER Alex Levinson <alexl@uber.com>
 
-ENV INITRD No
 ENV GSCRIPT_REVISION master
+ENV GO111MODULE=auto
+ENV GOROOT='/usr/local/go'
 
-RUN git clone https://github.com/gen0cide/gscript $GOPATH/src/github.com/gen0cide/gscript && \
+RUN mkdir -p $GOROOT && \
+    git clone https://github.com/gen0cide/gscript $GOPATH/src/github.com/gen0cide/gscript && \
     cd $GOPATH/src/github.com/gen0cide/gscript && \
     git checkout $GSCRIPT_REVISION && \
-    export GO111MODULE=on && \
     go get ./... && \
+    git clone https://github.com/robertkrimen/otto /usr/local/go/src/github.com/robertkrimen/otto && \
+    git clone -b v1.0.5 https://github.com/go-sourcemap/sourcemap /usr/local/go/src/gopkg.in/sourcemap.v1 && \
     cd cmd/gscript && \
-    go install -i -a  
+    go install -i -a
 
 WORKDIR /root
 
