@@ -1,0 +1,12 @@
+FROM golang:bullseye
+MAINTAINER Alex Levinson <alexl@uber.com>
+
+RUN git clone https://github.com/gen0cide/gscript $GOPATH/src/github.com/gen0cide/gscript && \
+    cd $GOPATH/src/github.com/gen0cide/gscript && \
+    git checkout $GSCRIPT_REVISION && \
+    export GO111MODULE=on && \
+    go get && \
+    cd cmd/gscript && \
+    go install -i -a 
+
+ENTRYPOINT ["gscript"]

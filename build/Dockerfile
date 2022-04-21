@@ -1,12 +1,18 @@
-FROM golang:buster
-
+FROM golang:bullseye
 MAINTAINER Alex Levinson <alexl@uber.com>
 
 ENV INITRD No
-ENV LANGUAGE en_US.UTF-8
-ENV LC_ALL en_US.UTF-8
-ENV LANG en_US.UTF-8
 ENV GSCRIPT_REVISION master
+
+RUN git clone https://github.com/gen0cide/gscript $GOPATH/src/github.com/gen0cide/gscript && \
+    cd $GOPATH/src/github.com/gen0cide/gscript && \
+    git checkout $GSCRIPT_REVISION && \
+    export GO111MODULE=on && \
+    go get ./... && \
+    cd cmd/gscript && \
+    go install -i -a  
+
+WORKDIR /root
 
 RUN DEBIAN_FRONTEND=noninteractive \
     apt-get update && \
@@ -18,21 +24,10 @@ RUN DEBIAN_FRONTEND=noninteractive \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN git clone https://github.com/gen0cide/gscript $GOPATH/src/github.com/gen0cide/gscript && \
-    cd $GOPATH/src/github.com/gen0cide/gscript && \
-    git checkout $GSCRIPT_REVISION && \
-    export GO111MODULE=on && \
-    go get && \
-    cd cmd/gscript && \
-    go install -i -a && \
-    cd /root
-
 ADD ps1.sh /etc/profile.d/Z1_PS1.sh
 
 RUN chmod +x /etc/profile.d/Z1_PS1.sh && \
     echo "" >> /root/.bashrc && \
-    echo "export GOPATH=/root/go" >> /root/.bashrc && \
-    echo "export GOROOT=/opt/go" >> /root/.bashrc && \
     echo "GSCRIPT_REVISION=$GSCRIPT_REVISION" >> /root/.bashrc && \
     echo "source /etc/profile.d/Z1_PS1.sh" >> /root/.bashrc
 
