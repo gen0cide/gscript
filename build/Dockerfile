@@ -1,15 +1,21 @@
-FROM ubuntu:latest
-
+FROM golang:1.17.13-bullseye
 MAINTAINER Alex Levinson <alexl@uber.com>
 
-ENV INITRD No
-ENV LANGUAGE en_US.UTF-8
-ENV LC_ALL en_US.UTF-8
-ENV LANG en_US.UTF-8
-ENV GOVERSION 1.12.5
-ENV GOROOT /opt/go
-ENV GOPATH /root/go
 ENV GSCRIPT_REVISION master
+ENV GO111MODULE=auto
+ENV GOROOT='/usr/local/go'
+
+RUN mkdir -p $GOROOT && \
+    git clone https://github.com/gen0cide/gscript $GOPATH/src/github.com/gen0cide/gscript && \
+    cd $GOPATH/src/github.com/gen0cide/gscript && \
+    git checkout $GSCRIPT_REVISION && \
+    go get ./... && \
+    git clone https://github.com/robertkrimen/otto /usr/local/go/src/github.com/robertkrimen/otto && \
+    git clone -b v1.0.5 https://github.com/go-sourcemap/sourcemap /usr/local/go/src/gopkg.in/sourcemap.v1 && \
+    cd cmd/gscript && \
+    go install -i -a
+
+WORKDIR /root
 
 RUN DEBIAN_FRONTEND=noninteractive \
     apt-get update && \
@@ -21,27 +27,10 @@ RUN DEBIAN_FRONTEND=noninteractive \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN cd /opt && \
-    wget https://storage.googleapis.com/golang/go${GOVERSION}.linux-amd64.tar.gz && \
-    tar zxf go${GOVERSION}.linux-amd64.tar.gz && rm go${GOVERSION}.linux-amd64.tar.gz && \
-    ln -s /opt/go/bin/go /usr/bin/ && \
-    mkdir $GOPATH
-
-RUN go get -d github.com/gen0cide/gscript/... && \
-    cd $GOPATH/src/github.com/gen0cide/gscript && \
-    git checkout $GSCRIPT_REVISION && \
-    export GO111MODULE=on && \
-    go get ./... && \
-    cd cmd/gscript && \
-    go install -i -a && \
-    cd /root
-
 ADD ps1.sh /etc/profile.d/Z1_PS1.sh
 
 RUN chmod +x /etc/profile.d/Z1_PS1.sh && \
     echo "" >> /root/.bashrc && \
-    echo "export GOPATH=/root/go" >> /root/.bashrc && \
-    echo "export GOROOT=/opt/go" >> /root/.bashrc && \
     echo "GSCRIPT_REVISION=$GSCRIPT_REVISION" >> /root/.bashrc && \
     echo "source /etc/profile.d/Z1_PS1.sh" >> /root/.bashrc
 
